@@ -3,8 +3,9 @@
 // parcours fait plusieurs boucles, timing.ts se charge de calculer les
 // passages cumulés (d, d+7, d+14, ...).
 //
-// ⚠️ PLACEHOLDER : coordonnées et notes d'accès à valider/remplacer avec les
-// vrais points choisis pour le semi d'Antony.
+// ⚠️ À VÉRIFIER SUR LE TERRAIN : coordonnées, accès et astuces sont des
+// placeholders réalistes, à confirmer/ajuster avec le club avant la démo.
+// Tout champ encore incertain est explicitement marqué ⟨à vérifier⟩.
 
 export interface ObservationPoint {
   id: string;
@@ -13,8 +14,16 @@ export interface ObservationPoint {
   lng: number;
   /** Distance depuis le départ, à l'intérieur d'UNE boucle (en km). */
   distanceInLoopKm: number;
-  /** Indication d'accès libre, affichée au clic sur le marqueur. */
-  accessNote: string;
+  /** Comment se rendre à ce point (transport, entrée...). */
+  acces: string;
+  /** Conseil pratique pour un supporter sur place. */
+  astuce: string;
+  /**
+   * Marque le meilleur point du parcours : celui où l'on voit son coureur
+   * le plus souvent sans bouger. Mis en avant dans l'UI (badge + marqueur
+   * distinct sur la carte). Un seul point devrait porter ce flag.
+   */
+  pointFort?: boolean;
 }
 
 export const OBSERVATION_POINTS: ObservationPoint[] = [
@@ -24,8 +33,11 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
     lat: 48.753,
     lng: 2.297,
     distanceInLoopKm: 0,
-    accessNote:
-      "Meilleur point pour voir le départ et chaque fin de boucle. Accès direct, tribunes disponibles.",
+    acces:
+      "⟨à vérifier⟩ À ~5 min à pied du RER B Antony, puis rue du Stade. Parkings visiteurs autour du stade.",
+    astuce:
+      "Le seul endroit d'où on voit son coureur passer 3 fois sans bouger : au départ, et à la fin de chaque boucle.",
+    pointFort: true,
   },
   {
     id: "parc-heller",
@@ -33,14 +45,16 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
     lat: 48.756,
     lng: 2.301,
     distanceInLoopKm: 2,
-    accessNote: "Entrée par l'allée principale du parc. Bonne visibilité, coin ombragé.",
+    acces: "⟨à vérifier⟩ Entrée par l'allée principale du parc, côté ⟨rue à préciser⟩.",
+    astuce: "Coin ombragé, bonne visibilité sur une portion droite : parfait pour les photos.",
   },
   {
-    id: "point-3-placeholder",
-    name: "⟨Point 3 à définir⟩",
+    id: "point-3-a-nommer",
+    name: "⟨Point 3 à nommer — carrefour ou lieu-repère sur la boucle⟩",
     lat: 48.7515,
     lng: 2.291,
     distanceInLoopKm: 5,
-    accessNote: "Placeholder — à remplacer une fois le vrai point choisi.",
+    acces: "⟨à définir avec le club⟩",
+    astuce: "⟨à définir — ex. un carrefour où la route se rétrécit, bon point sonore⟩",
   },
 ];

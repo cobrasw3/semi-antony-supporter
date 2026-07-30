@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { paceFromTargetTime } from "../lib/timing";
-import { formatDuration, formatPace, parseDuration, parsePace } from "../lib/format";
+import { formatDuration, formatPace, parseDuration, parsePace, readPaceFromUrl } from "../lib/format";
 
 type Mode = "pace" | "duration";
 
@@ -11,7 +11,7 @@ interface ChampAllureProps {
 
 export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps) {
   const [mode, setMode] = useState<Mode>("pace");
-  const [paceText, setPaceText] = useState("5:30");
+  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5:30");
   const [durationText, setDurationText] = useState("1:57");
 
   const resolvedPace = mode === "pace" ? parsePace(paceText) : null;

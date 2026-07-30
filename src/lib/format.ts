@@ -36,3 +36,24 @@ export function formatDuration(totalMinutes: number): string {
   const minutes = Math.round(totalMinutes % 60);
   return `${hours}:${String(minutes).padStart(2, "0")}`;
 }
+
+/** Paramètre d'URL utilisé pour partager l'allure saisie ("?pace=5:30"). */
+const PACE_URL_PARAM = "pace";
+
+/** Lit l'allure ("M:SS") depuis le paramètre d'URL, si présent. */
+export function readPaceFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get(PACE_URL_PARAM);
+}
+
+/** Construit l'URL de partage courante, avec l'allure encodée en paramètre. */
+export function buildShareUrl(paceMinPerKm: number | null): string {
+  if (typeof window === "undefined") return "";
+  const url = new URL(window.location.href);
+  if (paceMinPerKm) {
+    url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));
+  } else {
+    url.searchParams.delete(PACE_URL_PARAM);
+  }
+  return url.toString();
+}

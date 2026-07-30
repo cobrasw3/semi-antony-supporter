@@ -1,46 +1,56 @@
-import type { PointCrossings } from "../lib/timing";
+import type { CrossingEstimate } from "../lib/timing";
+
+export interface RecapPoint {
+  id: string;
+  name: string;
+  acces: string;
+  astuce: string;
+  pointFort?: boolean;
+  crossings: CrossingEstimate[];
+}
 
 interface RecapPassagesProps {
-  crossings: PointCrossings[];
+  points: RecapPoint[];
 }
 
-interface FlatRow {
-  key: string;
-  pointName: string;
-  loopIndex: number;
-  windowStart: string;
-  windowEnd: string;
-  windowStartMinutes: number;
-}
-
-export function RecapPassages({ crossings }: RecapPassagesProps) {
-  const rows: FlatRow[] = crossings
-    .flatMap((point) =>
-      point.crossings.map((c) => ({
-        key: `${point.pointId}-${c.loopIndex}`,
-        pointName: point.pointName,
-        loopIndex: c.loopIndex,
-        windowStart: c.windowStart,
-        windowEnd: c.windowEnd,
-        windowStartMinutes: c.windowStartMinutes,
-      }))
-    )
-    .sort((a, b) => a.windowStartMinutes - b.windowStartMinutes);
+export function RecapPassages({ points }: RecapPassagesProps) {
+  // Un groupe par point d'observation (nom + acces + astuce affichés une
+  // seule fois), ses 3 passages étant déjà en ordre croissant. Les groupes
+  // eux-mêmes sont ordonnés par leur premier passage, pour rester globalement
+  // chronologique.
+  const groups = points
+    .filter((p) => p.crossings.length > 0)
+    .slice()
+    .sort((a, b) => a.crossings[0].windowStartMinutes - b.crossings[0].windowStartMinutes);
 
   return (
     <section className="recap" aria-label="Récapitulatif des passages">
       <h2>Récapitulatif des passages</h2>
-      {rows.length === 0 ? (
+      {groups.length === 0 ? (
         <p className="recap-empty">Entrez une allure ou un temps visé pour voir les horaires.</p>
       ) : (
         <ul className="recap-list">
-          {rows.map((row) => (
-            <li key={row.key} className="recap-row">
-              <span className="recap-time">
-                {row.windowStart}–{row.windowEnd}
-              </span>
-              <span className="recap-point">{row.pointName}</span>
-              <span className="recap-loop">Boucle {row.loopIndex}</span>
+          {groups.map((point) => (
+            <li
+              key={point.id}
+              className={point.pointFort ? "recap-group recap-group-fort" : "recap-group"}
+            >
+              <p className="recap-group-name">
+                {point.pointFort ? "⭐ " : ""}
+                {point.name}
+              </p>
+              <p className="recap-acces">{point.acces}</p>
+              <p className="recap-astuce">{point.astuce}</p>
+              <ul className="recap-crossings">
+                {point.crossings.map((c) => (
+                  <li key={c.loopIndex} className="recap-crossing-row">
+                    <span className="recap-time">
+                      {c.windowStart}–{c.windowEnd}
+                    </span>
+                    <span className="recap-loop">Boucle {c.loopIndex}</span>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>

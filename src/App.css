@@ -22,6 +22,18 @@
   opacity: 0.92;
 }
 
+/* --- Bandeau "meilleur spot" --- */
+
+.best-spot-banner {
+  padding: var(--space-2) var(--space-3);
+  background: #fff6d8;
+  border-bottom: 2px solid #e8b800;
+  color: #4a3b00;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .carte-wrapper {
   height: 42vh;
   min-height: 260px;
@@ -29,9 +41,28 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.popup-acces,
+.popup-astuce {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9rem;
+}
+
 .popup-crossings {
   margin: var(--space-1) 0 0;
   padding-left: 1.1rem;
+}
+
+/* Marqueur étoile du point fort (via L.divIcon) */
+.marker-star-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.marker-star {
+  font-size: 1.9rem;
+  line-height: 1;
+  text-align: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
 /* --- Champ allure --- */
@@ -103,6 +134,59 @@
   font-weight: 600;
 }
 
+/* --- Partage --- */
+
+.partage {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.partage-btn {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.partage-panel {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.partage-qr {
+  padding: var(--space-2);
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+
+.partage-url {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.partage-copy-btn {
+  padding: var(--space-2) var(--space-3);
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
 /* --- Récap --- */
 
 .recap {
@@ -124,18 +208,49 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-3);
 }
 
-.recap-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2);
+.recap-group {
+  padding: var(--space-2) var(--space-3);
   background: var(--color-surface);
   border-radius: var(--radius);
   border-left: 4px solid var(--color-primary);
+}
+
+.recap-group-fort {
+  border-left-color: #e8b800;
+  background: #fffaf0;
+}
+
+.recap-group-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.recap-acces,
+.recap-astuce {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.recap-crossings {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recap-crossing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .recap-time {
@@ -143,11 +258,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.recap-point {
-  font-size: 1rem;
-  color: var(--color-text);
 }
 
 .recap-loop {

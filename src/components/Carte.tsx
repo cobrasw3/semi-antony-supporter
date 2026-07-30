@@ -1,5 +1,6 @@
 import "leaflet/dist/leaflet.css";
 import "../lib/leafletIcons";
+import L from "leaflet";
 import { useEffect } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import type { LatLng } from "../config/course";
@@ -10,7 +11,9 @@ interface CartePoint {
   name: string;
   lat: number;
   lng: number;
-  accessNote: string;
+  acces: string;
+  astuce: string;
+  pointFort?: boolean;
 }
 
 interface CarteProps {
@@ -18,6 +21,22 @@ interface CarteProps {
   points: CartePoint[];
   crossingsByPointId: Record<string, PointCrossings>;
 }
+
+// Marqueur distinct pour le "point fort" (celui où l'on voit son coureur le
+// plus souvent) : une étoile, plus grande et plus facile à repérer d'un
+// coup d'œil que le marqueur bleu par défaut.
+const pointFortIcon = L.divIcon({
+  html: '<div class="marker-star" aria-hidden="true">⭐</div>',
+  className: "marker-star-wrapper",
+  iconSize: [38, 38],
+  iconAnchor: [19, 19],
+  popupAnchor: [0, -16],
+});
+
+// Explicitement instancié (plutôt que de laisser `icon` à `undefined` sur le
+// Marker) : react-leaflet transmet un prop `icon={undefined}` tel quel à
+// Leaflet, qui écrase alors son icône par défaut interne et plante au rendu.
+const defaultIcon = new L.Icon.Default();
 
 function FitToRoute({ loopPoints }: { loopPoints: LatLng[] }) {
   const map = useMap();
@@ -51,10 +70,15 @@ export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
         {points.map((point) => {
           const pointCrossings = crossingsByPointId[point.id];
           return (
-            <Marker key={point.id} position={[point.lat, point.lng]}>
+            <Marker
+              key={point.id}
+              position={[point.lat, point.lng]}
+              icon={point.pointFort ? pointFortIcon : defaultIcon}
+            >
               <Popup>
-                <strong>{point.name}</strong>
-                <p>{point.accessNote}</p>
+                <strong>{point.pointFort ? "⭐ " : ""}{point.name}</strong>
+                <p className="popup-acces">{point.acces}</p>
+                <p className="popup-astuce">{point.astuce}</p>
                 {pointCrossings && (
                   <ul className="popup-crossings">
                     {pointCrossings.crossings.map((c) => (
