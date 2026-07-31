@@ -13,9 +13,11 @@
 //   départ/arrivée réels. distanceInLoopKm = 0 par construction.
 // - Rue Marius Hue : point du tracé au ~1er km (portion sud, vers
 //   Verrières-le-Buisson), reverse-géocodé depuis les coordonnées du GPX.
-// - Parc Heller : centre du parc (source OSM) à 105 m du tracé -> le
-//   tracé longe/traverse le parc sans passer par son centre géométrique.
-//   distanceInLoopKm ≈ 2.70 km.
+// - Parc Heller : coordonnées corrigées le 2026-08-01 — le centre du parc
+//   (source OSM) était à 105 m du tracé, donc le marqueur tombait "dans"
+//   le parc plutôt que sur le parcours. Recalé sur le point exact du
+//   tracé le plus proche (interpolé via projectPointOntoRoute), qui longe
+//   le parc côté Villa Henriette. distanceInLoopKm ≈ 2.70 km (inchangé).
 // - Rue des Champs : point du tracé le plus proche du 4e km officiel
 //   (montée confirmée par l'organisateur, répétée aux 11e et 18e km).
 //   distanceInLoopKm = 4.0 km, directement sur le tracé.
@@ -73,11 +75,11 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
   {
     id: "parc-heller",
     name: "Parc Heller",
-    lat: 48.7465275,
-    lng: 2.2893536,
+    lat: 48.745745,
+    lng: 2.290149,
     distanceInLoopKm: 2.7,
-    acces: "Parc Heller, Antony — accessible notamment par la rue Prosper Legouté.",
-    astuce: "Le parcours longe/traverse le parc : coin ombragé, bonne visibilité, loin du bruit de la route.",
+    acces: "Villa Henriette, Antony — le parcours longe le Parc Heller par cette rue (côté est du parc).",
+    astuce: "Coin ombragé en bordure du parc, bonne visibilité, loin du bruit de la route.",
   },
   {
     id: "rue-des-champs",
