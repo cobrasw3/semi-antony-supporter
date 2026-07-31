@@ -11,12 +11,18 @@
 // - Stade Georges Suant : le tracé GPX démarre et se termine à ~49 m de
 //   l'adresse officielle (165 avenue François-Molé) — cohérent avec le
 //   départ/arrivée réels. distanceInLoopKm = 0 par construction.
+// - Rue Marius Hue : point du tracé au ~1er km (portion sud, vers
+//   Verrières-le-Buisson), reverse-géocodé depuis les coordonnées du GPX.
 // - Parc Heller : centre du parc (source OSM) à 105 m du tracé -> le
 //   tracé longe/traverse le parc sans passer par son centre géométrique.
 //   distanceInLoopKm ≈ 2.70 km.
 // - Rue des Champs : point du tracé le plus proche du 4e km officiel
 //   (montée confirmée par l'organisateur, répétée aux 11e et 18e km).
 //   distanceInLoopKm = 4.0 km, directement sur le tracé.
+// - Rue des Sources Prolongée : ~5.2 km, sur la descente confirmée par
+//   l'organisateur entre le 5e et le 7e km.
+// - Rue des Hautes Bièvres : ~6.5 km, dernière ligne droite avant la fin
+//   de chaque boucle (le stade).
 //
 // Pour recaler un point plus finement (ou en ajouter un), utiliser le mode
 // calibrage : ouvrir l'app avec ?calibrage=1 et cliquer sur la carte.
@@ -56,6 +62,15 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
     pointFort: true,
   },
   {
+    id: "rue-marius-hue",
+    name: "Rue Marius Hue",
+    lat: 48.740664,
+    lng: 2.275916,
+    distanceInLoopKm: 1.0,
+    acces: "Rue Marius Hue, Antony — portion sud du parcours, vers Verrières-le-Buisson.",
+    astuce: "Juste après le départ : le peloton est encore groupé, ambiance de premier passage garantie.",
+  },
+  {
     id: "parc-heller",
     name: "Parc Heller",
     lat: 48.7465275,
@@ -72,5 +87,23 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
     distanceInLoopKm: 4.0,
     acces: "Rue des Champs, Antony — sur la portion montante du parcours (dénivelé total ~180 m sur les 21 km).",
     astuce: "Les coureurs ralentissent dans la montée (4e, 11e et 18e km) : le bon endroit pour crier fort et les pousser.",
+  },
+  {
+    id: "rue-des-sources-prolongee",
+    name: "Rue des Sources Prolongée (descente)",
+    lat: 48.752981,
+    lng: 2.284902,
+    distanceInLoopKm: 5.2,
+    acces: "Rue des Sources Prolongée, Antony.",
+    astuce: "Sur la descente confirmée entre le 5e et le 7e km : les coureurs reprennent de la vitesse, bon moment pour les relancer.",
+  },
+  {
+    id: "rue-des-hautes-bievres",
+    name: "Rue des Hautes Bièvres (dernière ligne droite)",
+    lat: 48.749299,
+    lng: 2.288598,
+    distanceInLoopKm: 6.5,
+    acces: "Rue des Hautes Bièvres, Antony — à ~500 m de la fin de chaque boucle.",
+    astuce: "Dernier point avant de refermer la boucle (ou l'arrivée à la 3e fois) : le sprint final se joue souvent ici.",
   },
 ];

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { APropos } from "./components/APropos";
 import { Carte } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
@@ -12,17 +13,23 @@ import "./App.css";
 
 function App() {
   const [paceMinPerKm, setPaceMinPerKm] = useState<number | null>(5.5);
+  const [runnerName, setRunnerName] = useState("");
 
   const handlePaceChange = useCallback((pace: number | null) => {
     setPaceMinPerKm(pace);
   }, []);
 
-  // Reflète l'allure courante dans l'URL (?pace=...), pour que le lien
-  // partagé (bouton "Partager") rouvre directement sur les mêmes horaires.
+  const handleRunnerNameChange = useCallback((name: string) => {
+    setRunnerName(name);
+  }, []);
+
+  // Reflète l'allure et le prénom du coureur dans l'URL (?pace=...&runner=...),
+  // pour que le lien partagé (bouton "Partager") rouvre directement sur les
+  // mêmes horaires, personnalisés.
   useEffect(() => {
-    const url = buildShareUrl(paceMinPerKm);
+    const url = buildShareUrl(paceMinPerKm, runnerName);
     if (url) window.history.replaceState(null, "", url);
-  }, [paceMinPerKm]);
+  }, [paceMinPerKm, runnerName]);
 
   const crossings: PointCrossings[] = useMemo(() => {
     if (!paceMinPerKm) return [];
@@ -54,14 +61,21 @@ function App() {
   );
 
   const pointFort = OBSERVATION_POINTS.find((p) => p.pointFort);
-  const shareUrl = useMemo(() => buildShareUrl(paceMinPerKm), [paceMinPerKm]);
+  const shareUrl = useMemo(() => buildShareUrl(paceMinPerKm, runnerName), [paceMinPerKm, runnerName]);
+  const trimmedRunnerName = runnerName.trim();
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>{RACE_NAME}</h1>
-        <p>Départ {RACE_START_TIME} — où se placer, et à quelle heure votre coureur passe.</p>
+        <p>Départ {RACE_START_TIME} — où se placer, et à quelle heure ton coureur passe.</p>
       </header>
+
+      {trimmedRunnerName && (
+        <div className="runner-banner">
+          🏃 Tu suis <strong>{trimmedRunnerName}</strong> — voici où et quand l'encourager.
+        </div>
+      )}
 
       {pointFort && (
         <div className="best-spot-banner">
@@ -72,7 +86,11 @@ function App() {
 
       <Carte loopPoints={LOOP_POINTS} points={OBSERVATION_POINTS} crossingsByPointId={crossingsByPointId} />
 
-      <ChampAllure totalDistanceKm={TOTAL_DISTANCE_KM} onPaceChange={handlePaceChange} />
+      <ChampAllure
+        totalDistanceKm={TOTAL_DISTANCE_KM}
+        onPaceChange={handlePaceChange}
+        onRunnerNameChange={handleRunnerNameChange}
+      />
 
       <Partage url={shareUrl} />
 
@@ -80,6 +98,7 @@ function App() {
 
       <footer className="app-footer">
         <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>
+        <APropos />
       </footer>
     </div>
   );

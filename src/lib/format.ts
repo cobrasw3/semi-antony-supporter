@@ -61,8 +61,9 @@ export function autoFormatTimeInput(raw: string): string {
   return `${digits.slice(0, -2)}:${digits.slice(-2)}`;
 }
 
-/** Paramètre d'URL utilisé pour partager l'allure saisie ("?pace=5:30"). */
+/** Paramètres d'URL utilisés pour partager l'allure et le prénom du coureur suivi. */
 const PACE_URL_PARAM = "pace";
+const RUNNER_URL_PARAM = "runner";
 
 /** Lit l'allure ("M:SS") depuis le paramètre d'URL, si présent. */
 export function readPaceFromUrl(): string | null {
@@ -70,14 +71,33 @@ export function readPaceFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get(PACE_URL_PARAM);
 }
 
-/** Construit l'URL de partage courante, avec l'allure encodée en paramètre. */
-export function buildShareUrl(paceMinPerKm: number | null): string {
+/** Lit le prénom du coureur suivi depuis le paramètre d'URL, si présent. */
+export function readRunnerNameFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get(RUNNER_URL_PARAM);
+}
+
+/**
+ * Construit l'URL de partage courante, avec l'allure et le prénom du
+ * coureur (si renseigné) encodés en paramètres — pour qu'un lien partagé
+ * rouvre directement sur les mêmes horaires, personnalisés.
+ */
+export function buildShareUrl(paceMinPerKm: number | null, runnerName?: string): string {
   if (typeof window === "undefined") return "";
   const url = new URL(window.location.href);
+
   if (paceMinPerKm) {
     url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));
   } else {
     url.searchParams.delete(PACE_URL_PARAM);
   }
+
+  const trimmedRunnerName = runnerName?.trim();
+  if (trimmedRunnerName) {
+    url.searchParams.set(RUNNER_URL_PARAM, trimmedRunnerName);
+  } else {
+    url.searchParams.delete(RUNNER_URL_PARAM);
+  }
+
   return url.toString();
 }

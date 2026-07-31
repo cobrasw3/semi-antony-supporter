@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
 import { paceFromTargetTime } from "../lib/timing";
-import { autoFormatTimeInput, formatDuration, formatPace, parseDuration, parsePace, readPaceFromUrl } from "../lib/format";
+import {
+  autoFormatTimeInput,
+  formatDuration,
+  formatPace,
+  parseDuration,
+  parsePace,
+  readPaceFromUrl,
+  readRunnerNameFromUrl,
+} from "../lib/format";
 
 type Mode = "pace" | "duration";
 
 interface ChampAllureProps {
   totalDistanceKm: number;
   onPaceChange: (paceMinPerKm: number | null) => void;
+  onRunnerNameChange: (runnerName: string) => void;
 }
 
-export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps) {
+export function ChampAllure({ totalDistanceKm, onPaceChange, onRunnerNameChange }: ChampAllureProps) {
   const [mode, setMode] = useState<Mode>("pace");
   const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5:30");
   const [durationText, setDurationText] = useState("1:57");
+  const [runnerName, setRunnerName] = useState(() => readRunnerNameFromUrl() ?? "");
 
   const resolvedPace = mode === "pace" ? parsePace(paceText) : null;
   const resolvedDuration = mode === "duration" ? parseDuration(durationText) : null;
@@ -25,8 +35,24 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePace]);
 
+  useEffect(() => {
+    onRunnerNameChange(runnerName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runnerName]);
+
   return (
     <section className="champ-allure" aria-label="Allure du coureur">
+      <label className="champ-input-label champ-runner-label">
+        Qui encourages-tu ? (optionnel)
+        <input
+          className="champ-input champ-runner-input"
+          type="text"
+          placeholder="Prénom du coureur"
+          value={runnerName}
+          onChange={(e) => setRunnerName(e.target.value)}
+        />
+      </label>
+
       <div className="mode-toggle" role="group" aria-label="Choix de saisie">
         <button
           type="button"

@@ -28,7 +28,7 @@ export function RecapPassages({ points }: RecapPassagesProps) {
       <h2>Récapitulatif des passages</h2>
       <p className="recap-disclaimer">Horaires estimés — arrive quelques minutes avant par sécurité.</p>
       {groups.length === 0 ? (
-        <p className="recap-empty">Entrez une allure ou un temps visé pour voir les horaires.</p>
+        <p className="recap-empty">Entre une allure ou un temps visé pour voir les horaires.</p>
       ) : (
         <ul className="recap-list">
           {groups.map((point) => (

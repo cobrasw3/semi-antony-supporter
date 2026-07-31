@@ -108,9 +108,15 @@ export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
   const fallbackCenter: [number, number] = polylinePositions[0] ?? [48.753, 2.297];
   const calibrage = isCalibrageMode();
   const [calibrageResult, setCalibrageResult] = useState<CalibrageResult | null>(null);
+  const [tilesLoading, setTilesLoading] = useState(true);
 
   return (
     <div className="carte-wrapper">
+      {tilesLoading && (
+        <div className="carte-loading-badge" aria-live="polite">
+          Chargement de la carte…
+        </div>
+      )}
       {calibrage && (
         <div className="calibrage-banner">
           {calibrageResult ? (
@@ -133,6 +139,10 @@ export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          eventHandlers={{
+            loading: () => setTilesLoading(true),
+            load: () => setTilesLoading(false),
+          }}
         />
         <Polyline positions={polylinePositions} pathOptions={{ color: "#0a5c36", weight: 5 }} />
         {points.map((point) => {
