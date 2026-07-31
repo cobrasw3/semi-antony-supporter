@@ -1,9 +1,10 @@
 import "leaflet/dist/leaflet.css";
 import "../lib/leafletIcons";
 import L from "leaflet";
-import { useEffect } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { LatLng } from "../config/course";
+import { projectPointOntoRoute } from "../lib/geo";
 import type { PointCrossings } from "../lib/timing";
 
 interface CartePoint {
@@ -33,10 +34,17 @@ const pointFortIcon = L.divIcon({
   popupAnchor: [0, -16],
 });
 
-// Explicitement instancié (plutôt que de laisser `icon` à `undefined` sur le
-// Marker) : react-leaflet transmet un prop `icon={undefined}` tel quel à
-// Leaflet, qui écrase alors son icône par défaut interne et plante au rendu.
+// Explicitement instancié (plutôt que de laisser `icon` à `undefined` sur le
+// Marker) : react-leaflet transmet un prop `icon={undefined}` tel quel à
+// Leaflet, qui écrase alors son icône par défaut interne et plante au rendu.
 const defaultIcon = new L.Icon.Default();
+
+const calibrageMarkerIcon = L.divIcon({
+  html: '<div class="marker-calibrage" aria-hidden="true"></div>',
+  className: "marker-calibrage-wrapper",
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
 
 function FitToRoute({ loopPoints }: { loopPoints: LatLng[] }) {
   const map = useMap();
@@ -50,12 +58,72 @@ function FitToRoute({ loopPoints }: { loopPoints: LatLng[] }) {
   return null;
 }
 
+interface CalibrageResult {
+  lat: number;
+  lng: number;
+  distanceAlongRouteKm: number;
+  distanceFromRouteKm: number;
+}
+
+/**
+ * Écoute les clics sur la carte en mode calibrage et reporte le résultat de
+ * la projection au composant parent (pas de rendu propre : juste le hook
+ * d'écoute, react-leaflet exige qu'il tourne dans un descendant de
+ * MapContainer).
+ */
+function CalibrageClickListener({
+  loopPoints,
+  onResult,
+}: {
+  loopPoints: LatLng[];
+  onResult: (result: CalibrageResult) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      const projection = projectPointOntoRoute(loopPoints, { lat: e.latlng.lat, lng: e.latlng.lng });
+      const result: CalibrageResult = {
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+        distanceAlongRouteKm: projection.distanceAlongRouteKm,
+        distanceFromRouteKm: projection.distanceFromRouteKm,
+      };
+      onResult(result);
+      console.log(
+        `Calibrage : distance dans la boucle ≈ ${projection.distanceAlongRouteKm.toFixed(2)} km ` +
+          `(clic à ${(projection.distanceFromRouteKm * 1000).toFixed(0)} m du tracé)`
+      );
+    },
+  });
+
+  return null;
+}
+
+function isCalibrageMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("calibrage") === "1";
+}
+
 export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
   const polylinePositions = loopPoints.map((p) => [p.lat, p.lng]) as [number, number][];
   const fallbackCenter: [number, number] = polylinePositions[0] ?? [48.753, 2.297];
+  const calibrage = isCalibrageMode();
+  const [calibrageResult, setCalibrageResult] = useState<CalibrageResult | null>(null);
 
   return (
     <div className="carte-wrapper">
+      {calibrage && (
+        <div className="calibrage-banner">
+          {calibrageResult ? (
+            <>
+              📍 Distance dans la boucle : <strong>{calibrageResult.distanceAlongRouteKm.toFixed(2)} km</strong>
+              {" "}
+              (clic à {(calibrageResult.distanceFromRouteKm * 1000).toFixed(0)} m du tracé)
+            </>
+          ) : (
+            "🛠️ Mode calibrage — clique sur la carte pour voir la distance dans la boucle"
+          )}
+        </div>
+      )}
       <MapContainer
         center={fallbackCenter}
         zoom={15}
@@ -93,6 +161,10 @@ export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
           );
         })}
         <FitToRoute loopPoints={loopPoints} />
+        {calibrage && <CalibrageClickListener loopPoints={loopPoints} onResult={setCalibrageResult} />}
+        {calibrage && calibrageResult && (
+          <Marker position={[calibrageResult.lat, calibrageResult.lng]} icon={calibrageMarkerIcon} />
+        )}
       </MapContainer>
     </div>
   );

@@ -12,24 +12,51 @@ de config.
 
 ```
 src/config/course.ts             Tracé du parcours (placeholder pour l'instant) + nb/longueur de boucles
-src/config/observationPoints.ts  Points d'observation (nom, coordonnées, distance sur une boucle, accès)
+src/config/observationPoints.ts  Points d'observation (nom, coordonnées, distance sur une boucle, accès, astuce)
 src/config/settings.ts           Heure de départ, marge d'incertitude
 src/lib/timing.ts                Calcul pur des horaires de passage (testé, voir timing.test.ts)
-src/lib/format.ts                Parsing/formatage des saisies allure & temps visé
-src/components/Carte.tsx         Carte Leaflet (tracé + marqueurs + popups)
+src/lib/format.ts                Parsing/formatage des saisies allure & temps visé + URL de partage
+src/lib/geo.ts                   Distances, projection d'un point sur un tracé, découpage multi-boucles (testé)
+src/lib/gpxKml.ts                Parsing GPX/KML -> tableau de coordonnées (testé)
+scripts/import-track.ts          CLI : convertit un GPX/KML en coordonnées prêtes à intégrer (voir plus bas)
+src/components/Carte.tsx         Carte Leaflet (tracé + marqueurs + popups + mode calibrage)
 src/components/ChampAllure.tsx   Saisie allure / temps visé
+src/components/Partage.tsx       Bouton de partage (QR code + lien avec allure encodée)
 src/components/RecapPassages.tsx Récapitulatif trié des créneaux de passage
 ```
 
 ## ⚠️ Données à remplacer avant la démo
 
-- `src/config/course.ts` : `PLACEHOLDER_LOOP_POINTS` est un tracé fictif.
-  Remplacer par le vrai parcours dès que le GPX est disponible, via
-  `createLoopFromPoints([[lat, lng], ...])`.
-- `src/config/observationPoints.ts` : 3 points d'exemple (dont un
-  `⟨Point 3 à définir⟩`) — à valider/remplacer par les vrais points choisis.
+- `src/config/course.ts` : `PLACEHOLDER_LOOP_POINTS` est un tracé fictif. Voir
+  "Intégrer le vrai tracé" ci-dessous pour le remplacer à partir d'un GPX/KML.
+- `src/config/observationPoints.ts` : 3 points (Stade Georges Suant, Parc
+  Heller, `⟨3e point à nommer⟩`) — accès et astuces encore marqués
+  `⟨à vérifier⟩` par endroits, à confirmer avec le club.
 - `src/config/settings.ts` : heure de départ (`14:30`) et marge
   d'incertitude (`±1 %` à `±3 %`), facilement ajustables.
+
+## Intégrer le vrai tracé (GPX/KML)
+
+```bash
+node scripts/import-track.ts chemin/vers/tracé.gpx
+```
+
+Le script détecte automatiquement si le fichier contient 1 seule boucle
+(7 km) ou les 3 (21 km, il les découpe alors en 3 tracés égaux et ne garde
+que le premier), vérifie que la longueur obtenue est cohérente avec
+7 km/boucle (prévient sinon), et écrit le résultat dans
+`src/config/course.imported.ts` — à relire, puis à recopier dans
+`course.ts` (remplace `PLACEHOLDER_LOOP_POINTS`) une fois le tracé validé
+visuellement sur la carte.
+
+Options : `--loop-length=7` (longueur de boucle attendue, en km) et
+`--loops=3` pour forcer le nombre de boucles si la détection automatique se
+trompe.
+
+Une fois le vrai tracé en place, cale précisément la `distanceInLoopKm` de
+chaque point d'observation en ouvrant l'app avec `?calibrage=1` (ex.
+`http://localhost:5173/?calibrage=1`) : un clic sur la carte affiche
+instantanément la distance-dans-la-boucle du point cliqué.
 
 ## Lancer en local
 

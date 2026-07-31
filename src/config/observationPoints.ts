@@ -6,6 +6,10 @@
 // ⚠️ À VÉRIFIER SUR LE TERRAIN : coordonnées, accès et astuces sont des
 // placeholders réalistes, à confirmer/ajuster avec le club avant la démo.
 // Tout champ encore incertain est explicitement marqué ⟨à vérifier⟩.
+//
+// Pour caler distanceInLoopKm précisément une fois le vrai tracé en place :
+// ouvrir l'app avec ?calibrage=1 et cliquer sur la carte au niveau du point
+// — la distance-dans-la-boucle correspondante s'affiche instantanément.
 
 export interface ObservationPoint {
   id: string;
