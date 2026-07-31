@@ -1,10 +1,15 @@
 // Parsing/formatage des saisies utilisateur (allure, temps visé). Séparé de
 // timing.ts pour garder ce dernier focalisé sur le calcul pur des horaires.
 
-/** Parse une allure saisie en "M:SS" (ex: "5:30") en minutes/km décimales. */
+/**
+ * Parse une allure en minutes/km décimales. Accepte ":", "." ou "," comme
+ * séparateur minutes/secondes ("5:30", "5.30", "5,30") : le clavier
+ * numérique mobile (inputMode="decimal") n'a généralement pas de touche
+ * ":", seulement un point ou une virgule selon la locale du téléphone.
+ */
 export function parsePace(input: string): number | null {
   const trimmed = input.trim();
-  const match = trimmed.match(/^(\d{1,2})(?::([0-5]?\d))?$/);
+  const match = trimmed.match(/^(\d{1,2})(?:[:.,]([0-5]?\d))?$/);
   if (!match) return null;
   const minutes = Number(match[1]);
   const seconds = match[2] ? Number(match[2]) : 0;
@@ -19,10 +24,13 @@ export function formatPace(minPerKm: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Parse un temps visé saisi en "H:MM" (ex: "2:05") en minutes décimales. */
+/**
+ * Parse un temps visé en minutes décimales. Mêmes séparateurs tolérés que
+ * parsePace ("2:05", "2.05", "2,05") pour la même raison de clavier mobile.
+ */
 export function parseDuration(input: string): number | null {
   const trimmed = input.trim();
-  const match = trimmed.match(/^(\d{1,2}):([0-5]?\d)$/);
+  const match = trimmed.match(/^(\d{1,2})[:.,]([0-5]?\d)$/);
   if (!match) return null;
   const hours = Number(match[1]);
   const minutes = Number(match[2]);

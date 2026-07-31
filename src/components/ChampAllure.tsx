@@ -11,8 +11,8 @@ interface ChampAllureProps {
 
 export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps) {
   const [mode, setMode] = useState<Mode>("pace");
-  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5:30");
-  const [durationText, setDurationText] = useState("1:57");
+  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5.30");
+  const [durationText, setDurationText] = useState("1.57");
 
   const resolvedPace = mode === "pace" ? parsePace(paceText) : null;
   const resolvedDuration = mode === "duration" ? parseDuration(durationText) : null;
@@ -50,8 +50,8 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
           <input
             className="champ-input"
             type="text"
-            inputMode="numeric"
-            placeholder="5:30"
+            inputMode="decimal"
+            placeholder="5.30"
             value={paceText}
             onChange={(e) => setPaceText(e.target.value)}
           />
@@ -67,8 +67,8 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
           <input
             className="champ-input"
             type="text"
-            inputMode="numeric"
-            placeholder="1:57"
+            inputMode="decimal"
+            placeholder="1.57"
             value={durationText}
             onChange={(e) => setDurationText(e.target.value)}
           />
@@ -78,7 +78,9 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
         </label>
       )}
 
-      {activePace === null && <p className="champ-error">Format attendu : {mode === "pace" ? "5:30" : "1:57"}</p>}
+      {activePace === null && (
+        <p className="champ-error">Format attendu : {mode === "pace" ? "5.30 (ou 5:30)" : "1.57 (ou 1:57)"}</p>
+      )}
     </section>
   );
 }
