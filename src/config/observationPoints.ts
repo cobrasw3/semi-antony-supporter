@@ -3,13 +3,26 @@
 // parcours fait plusieurs boucles, timing.ts se charge de calculer les
 // passages cumulés (d, d+7, d+14, ...).
 //
-// ⚠️ À VÉRIFIER SUR LE TERRAIN : coordonnées, accès et astuces sont des
-// placeholders réalistes, à confirmer/ajuster avec le club avant la démo.
-// Tout champ encore incertain est explicitement marqué ⟨à vérifier⟩.
+// Coordonnées et distances calées sur le vrai tracé (src/config/course.ts,
+// importé le 2026-07-31 depuis semi-marathon_Antony.gpx) : distanceInLoopKm
+// vient de la projection du point réel (adresse officielle / OSM) sur le
+// tracé, via projectPointOntoRoute (src/lib/geo.ts). Détail par point :
 //
-// Pour caler distanceInLoopKm précisément une fois le vrai tracé en place :
-// ouvrir l'app avec ?calibrage=1 et cliquer sur la carte au niveau du point
-// — la distance-dans-la-boucle correspondante s'affiche instantanément.
+// - Stade Georges Suant : le tracé GPX démarre et se termine à ~49 m de
+//   l'adresse officielle (165 avenue François-Molé) — cohérent avec le
+//   départ/arrivée réels. distanceInLoopKm = 0 par construction.
+// - Parc Heller : centre du parc (source OSM) à 105 m du tracé -> le
+//   tracé longe/traverse le parc sans passer par son centre géométrique.
+//   distanceInLoopKm ≈ 2.70 km.
+// - Rue des Champs : point du tracé le plus proche du 4e km officiel
+//   (montée confirmée par l'organisateur, répétée aux 11e et 18e km).
+//   distanceInLoopKm = 4.0 km, directement sur le tracé.
+//
+// Pour recaler un point plus finement (ou en ajouter un), utiliser le mode
+// calibrage : ouvrir l'app avec ?calibrage=1 et cliquer sur la carte.
+//
+// ⚠️ Accès et astuces restent à valider sur le terrain avec le club — les
+// distances/coordonnées, elles, sont désormais basées sur le vrai tracé.
 
 export interface ObservationPoint {
   id: string;
@@ -34,11 +47,10 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
   {
     id: "stade-suant",
     name: "Stade Georges Suant (départ / arrivée)",
-    lat: 48.753,
-    lng: 2.297,
+    lat: 48.745326,
+    lng: 2.285084,
     distanceInLoopKm: 0,
-    acces:
-      "⟨à vérifier⟩ À ~5 min à pied du RER B Antony, puis rue du Stade. Parkings visiteurs autour du stade.",
+    acces: "165 avenue François-Molé, Antony — départ et arrivée officiels du semi.",
     astuce:
       "Le seul endroit d'où on voit son coureur passer 3 fois sans bouger : au départ, et à la fin de chaque boucle.",
     pointFort: true,
@@ -46,19 +58,19 @@ export const OBSERVATION_POINTS: ObservationPoint[] = [
   {
     id: "parc-heller",
     name: "Parc Heller",
-    lat: 48.756,
-    lng: 2.301,
-    distanceInLoopKm: 2,
-    acces: "⟨à vérifier⟩ Entrée par l'allée principale du parc, côté ⟨rue à préciser⟩.",
-    astuce: "Coin ombragé, bonne visibilité sur une portion droite : parfait pour les photos.",
+    lat: 48.7465275,
+    lng: 2.2893536,
+    distanceInLoopKm: 2.7,
+    acces: "Parc Heller, Antony — accessible notamment par la rue Prosper Legouté.",
+    astuce: "Le parcours longe/traverse le parc : coin ombragé, bonne visibilité, loin du bruit de la route.",
   },
   {
-    id: "point-3-a-nommer",
-    name: "⟨Point 3 à nommer — carrefour ou lieu-repère sur la boucle⟩",
-    lat: 48.7515,
-    lng: 2.291,
-    distanceInLoopKm: 5,
-    acces: "⟨à définir avec le club⟩",
-    astuce: "⟨à définir — ex. un carrefour où la route se rétrécit, bon point sonore⟩",
+    id: "rue-des-champs",
+    name: "Rue des Champs (montée du 4e km)",
+    lat: 48.75303,
+    lng: 2.295702,
+    distanceInLoopKm: 4.0,
+    acces: "Rue des Champs, Antony — sur la portion montante du parcours (dénivelé total ~180 m sur les 21 km).",
+    astuce: "Les coureurs ralentissent dans la montée (4e, 11e et 18e km) : le bon endroit pour crier fort et les pousser.",
   },
 ];

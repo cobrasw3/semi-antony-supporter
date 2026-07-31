@@ -1,12 +1,5 @@
 // Définition géométrique du parcours : la boucle de base + les métadonnées
 // qui en découlent (nombre de boucles, distance totale).
-//
-// ⚠️ PLACEHOLDER : les coordonnées ci-dessous ne représentent PAS le vrai
-// parcours du semi d'Antony. C'est une forme arbitraire (en boucle fermée)
-// centrée approximativement sur le Stade Georges Suant, uniquement pour
-// avoir quelque chose à afficher sur la carte avant d'avoir le GPX réel.
-// Remplacer PLACEHOLDER_LOOP_POINTS par le tracé réel dès qu'il est
-// disponible (via createLoopFromPoints, voir plus bas).
 
 export interface LatLng {
   lat: number;
@@ -16,7 +9,13 @@ export interface LatLng {
 /** Nombre de boucles du parcours. */
 export const LOOP_COUNT = 3;
 
-/** Longueur d'une boucle, en kilomètres. */
+/**
+ * Longueur d'une boucle, en kilomètres — distance officielle confirmée par
+ * l'organisateur (7 km x 3 = 21,1 km). Le tracé GPX ci-dessous mesure
+ * ~6.97 km (bruit GPS habituel), volontairement pas utilisé pour ce chiffre :
+ * on garde la distance officielle comme source de vérité pour les calculs
+ * d'horaires.
+ */
 export const LOOP_LENGTH_KM = 7;
 
 /** Distance totale du parcours (somme des boucles), en kilomètres. */
@@ -25,36 +24,91 @@ export const TOTAL_DISTANCE_KM = LOOP_COUNT * LOOP_LENGTH_KM;
 /**
  * Construit une boucle (tableau de LatLng) à partir d'un tableau de tuples
  * [lat, lng] — le format le plus courant en sortie d'export GPX / outils de
- * tracé. Permet de remplacer facilement le tracé placeholder par le vrai
- * parcours : `export const LOOP_POINTS = createLoopFromPoints([[48.75, 2.29], ...])`.
+ * tracé. Utilisé pour importer le tracé (voir scripts/import-track.ts).
  */
 export function createLoopFromPoints(points: Array<[number, number]>): LatLng[] {
   return points.map(([lat, lng]) => ({ lat, lng }));
 }
 
-const STADE_LAT = 48.753;
-const STADE_LNG = 2.297;
-
-// Approximation locale : à cette latitude, 1 km ≈ 0.009° en latitude et
-// ≈ 0.0137° en longitude. Sert uniquement à dessiner la forme placeholder.
-const KM_LAT = 0.009;
-const KM_LNG = 0.0137;
-
 /**
- * Tracé placeholder d'une boucle, en boucle fermée (le dernier point revient
- * au premier). À remplacer par le vrai tracé du semi d'Antony.
+ * Tracé réel d'une boucle du semi d'Antony (départ/arrivée Stade Georges
+ * Suant), importé le 2026-07-31 depuis semi-marathon_Antony.gpx via
+ * `node scripts/import-track.ts` — le fichier contenait les 3 boucles
+ * (21,09 km), découpées automatiquement pour n'en garder qu'une seule
+ * (~6.97 km, cohérent avec les 7 km officiels).
  */
-export const PLACEHOLDER_LOOP_POINTS: Array<[number, number]> = [
-  [STADE_LAT, STADE_LNG],
-  [STADE_LAT + 0.3 * KM_LAT, STADE_LNG + 1.0 * KM_LNG],
-  [STADE_LAT + 1.0 * KM_LAT, STADE_LNG + 1.3 * KM_LNG],
-  [STADE_LAT + 1.8 * KM_LAT, STADE_LNG + 1.0 * KM_LNG],
-  [STADE_LAT + 2.2 * KM_LAT, STADE_LNG + 0.3 * KM_LNG],
-  [STADE_LAT + 2.2 * KM_LAT, STADE_LNG - 0.5 * KM_LNG],
-  [STADE_LAT + 1.6 * KM_LAT, STADE_LNG - 1.1 * KM_LNG],
-  [STADE_LAT + 0.8 * KM_LAT, STADE_LNG - 1.2 * KM_LNG],
-  [STADE_LAT + 0.2 * KM_LAT, STADE_LNG - 0.6 * KM_LNG],
-  [STADE_LAT, STADE_LNG],
+export const ANTONY_LOOP_POINTS: Array<[number, number]> = [
+  [48.745326, 2.285084],
+  [48.746361, 2.284291],
+  [48.745266, 2.283047],
+  [48.743705, 2.280407],
+  [48.742305, 2.277858],
+  [48.740664, 2.275916],
+  [48.738883, 2.275158],
+  [48.738522, 2.275401],
+  [48.739643, 2.278497],
+  [48.740724, 2.281592],
+  [48.742045, 2.285264],
+  [48.743145, 2.284808],
+  [48.743946, 2.286325],
+  [48.744826, 2.288055],
+  [48.745747, 2.290149],
+  [48.746047, 2.291909],
+  [48.746667, 2.292546],
+  [48.747267, 2.293244],
+  [48.747868, 2.293699],
+  [48.748408, 2.294094],
+  [48.748728, 2.294549],
+  [48.748308, 2.294701],
+  [48.748348, 2.295065],
+  [48.748828, 2.295490],
+  [48.749288, 2.296066],
+  [48.749808, 2.297432],
+  [48.750449, 2.297189],
+  [48.750889, 2.296642],
+  [48.751369, 2.295853],
+  [48.751489, 2.296400],
+  [48.751829, 2.296703],
+  [48.752109, 2.296764],
+  [48.752549, 2.296309],
+  [48.753030, 2.295702],
+  [48.753503, 2.294913],
+  [48.754043, 2.294124],
+  [48.754403, 2.293456],
+  [48.754295, 2.292852],
+  [48.754135, 2.292699],
+  [48.754312, 2.292418],
+  [48.754337, 2.291920],
+  [48.754463, 2.290568],
+  [48.754766, 2.289317],
+  [48.755161, 2.287952],
+  [48.755498, 2.286549],
+  [48.755700, 2.285056],
+  [48.755759, 2.284699],
+  [48.753567, 2.283677],
+  [48.752981, 2.284902],
+  [48.752330, 2.286077],
+  [48.752342, 2.286817],
+  [48.752246, 2.287449],
+  [48.751985, 2.288170],
+  [48.751652, 2.288964],
+  [48.751259, 2.289758],
+  [48.750747, 2.290679],
+  [48.750489, 2.291163],
+  [48.751260, 2.292650],
+  [48.750549, 2.293833],
+  [48.749999, 2.293090],
+  [48.750109, 2.291967],
+  [48.749619, 2.290677],
+  [48.749489, 2.290298],
+  [48.749299, 2.288598],
+  [48.748899, 2.286899],
+  [48.748739, 2.286429],
+  [48.748278, 2.285989],
+  [48.747728, 2.285534],
+  [48.747258, 2.285109],
+  [48.746878, 2.284729],
+  [48.746337, 2.284213],
 ];
 
-export const LOOP_POINTS: LatLng[] = createLoopFromPoints(PLACEHOLDER_LOOP_POINTS);
+export const LOOP_POINTS: LatLng[] = createLoopFromPoints(ANTONY_LOOP_POINTS);
