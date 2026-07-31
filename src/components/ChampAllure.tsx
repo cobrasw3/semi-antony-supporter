@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { paceFromTargetTime } from "../lib/timing";
-import { formatDuration, formatPace, parseDuration, parsePace, readPaceFromUrl } from "../lib/format";
+import { autoFormatTimeInput, formatDuration, formatPace, parseDuration, parsePace, readPaceFromUrl } from "../lib/format";
 
 type Mode = "pace" | "duration";
 
@@ -11,8 +11,8 @@ interface ChampAllureProps {
 
 export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps) {
   const [mode, setMode] = useState<Mode>("pace");
-  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5.30");
-  const [durationText, setDurationText] = useState("1.57");
+  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5:30");
+  const [durationText, setDurationText] = useState("1:57");
 
   const resolvedPace = mode === "pace" ? parsePace(paceText) : null;
   const resolvedDuration = mode === "duration" ? parseDuration(durationText) : null;
@@ -50,10 +50,10 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
           <input
             className="champ-input"
             type="text"
-            inputMode="decimal"
-            placeholder="5.30"
+            inputMode="numeric"
+            placeholder="5:30"
             value={paceText}
-            onChange={(e) => setPaceText(e.target.value)}
+            onChange={(e) => setPaceText(autoFormatTimeInput(e.target.value))}
           />
           {paceFromDuration === null && resolvedPace && (
             <span className="champ-hint">
@@ -67,10 +67,10 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
           <input
             className="champ-input"
             type="text"
-            inputMode="decimal"
-            placeholder="1.57"
+            inputMode="numeric"
+            placeholder="1:57"
             value={durationText}
-            onChange={(e) => setDurationText(e.target.value)}
+            onChange={(e) => setDurationText(autoFormatTimeInput(e.target.value))}
           />
           {paceFromDuration && (
             <span className="champ-hint">≈ allure {formatPace(paceFromDuration)} min/km</span>
@@ -79,7 +79,9 @@ export function ChampAllure({ totalDistanceKm, onPaceChange }: ChampAllureProps)
       )}
 
       {activePace === null && (
-        <p className="champ-error">Format attendu : {mode === "pace" ? "5.30 (ou 5:30)" : "1.57 (ou 1:57)"}</p>
+        <p className="champ-error">
+          Tape juste les chiffres, ex. {mode === "pace" ? "530 pour 5:30" : "157 pour 1:57"}
+        </p>
       )}
     </section>
   );

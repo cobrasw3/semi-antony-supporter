@@ -45,6 +45,22 @@ export function formatDuration(totalMinutes: number): string {
   return `${hours}:${String(minutes).padStart(2, "0")}`;
 }
 
+/**
+ * Reformate en direct une saisie de type "M:SS" ou "H:MM" à partir des
+ * chiffres tapés, en insérant automatiquement le séparateur — pour éviter
+ * de dépendre d'une touche ":" que la plupart des claviers numériques
+ * mobiles n'ont pas (seulement un point ou une virgule selon la locale, et
+ * même ça manque parfois). Les 2 derniers chiffres tapés sont toujours
+ * interprétés comme secondes/minutes, le reste comme minutes/heures.
+ * Tolère aussi ":", "." et "," déjà présents dans la saisie (ignorés, la
+ * saisie est reconstruite uniquement à partir des chiffres).
+ */
+export function autoFormatTimeInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, -2)}:${digits.slice(-2)}`;
+}
+
 /** Paramètre d'URL utilisé pour partager l'allure saisie ("?pace=5:30"). */
 const PACE_URL_PARAM = "pace";
 
