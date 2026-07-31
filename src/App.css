@@ -226,6 +226,14 @@
 
 .recap h2 {
   font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.recap-disclaimer {
+  margin: 0 0 var(--space-3);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-text-muted);
 }
 
 .recap-empty {

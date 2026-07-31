@@ -3,8 +3,10 @@
 // rester facilement testable.
 
 export interface MarginConfig {
-  minPercent: number;
-  maxPercent: number;
+  /** Part du temps écoulé appliquée comme demi-largeur de marge (ex. 0.035 = ±3,5 %). */
+  percentage: number;
+  /** Plancher de la demi-largeur, en minutes, même tout près du départ. */
+  minMinutes: number;
 }
 
 export interface CrossingEstimate {
@@ -34,12 +36,34 @@ export function timeStringToMinutes(time: string): number {
   return h * 60 + m;
 }
 
-/** Convertit des minutes depuis minuit en "HH:MM" (24h, boucle après minuit). */
-export function minutesToTimeString(totalMinutes: number): string {
-  const normalized = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
+function formatMinutesOfDay(totalMinutes: number): string {
+  const normalized = ((totalMinutes % 1440) + 1440) % 1440;
   const h = Math.floor(normalized / 60);
   const m = normalized % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** Convertit des minutes depuis minuit en "HH:MM" (24h, boucle après minuit), arrondi au plus proche. */
+export function minutesToTimeString(totalMinutes: number): string {
+  return formatMinutesOfDay(Math.round(totalMinutes));
+}
+
+/**
+ * Comme minutesToTimeString, mais arrondi vers le bas — pour la borne basse
+ * d'une fenêtre de passage, afin de ne jamais afficher une heure de début
+ * plus tardive (donc plus rassurante à tort) que ce que le calcul donne.
+ */
+export function floorMinutesToTimeString(totalMinutes: number): string {
+  return formatMinutesOfDay(Math.floor(totalMinutes));
+}
+
+/**
+ * Comme minutesToTimeString, mais arrondi vers le haut — pour la borne
+ * haute d'une fenêtre de passage, afin de ne jamais afficher une heure de
+ * fin plus précoce que ce que le calcul donne.
+ */
+export function ceilMinutesToTimeString(totalMinutes: number): string {
+  return formatMinutesOfDay(Math.ceil(totalMinutes));
 }
 
 /** Allure (min/km) à partir d'un temps visé (en minutes) sur une distance donnée. */
@@ -48,17 +72,15 @@ export function paceFromTargetTime(targetTimeMinutes: number, totalDistanceKm: n
 }
 
 /**
- * Pourcentage de marge à appliquer pour une distance cumulée donnée :
- * interpolation linéaire entre minPercent (à 0 km) et maxPercent (à
- * totalDistanceKm), plafonnée à ces deux bornes.
+ * Demi-largeur de la fenêtre de passage, en minutes : un pourcentage du
+ * temps déjà écoulé, avec un plancher pour rester significative même juste
+ * après le départ. Croît naturellement avec la distance parcourue (donc
+ * avec le temps écoulé), sans avoir besoin de connaître la distance totale
+ * du parcours — volontairement plus simple que l'ancien modèle par
+ * interpolation sur la distance.
  */
-export function computeMarginPercent(
-  cumulativeDistanceKm: number,
-  totalDistanceKm: number,
-  margin: MarginConfig
-): number {
-  const fraction = Math.min(Math.max(cumulativeDistanceKm / totalDistanceKm, 0), 1);
-  return margin.minPercent + (margin.maxPercent - margin.minPercent) * fraction;
+export function computeMarginMinutes(elapsedMinutes: number, margin: MarginConfig): number {
+  return Math.max(elapsedMinutes * margin.percentage, margin.minMinutes);
 }
 
 /**
@@ -71,26 +93,16 @@ export function computeCrossingsForPoint(params: {
   distanceInLoopKm: number;
   loopCount: number;
   loopLengthKm: number;
-  totalDistanceKm: number;
   margin: MarginConfig;
 }): CrossingEstimate[] {
-  const {
-    startTimeMinutes,
-    paceMinPerKm,
-    distanceInLoopKm,
-    loopCount,
-    loopLengthKm,
-    totalDistanceKm,
-    margin,
-  } = params;
+  const { startTimeMinutes, paceMinPerKm, distanceInLoopKm, loopCount, loopLengthKm, margin } = params;
 
   const crossings: CrossingEstimate[] = [];
 
   for (let loopIndex = 1; loopIndex <= loopCount; loopIndex++) {
     const cumulativeDistanceKm = distanceInLoopKm + (loopIndex - 1) * loopLengthKm;
     const elapsedMinutes = cumulativeDistanceKm * paceMinPerKm;
-    const marginPercent = computeMarginPercent(cumulativeDistanceKm, totalDistanceKm, margin);
-    const marginMinutes = elapsedMinutes * marginPercent;
+    const marginMinutes = computeMarginMinutes(elapsedMinutes, margin);
 
     const estimatedMinutes = startTimeMinutes + elapsedMinutes;
     const windowStartMinutes = estimatedMinutes - marginMinutes;
@@ -100,8 +112,10 @@ export function computeCrossingsForPoint(params: {
       loopIndex,
       cumulativeDistanceKm,
       estimatedTime: minutesToTimeString(estimatedMinutes),
-      windowStart: minutesToTimeString(windowStartMinutes),
-      windowEnd: minutesToTimeString(windowEndMinutes),
+      // Bornes arrondies "vers l'extérieur" (floor/ceil) : la fenêtre ne se
+      // rétrécit jamais à l'arrondi, elle ne fait que s'élargir un peu plus.
+      windowStart: floorMinutesToTimeString(windowStartMinutes),
+      windowEnd: ceilMinutesToTimeString(windowEndMinutes),
       windowStartMinutes,
     });
   }
@@ -121,7 +135,6 @@ export function computeAllCrossings(
     paceMinPerKm: number;
     loopCount: number;
     loopLengthKm: number;
-    totalDistanceKm: number;
     margin: MarginConfig;
   }
 ): PointCrossings[] {

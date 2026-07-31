@@ -26,6 +26,7 @@ export function RecapPassages({ points }: RecapPassagesProps) {
   return (
     <section className="recap" aria-label="Récapitulatif des passages">
       <h2>Récapitulatif des passages</h2>
+      <p className="recap-disclaimer">Horaires estimés — arrive quelques minutes avant par sécurité.</p>
       {groups.length === 0 ? (
         <p className="recap-empty">Entrez une allure ou un temps visé pour voir les horaires.</p>
       ) : (

@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   timeStringToMinutes,
   minutesToTimeString,
+  floorMinutesToTimeString,
+  ceilMinutesToTimeString,
   paceFromTargetTime,
-  computeMarginPercent,
+  computeMarginMinutes,
   computeCrossingsForPoint,
   computeAllCrossings,
 } from "./timing";
@@ -20,6 +22,18 @@ describe("timeStringToMinutes / minutesToTimeString", () => {
   });
 });
 
+describe("floorMinutesToTimeString / ceilMinutesToTimeString", () => {
+  it("arrondissent vers le bas / le haut, jamais vers le plus proche", () => {
+    expect(floorMinutesToTimeString(870.9)).toBe("14:30");
+    expect(ceilMinutesToTimeString(870.1)).toBe("14:31");
+  });
+
+  it("laissent les minutes entières inchangées", () => {
+    expect(floorMinutesToTimeString(870)).toBe("14:30");
+    expect(ceilMinutesToTimeString(870)).toBe("14:30");
+  });
+});
+
 describe("paceFromTargetTime", () => {
   it("déduit l'allure d'un temps visé", () => {
     // 2h05 (125 min) sur 21.1 km ≈ 5.92 min/km
@@ -27,19 +41,21 @@ describe("paceFromTargetTime", () => {
   });
 });
 
-describe("computeMarginPercent", () => {
-  const margin = { minPercent: 0.01, maxPercent: 0.03 };
+describe("computeMarginMinutes", () => {
+  const margin = { percentage: 0.035, minMinutes: 1.5 };
 
-  it("vaut minPercent au tout début du parcours", () => {
-    expect(computeMarginPercent(0, 21, margin)).toBeCloseTo(0.01);
+  it("applique le plancher quand le pourcentage donnerait moins", () => {
+    // 10 min écoulées * 3.5% = 0.35 min, bien en dessous du plancher de 1.5 min.
+    expect(computeMarginMinutes(10, margin)).toBe(1.5);
   });
 
-  it("vaut maxPercent à la fin du parcours", () => {
-    expect(computeMarginPercent(21, 21, margin)).toBeCloseTo(0.03);
+  it("applique le pourcentage une fois qu'il dépasse le plancher", () => {
+    // 100 min écoulées * 3.5% = 3.5 min > plancher.
+    expect(computeMarginMinutes(100, margin)).toBeCloseTo(3.5);
   });
 
-  it("interpole linéairement entre les deux", () => {
-    expect(computeMarginPercent(10.5, 21, margin)).toBeCloseTo(0.02);
+  it("croît avec le temps écoulé (donc avec la distance)", () => {
+    expect(computeMarginMinutes(200, margin)).toBeGreaterThan(computeMarginMinutes(100, margin));
   });
 });
 
@@ -52,8 +68,7 @@ describe("computeCrossingsForPoint", () => {
     distanceInLoopKm: 2,
     loopCount: 3,
     loopLengthKm: 7,
-    totalDistanceKm: 21,
-    margin: { minPercent: 0, maxPercent: 0 }, // marge désactivée pour isoler le calcul central
+    margin: { percentage: 0, minMinutes: 0 }, // marge désactivée pour isoler le calcul central
   };
 
   it("calcule l'heure de passage exacte de la boucle 1", () => {
@@ -75,21 +90,33 @@ describe("computeCrossingsForPoint", () => {
   it("élargit la fenêtre avec la distance quand la marge est active", () => {
     const withMargin = computeCrossingsForPoint({
       ...baseParams,
-      margin: { minPercent: 0.01, maxPercent: 0.03 },
+      margin: { percentage: 0.035, minMinutes: 1.5 },
     });
 
     const [loop1, , loop3] = withMargin;
     const widthLoop1 = timeStringToMinutes(loop1.windowEnd) - timeStringToMinutes(loop1.windowStart);
     const widthLoop3 = timeStringToMinutes(loop3.windowEnd) - timeStringToMinutes(loop3.windowStart);
 
-    // La fenêtre du 3e passage (16 km parcourus) doit être nettement plus
-    // large que celle du 1er passage (2 km parcourus) : à faible distance,
-    // la marge est de l'ordre de la dizaine de secondes et peut arrondir à 0
-    // minute à l'affichage, ce qui est attendu.
+    // La fenêtre du 3e passage (16 km, donc plus de temps écoulé) doit être
+    // plus large que celle du 1er passage (2 km).
     expect(widthLoop3).toBeGreaterThan(widthLoop1);
-    expect(widthLoop3).toBeGreaterThan(0);
+    // Le plancher garantit au moins 3 min de large (±1.5 min) dès le 1er passage.
+    expect(widthLoop1).toBeGreaterThanOrEqual(3);
     // L'heure centrale reste identique au cas sans marge.
     expect(loop1.estimatedTime).toBe("14:40");
+  });
+
+  it("la fenêtre n'est jamais inversée ni nulle, même avec une marge minimale", () => {
+    const withTinyMargin = computeCrossingsForPoint({
+      ...baseParams,
+      margin: { percentage: 0.0001, minMinutes: 0.01 },
+    });
+
+    for (const crossing of withTinyMargin) {
+      const startMin = timeStringToMinutes(crossing.windowStart);
+      const endMin = timeStringToMinutes(crossing.windowEnd);
+      expect(endMin).toBeGreaterThan(startMin);
+    }
   });
 });
 
@@ -105,8 +132,7 @@ describe("computeAllCrossings", () => {
       paceMinPerKm: 5,
       loopCount: 3,
       loopLengthKm: 7,
-      totalDistanceKm: 21,
-      margin: { minPercent: 0.01, maxPercent: 0.03 },
+      margin: { percentage: 0.035, minMinutes: 1.5 },
     });
 
     expect(result).toHaveLength(2);

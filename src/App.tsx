@@ -5,7 +5,7 @@ import { Partage } from "./components/Partage";
 import { RecapPassages, type RecapPoint } from "./components/RecapPassages";
 import { LOOP_COUNT, LOOP_LENGTH_KM, LOOP_POINTS, TOTAL_DISTANCE_KM } from "./config/course";
 import { OBSERVATION_POINTS } from "./config/observationPoints";
-import { MARGIN_CONFIG, RACE_NAME, RACE_START_TIME } from "./config/settings";
+import { MARGE_MIN_MINUTES, MARGE_POURCENTAGE, RACE_NAME, RACE_START_TIME } from "./config/settings";
 import { buildShareUrl } from "./lib/format";
 import { computeAllCrossings, timeStringToMinutes, type PointCrossings } from "./lib/timing";
 import "./App.css";
@@ -31,8 +31,7 @@ function App() {
       paceMinPerKm,
       loopCount: LOOP_COUNT,
       loopLengthKm: LOOP_LENGTH_KM,
-      totalDistanceKm: TOTAL_DISTANCE_KM,
-      margin: MARGIN_CONFIG,
+      margin: { percentage: MARGE_POURCENTAGE, minMinutes: MARGE_MIN_MINUTES },
     });
   }, [paceMinPerKm]);
 
