@@ -8,9 +8,10 @@
 // Service : OSRM profil piéton de routing.openstreetmap.de (FOSSGIS, données
 // © contributeurs OpenStreetMap). Une seule requête « table » par course.
 //
-// Limite : l'itinéraire ignore les fermetures et traversées interdites du
-// parcours le jour J. L'organisateur peut corriger une valeur à la main dans
-// event.json (km), elle sera utilisée telle quelle.
+// Le parcours peut être traversé à pied le jour J (en faisant attention aux
+// coureurs) : les itinéraires calculés sont donc valables. Une valeur peut
+// toujours être corrigée à la main dans event.json (km), elle sera utilisée
+// telle quelle.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";

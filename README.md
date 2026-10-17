@@ -64,7 +64,8 @@ vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cach
 - `races[].walkingRoutes` : distances À PIED réelles entre spots (km),
   générées par `node scripts/compute-walking-routes.ts` (itinéraires piétons
   OpenStreetMap). À relancer après tout ajout ou déplacement de spot ; une
-  valeur peut être corrigée à la main (traversée interdite le jour J…).
+  valeur peut être corrigée à la main si besoin. Le parcours peut être
+  traversé à pied le jour J (attention aux coureurs).
   Sans ce bloc, l'app estime à vol d'oiseau × facteur de détour.
 - `contentVersion` / `contentUpdatedAt` : à incrémenter à chaque modification
   (affichés dans « À propos »).

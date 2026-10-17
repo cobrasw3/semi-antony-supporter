@@ -306,8 +306,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (source « route »), sinon l'estimation vol d'oiseau × 1,3 (« estimate »).
   Depuis la position GPS de l'utilisateur : estimation, affichée comme
   telle (envoyer la position à un service externe est exclu).
-  Limite documentée : l'itinéraire ignore les traversées interdites du
-  parcours le jour J (valeurs corrigeables à la main).
+  ~~Limite : traversées du parcours~~ → levée, voir ci-dessous.
 - **Compromis passages ↔ marche** : `planOptions` (lib/itinerary.ts, DP
   « marche minimale pour k passages », options non dominées), testée contre
   une recherche exhaustive. À 5:30 : 4× sans bouger (stade), 5× 1 km,
@@ -326,3 +325,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - Preview Vercel de `feat/plan-marche` @ 8ed7bde (cible preview, prod non
   touchée) : https://semi-antony-supporter-r25pw6s4j-pmachard2001-5765s-projects.vercel.app
   — Ready ; `event.json` servi avec `walkingRoutes`. 193 tests ✅.
+- **Info utilisateur** : le parcours peut être traversé à pied le jour J,
+  il faut seulement faire attention aux coureurs. Les itinéraires piétons
+  calculés restent donc valables ; mise en garde retirée de l'onglet Plan,
+  remplacée par la consigne (Plan « Comment c'est calculé ? », infos
+  pratiques « Se déplacer entre les spots », README, script).

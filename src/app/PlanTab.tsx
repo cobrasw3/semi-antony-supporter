@@ -187,7 +187,7 @@ export function PlanTab({
                     : `Distances estimées à vol d'oiseau × ${String(walking.detourFactor).replace(".", ",")}, à ${String(walking.speedKmh).replace(".", ",")} km/h.`}
                 </li>
                 <li>Pour chaque nombre de passages, l'app cherche le trajet qui demande le moins de marche.</li>
-                <li>Le jour J, certaines rues du parcours peuvent être difficiles à traverser : garde de la marge.</li>
+                <li>On peut traverser le parcours pour passer d'un spot à l'autre : fais juste attention aux coureurs.</li>
               </ul>
             </details>
           </>
