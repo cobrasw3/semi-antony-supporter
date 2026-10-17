@@ -208,3 +208,27 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     la coque à onglets).
   - Corrigé après capture : champ prénom qui débordait (défilement
     horizontal).
+- **Étape 3a — coque à onglets + onglet Live** :
+  - `src/app/Shell.tsx` : en-tête compact (puce coureur → tiroir de
+    modification avec `GoalControls` partagé avec l'assistant ; info du
+    moment J-x / Départ dans… / Km estimé / Arrivée), fines barres (démo,
+    hors-ligne), toasts (mise à jour, annonce importante, alerte de passage,
+    lien copié), barre d'onglets (onglet dans le hash `#plan`…), tiroir
+    spot (adresse, conseils, tous les passages, « Sur la carte », « Y aller »
+    → Google Maps à pied).
+  - `LiveTab` : héros selon l'état (J-x + « Prépare ta journée », départ
+    dans X min, prochain passage avec anneau, « Là ! maintenant »,
+    célébration sobre une fois à l'arrivée), frise avec point coureur
+    estimé, prochains passages. Modèle de présentation pur et testé
+    (`liveModel.ts`), position estimée du coureur (`lib/runnerPosition.ts`,
+    nouveau, testé).
+  - Logique extraite des anciens composants : `useReminders` (alertes +
+    .ics), `useGeolocation` (sur demande, jamais envoyée ni stockée),
+    `share.ts`.
+  - Annonces « info » : plus de toast (masquait le contenu) → onglet Infos
+    avec pastille ; seules les « importantes » en toast.
+  - `haptic()` ne vibre qu'après un premier geste (sinon erreur console).
+  - `vercel.json` : Permissions-Policy `geolocation=(self)` (distance à
+    pied) — reste sur l'appareil.
+  - Plan / Carte / Infos provisoires (étapes suivantes). La page /qr a perdu
+    ses styles (App.css plus chargé) : à reprendre à l'étape 4.

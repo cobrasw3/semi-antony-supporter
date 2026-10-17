@@ -16,6 +16,15 @@
   outline-offset: 2px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .display {
   font-family: var(--font-display);
   font-weight: 800;
@@ -780,6 +789,21 @@ div.spot-card__head {
     transform var(--dur-2) var(--ease);
 }
 
+.tabbar__icon {
+  position: relative;
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: 2px;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--sprint);
+}
+
 .tabbar__tab[aria-selected="true"] .tabbar__icon {
   background: var(--sprint);
   color: var(--on-sprint);
@@ -878,8 +902,8 @@ div.spot-card__head {
 
 .app-bar {
   display: grid;
-  gap: var(--s-2);
-  padding: calc(var(--s-2) + env(safe-area-inset-top)) var(--s-2) var(--s-3) var(--s-4);
+  gap: 4px;
+  padding: calc(4px + env(safe-area-inset-top)) var(--s-1) var(--s-3) var(--s-4);
   background: var(--strong);
   color: var(--on-strong);
 }

@@ -66,7 +66,12 @@ body {
   font-size: var(--t-3xl);
 }
 
-.onboarding__estimate {
+.goal {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.goal__estimate {
   display: grid;
   justify-items: center;
   gap: 2px;
@@ -79,14 +84,14 @@ body {
   color: var(--muted);
 }
 
-.onboarding__estimate .num {
+.goal__estimate .num {
   font-size: var(--t-3xl);
   font-weight: 800;
   line-height: 1;
   color: var(--text);
 }
 
-.onboarding__estimate .caption {
+.goal__estimate .caption {
   margin: 0;
 }
 
@@ -174,4 +179,415 @@ body {
   border-radius: 10px;
   background: var(--soft);
   color: var(--on-soft);
+}
+
+/* ------------------------------------------------------------ Coque */
+
+.shell {
+  max-width: var(--app-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-5));
+  background: var(--bg);
+}
+
+@media (min-width: 520px) {
+  /* Desktop : colonne de téléphone centrée. */
+  html,
+  body {
+    background: var(--surface-2);
+  }
+
+  .shell,
+  .onboarding {
+    box-shadow: var(--shadow-2);
+  }
+}
+
+.shell__top {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+}
+
+.shell__main {
+  animation: panel-in var(--dur-2) var(--ease);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.section {
+  padding: var(--s-5) var(--s-4) 0;
+}
+
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--s-3);
+}
+
+.section__title {
+  margin: 0;
+  font-size: var(--t-xl);
+}
+
+.section__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--sprint-text);
+  font: 700 var(--t-sm) / 1 var(--font-body);
+  cursor: pointer;
+}
+
+.stack {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.stack--tight {
+  gap: var(--s-2);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.row > * {
+  flex: 1;
+}
+
+a.btn {
+  text-decoration: none;
+}
+
+.card-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease);
+}
+
+.card-btn:active {
+  transform: scale(0.98);
+}
+
+.tip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: var(--s-5) var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--soft);
+  color: var(--on-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.tip svg {
+  flex: none;
+}
+
+.map-loading {
+  display: grid;
+  place-items: center;
+  height: 50dvh;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ Héros Live */
+
+.hero {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  margin: var(--s-4) var(--s-4) 0;
+  padding: var(--s-5) var(--s-5) var(--s-5);
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--strong);
+  color: var(--on-strong);
+  text-align: center;
+  box-shadow: var(--shadow-2);
+}
+
+.hero > * {
+  margin: 0;
+}
+
+.hero__kicker {
+  color: var(--signal);
+  font: 800 var(--t-sm) / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero__spot,
+.hero__title {
+  font-size: var(--t-2xl);
+  line-height: 1;
+}
+
+.hero__days {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.hero__days-num {
+  color: var(--signal);
+  font-size: 6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.85;
+}
+
+.hero__days-unit {
+  font-size: var(--t-2xl);
+}
+
+.hero__sub,
+.hero__next,
+.hero__then {
+  color: var(--on-strong-muted);
+  font-size: var(--t-md);
+}
+
+.hero__next strong,
+.hero__sub strong,
+.hero__then strong {
+  color: var(--on-strong);
+}
+
+.hero__facts {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: var(--s-3) 0;
+  border-top: 1px solid color-mix(in srgb, var(--on-strong) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--on-strong) 16%, transparent);
+  font-size: var(--t-md);
+}
+
+.hero__facts strong {
+  color: var(--signal);
+  font-size: var(--t-xl);
+}
+
+.hero__walk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--on-strong);
+  font-weight: 700;
+}
+
+.hero__walk--late {
+  color: var(--signal);
+}
+
+.hero__geo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding: 0 var(--s-4);
+  border: 1px solid color-mix(in srgb, var(--on-strong) 30%, transparent);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--on-strong);
+  font: 700 var(--t-sm) / 1 var(--font-body);
+  cursor: pointer;
+}
+
+.hero--now .ring__value {
+  font-size: var(--t-3xl);
+}
+
+.hero--now .ring__bar {
+  animation: ring-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.hero__flag {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+/* Célébration sobre (une seule fois) */
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: -12px;
+  left: calc(var(--i) * 5.6%);
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--signal);
+  animation: confetti 1.8s var(--ease) calc(var(--i) * 40ms) both;
+}
+
+.confetti span:nth-child(3n) {
+  background: var(--sprint);
+}
+
+.confetti span:nth-child(3n + 1) {
+  background: var(--on-strong);
+}
+
+@keyframes confetti {
+  to {
+    transform: translateY(420px) rotate(540deg);
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------ Frise */
+
+.timeline {
+  margin: var(--s-5) var(--s-4) 0;
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.timeline__track {
+  position: relative;
+  height: 10px;
+  margin: 10px 8px 0;
+  border-radius: var(--r-pill);
+  background: var(--soft);
+}
+
+.timeline__done {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sprint);
+  transition: width 600ms var(--ease);
+}
+
+.timeline__tick {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  background: var(--muted);
+  transform: translateX(-1px);
+}
+
+.timeline__stop {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, -50%);
+}
+
+.timeline__runner {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 35%, transparent);
+  transform: translate(-50%, -50%);
+  transition: left 600ms var(--ease);
+}
+
+.timeline__labels {
+  position: relative;
+  height: 20px;
+  margin: 10px 8px 0;
+  font: 700 var(--t-xs) / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.timeline__labels span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.timeline__labels span:first-child {
+  transform: none;
+}
+
+.timeline__labels span:last-child {
+  transform: translateX(-100%);
+}
+
+.timeline__caption {
+  margin-top: var(--s-2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ Tiroir spot */
+
+.spot-sheet__where {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+  font-weight: 700;
+}
+
+.sheet__sub {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__main,
+  .onboarding__step,
+  .confetti span,
+  .hero--now .ring__bar,
+  .timeline__runner,
+  .timeline__done {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .confetti {
+    display: none;
+  }
 }

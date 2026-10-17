@@ -132,6 +132,8 @@ export interface TabDef<T extends string> {
   id: T;
   label: string;
   icon: ReactNode;
+  /** Pastille « nouveau » (ex. annonce à lire). */
+  badge?: boolean;
 }
 
 export function TabBar<T extends string>({ tabs, active, onChange }: { tabs: TabDef<T>[]; active: T; onChange: (id: T) => void }) {
@@ -152,8 +154,14 @@ export function TabBar<T extends string>({ tabs, active, onChange }: { tabs: Tab
               onChange(t.id);
             }}
           >
-            <span className="tabbar__icon" aria-hidden="true">{t.icon}</span>
-            <span className="tabbar__label">{t.label}</span>
+            <span className="tabbar__icon" aria-hidden="true">
+              {t.icon}
+              {t.badge && <span className="tabbar__badge" />}
+            </span>
+            <span className="tabbar__label">
+              {t.label}
+              {t.badge && <span className="sr-only"> (nouveau)</span>}
+            </span>
           </button>
         ))}
       </div>
