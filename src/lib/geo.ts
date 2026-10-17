@@ -146,3 +146,31 @@ export function detectLoopCount(points: LatLng[], expectedLoopLengthKm: number):
   if (expectedLoopLengthKm <= 0) return 1;
   return Math.max(1, Math.round(total / expectedLoopLengthKm));
 }
+
+/** Cap (en degrés, 0 = nord, sens horaire) pour aller de `a` vers `b`. */
+export function bearingDeg(a: LatLng, b: LatLng): number {
+  const lat1 = toRadians(a.lat);
+  const lat2 = toRadians(b.lat);
+  const dLng = toRadians(b.lng - a.lng);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+/**
+ * Point situé à `km` le long du tracé (interpolé linéairement), avec le cap
+ * du segment à cet endroit — pour placer flèches de sens et repères km.
+ * Borné au début / à la fin du tracé.
+ */
+export function pointAtDistance(points: LatLng[], km: number): LatLng & { bearing: number } {
+  const cumulative = cumulativeDistancesKm(points);
+  const total = cumulative[cumulative.length - 1];
+  const target = Math.min(Math.max(km, 0), total);
+  let i = 0;
+  while (i < points.length - 2 && cumulative[i + 1] < target) i++;
+  const a = points[i];
+  const b = points[i + 1];
+  const seg = cumulative[i + 1] - cumulative[i];
+  const t = seg === 0 ? 0 : (target - cumulative[i]) / seg;
+  return { lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t, bearing: bearingDeg(a, b) };
+}

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { APropos } from "./components/APropos";
-import { Carte } from "./components/Carte";
+import { Carte, type MapFocus } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
 import { Itineraire } from "./components/Itineraire";
@@ -69,7 +69,20 @@ function App() {
   const clock = useEventClock(config.event.date, config.event.timeZone);
 
   const scrollToSpot = useCallback((spotId: string) => {
-    document.getElementById(`spot-${spotId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const card = document.getElementById(`spot-${spotId}`);
+    card?.scrollIntoView({ behavior: "smooth", block: "start" });
+    card?.focus({ preventScroll: true });
+  }, []);
+
+  const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
+  const mapSectionRef = useRef<HTMLDetailsElement>(null);
+  const showOnMap = useCallback((spotId: string) => {
+    const section = mapSectionRef.current;
+    if (section) {
+      section.open = true;
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setMapFocus((f) => ({ spotId, nonce: (f?.nonce ?? 0) + 1 }));
   }, []);
 
   return (
@@ -131,9 +144,17 @@ function App() {
         onSelectSpot={scrollToSpot}
       />
 
-      <details className="carte-section" open>
+      <details className="carte-section" open ref={mapSectionRef}>
         <summary>🗺️ Carte du parcours</summary>
-        <Carte key={race.id} loopPoints={track} spots={race.spots} passagesBySpot={passagesBySpot} />
+        <Carte
+          key={race.id}
+          loopPoints={track}
+          race={race}
+          spots={race.spots}
+          spotNumbers={spotNumbers}
+          focus={mapFocus}
+          onSelectSpot={scrollToSpot}
+        />
       </details>
 
       {highlight && (
@@ -143,7 +164,13 @@ function App() {
         </div>
       )}
 
-      <RecapPassages spots={race.spots} passagesBySpot={passagesBySpot} runnerName={runnerName} />
+      <RecapPassages
+        spots={race.spots}
+        passagesBySpot={passagesBySpot}
+        runnerName={runnerName}
+        spotNumbers={spotNumbers}
+        onShowOnMap={showOnMap}
+      />
 
       <footer className="app-footer">
         <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>

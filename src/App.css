@@ -181,17 +181,93 @@
   padding-left: 1.1rem;
 }
 
-/* Marqueur étoile du point fort (via L.divIcon) */
-.marker-star-wrapper {
+/* Marqueurs numérotés, flèches de sens et bornes km (via L.divIcon) */
+.marker-num-wrapper,
+.marker-arrow-wrapper,
+.marker-km-wrapper {
   background: transparent;
   border: none;
 }
 
-.marker-star {
-  font-size: 1.9rem;
-  line-height: 1;
+.marker-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 3px solid #fff;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.marker-num-fort {
+  background: #e8b800;
+  color: #14171a;
+}
+
+.marker-num-active {
+  outline: 4px solid #d64545;
+}
+
+.marker-arrow {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+  font-size: 12px;
+  line-height: 16px;
   text-align: center;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+.marker-km {
+  transform: translate(6px, -50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 800;
+  color: #14171a;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+}
+
+/* Plan statique de repli (fond de carte indisponible) */
+.carte-plan {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+
+.carte-plan img {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+}
+
+.carte-plan-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  background: #14171a;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.carte-plan-bar button {
+  padding: 4px 10px;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* --- Champ allure --- */
@@ -624,4 +700,26 @@
   font-size: 0.85em;
   font-weight: 800;
   text-decoration: none;
+}
+
+.spot-num-fort {
+  background: #e8b800;
+  color: #14171a;
+}
+
+.recap-map-btn {
+  margin-top: var(--space-1);
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.carte-section {
+  scroll-margin-top: 0;
 }

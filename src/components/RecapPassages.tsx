@@ -6,9 +6,11 @@ interface RecapPassagesProps {
   spots: Spot[];
   passagesBySpot: Record<string, Passage[]>;
   runnerName: string;
+  spotNumbers: Record<string, number>;
+  onShowOnMap: (spotId: string) => void;
 }
 
-export function RecapPassages({ spots, passagesBySpot, runnerName }: RecapPassagesProps) {
+export function RecapPassages({ spots, passagesBySpot, runnerName, spotNumbers, onShowOnMap }: RecapPassagesProps) {
   // Un groupe par spot (nom + accès + conseil affichés une seule fois), ses
   // passages étant déjà en ordre croissant. Les groupes eux-mêmes sont
   // ordonnés par leur premier passage, pour rester globalement chronologique.
@@ -26,11 +28,12 @@ export function RecapPassages({ spots, passagesBySpot, runnerName }: RecapPassag
       ) : (
         <ul className="recap-list">
           {groups.map(({ spot, passages }) => (
-            <li key={spot.id} id={`spot-${spot.id}`} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
-              <p className="recap-group-name">
+            <li key={spot.id} id={`spot-${spot.id}`} tabIndex={-1} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
+              <h3 className="recap-group-name">
+                <span className={spot.highlight ? "spot-num spot-num-fort" : "spot-num"}>{spotNumbers[spot.id]}</span>
                 {spot.highlight ? "⭐ " : ""}
                 {spot.name}
-              </p>
+              </h3>
               <p className="recap-sentence">
                 {RunnerLabel(runnerName)} passe {passages.length > 1 ? `${passages.length} fois ` : ""}
                 {spotWhere(spot)} vers{" "}
@@ -38,6 +41,9 @@ export function RecapPassages({ spots, passagesBySpot, runnerName }: RecapPassag
               </p>
               <p className="recap-acces">{spot.access}</p>
               <p className="recap-astuce">{spot.description}</p>
+              <button type="button" className="recap-map-btn" onClick={() => onShowOnMap(spot.id)}>
+                📍 Voir sur la carte
+              </button>
               <ul className="recap-crossings">
                 {passages.map((c) => (
                   <li key={c.km} className={c.kind === "finish" ? "recap-crossing-row recap-finish" : "recap-crossing-row"}>

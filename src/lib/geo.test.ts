@@ -6,6 +6,8 @@ import {
   projectPointOntoRoute,
   splitIntoEqualLoops,
   detectLoopCount,
+  bearingDeg,
+  pointAtDistance,
   type LatLng,
 } from "./geo";
 
@@ -92,5 +94,26 @@ describe("detectLoopCount", () => {
     const closedLoop = [...SQUARE_KM, SQUARE_KM[0]];
     const threeLoops = [...closedLoop, ...closedLoop, ...closedLoop];
     expect(detectLoopCount(threeLoops, 4)).toBe(3);
+  });
+});
+
+describe("bearingDeg / pointAtDistance", () => {
+  it("donne le cap nord, est, sud", () => {
+    expect(bearingDeg({ lat: 48.75, lng: 2.29 }, { lat: 48.76, lng: 2.29 })).toBeCloseTo(0, 0);
+    expect(bearingDeg({ lat: 48.75, lng: 2.29 }, { lat: 48.75, lng: 2.3 })).toBeCloseTo(90, 0);
+    expect(bearingDeg({ lat: 48.76, lng: 2.29 }, { lat: 48.75, lng: 2.29 })).toBeCloseTo(180, 0);
+  });
+
+  it("interpole un point le long du tracé", () => {
+    // Le carré fait ~1 km de côté : à 1,5 km on est au milieu du 2e côté (vers le nord).
+    const p = pointAtDistance(SQUARE_KM, 1.5);
+    expect(p.lng).toBeCloseTo(2.29 + 0.0137, 4);
+    expect(p.lat).toBeCloseTo(48.75 + 0.0045, 3);
+    expect(p.bearing).toBeCloseTo(0, 0);
+  });
+
+  it("borne aux extrémités", () => {
+    expect(pointAtDistance(SQUARE_KM, -1)).toMatchObject(SQUARE_KM[0]);
+    expect(pointAtDistance(SQUARE_KM, 99).lat).toBeCloseTo(SQUARE_KM[3].lat, 6);
   });
 });
