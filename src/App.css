@@ -894,3 +894,71 @@
   font-size: 1rem;
   cursor: pointer;
 }
+
+/* --- Page /qr (affiches, stand des dossards) --- */
+
+.qr-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+}
+
+.qr-page h1 {
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+.qr-lead {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.qr-code {
+  display: inline-block;
+  margin: var(--space-3) 0;
+  padding: var(--space-2);
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.qr-url {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.qr-points {
+  display: inline-block;
+  margin: var(--space-3) 0;
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.qr-footer {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.qr-print {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media print {
+  .qr-print {
+    display: none;
+  }
+
+  .qr-page {
+    padding-top: 0;
+  }
+}
