@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Annonces } from "./components/Annonces";
 import { APropos } from "./components/APropos";
 import { BandeauConnexion } from "./components/BandeauConnexion";
 import { Carte, type MapFocus } from "./components/Carte";
@@ -8,7 +9,8 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { Itineraire } from "./components/Itineraire";
 import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
-import { BUNDLED_EVENT } from "./config/event";
+import { BUNDLED_ANNONCES, BUNDLED_EVENT } from "./config/event";
+import { activeAnnonces, parseAnnonces } from "./lib/annonces";
 import { findRace, parseEventConfig, trackOf } from "./lib/event";
 import {
   buildShareText,
@@ -88,6 +90,8 @@ function App() {
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const clock = useEventClock(config.event.date, config.event.timeZone);
   const online = useOnline();
+  const annoncesData = useRemoteJson("/data/annonces.json", "semi-supporter:annonces", BUNDLED_ANNONCES, parseAnnonces);
+  const annonces = activeAnnonces(annoncesData.data.annonces, clock, config.event.timeZone);
   const beforeRaceDay = clock.date < config.event.date;
 
   const scrollToSpot = useCallback((spotId: string) => {
@@ -120,6 +124,7 @@ function App() {
           <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
         </header>
       </div>
+      <Annonces annonces={annonces} />
       <BandeauConnexion online={online} stale={eventData.stale} fetchedAt={eventData.fetchedAt} />
 
       {config.races.length > 1 && (

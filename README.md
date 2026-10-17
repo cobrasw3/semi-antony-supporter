@@ -58,6 +58,36 @@ chaque point d'observation en ouvrant l'app avec `?calibrage=1` (ex.
 `http://localhost:5173/?calibrage=1`) : un clic sur la carte affiche
 instantanément la distance-dans-la-boucle du point cliqué.
 
+## Publier une annonce (2 minutes)
+
+Les annonces s'affichent en bandeau en haut de l'app, chez tout le monde,
+**sans nouvelle version de l'app** (l'app relit le fichier au retour au
+premier plan, au retour du réseau et toutes les 15 min).
+
+1. Ouvrir `public/data/annonces.json` (directement sur GitHub : icône ✏️).
+2. Ajouter une entrée dans `annonces` :
+
+   ```json
+   {
+     "id": "parking-stade-2027",
+     "level": "important",
+     "text": "Parking du stade complet : garez-vous rue Velpeau.",
+     "start": "2027-03-21T12:00:00+01:00",
+     "end": "2027-03-21T18:00:00+01:00"
+   }
+   ```
+
+   - `id` : unique (sert à mémoriser qu'une annonce « info » a été fermée).
+   - `level` : `info` (bleu, peut être fermée) ou `important` (rouge, toujours visible).
+   - `start` / `end` : début et fin d'affichage, avec le fuseau (`+01:00` en
+     mars, heure d'hiver ; `+02:00` en heure d'été).
+   - `demoOnly: true` : visible seulement en mode démo (`?demo=1`).
+3. Valider le commit sur `main` → Vercel redéploie en ~1 min → l'annonce
+   apparaît chez les utilisateurs à leur prochain retour dans l'app.
+
+Pour retirer une annonce : supprimer l'entrée (ou avancer sa date `end`).
+Une entrée mal formée est ignorée sans casser les autres.
+
 ## Lancer en local
 
 Prérequis : [Node.js](https://nodejs.org/) ≥ 20.

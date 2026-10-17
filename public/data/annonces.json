@@ -1,0 +1,13 @@
+{
+  "$doc": "Annonces affichées en bandeau en haut de l'app. Voir README, section « Publier une annonce ». level : info | important. start/end : date-heure ISO avec fuseau. demoOnly : visible seulement en mode démo (?demo=1).",
+  "annonces": [
+    {
+      "id": "exemple-demo",
+      "level": "info",
+      "text": "Exemple d'annonce de l'organisateur : elle s'affiche ici pour tous, sans mise à jour de l'app.",
+      "start": "2026-01-01T00:00:00+01:00",
+      "end": "2027-12-31T23:59:00+01:00",
+      "demoOnly": true
+    }
+  ]
+}
