@@ -20,7 +20,7 @@ import {
   updateCurrentUrl,
   type RunnerPrefs,
 } from "../lib/format";
-import { optimalPlan } from "../lib/itinerary";
+import { planOptions } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
@@ -29,6 +29,7 @@ import { needsOnboarding } from "./onboardingRule";
 const PREFS_KEY = "semi-supporter:prefs";
 const ONBOARDED_KEY = "semi-supporter:onboarded";
 const SPOTS_KEY = "semi-supporter:spots-choisis";
+const COUNT_KEY = "semi-supporter:nb-passages";
 
 export function useSupporter() {
   // event.json : affiché tout de suite, rafraîchi en arrière-plan.
@@ -81,11 +82,25 @@ export function useSupporter() {
   );
   const resetSpots = useCallback(() => setChosenSpots([]), []);
   useEffect(() => writeJson(SPOTS_KEY, chosenSpots), [chosenSpots]);
-  const plan = useMemo(() => {
+  // Distances à pied réelles (itinéraires piétons pré-calculés), sinon estimation.
+  const routes = race.walkingRoutes?.km;
+  // Compromis « nombre de passages ↔ marche » : une option par niveau utile,
+  // de « sans bouger » au maximum possible.
+  const planOptionsList = useMemo(() => {
     const allowed = chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id));
     const pool = allowed.length ? passages.filter((p) => allowed.includes(p.spotId)) : passages;
-    return optimalPlan(pool, race.spots, config.settings.walking);
-  }, [chosenSpots, passages, race.spots, config.settings.walking]);
+    return planOptions(pool, race.spots, config.settings.walking, routes);
+  }, [chosenSpots, passages, race.spots, config.settings.walking, routes]);
+  // Nombre de passages voulu (null = le maximum). Si l'allure change et que
+  // ce nombre n'est plus atteignable, on prend la meilleure option en dessous.
+  const [wantedCount, setWantedCount] = useState<number | null>(() => readJson<number | null>(COUNT_KEY));
+  useEffect(() => writeJson(COUNT_KEY, wantedCount), [wantedCount]);
+  const emptyPlan = { steps: [], transitions: [], totalWalkKm: 0 };
+  const plan =
+    (wantedCount === null
+      ? planOptionsList.at(-1)
+      : (planOptionsList.filter((o) => o.steps.length <= wantedCount).at(-1) ?? planOptionsList[0])) ?? emptyPlan;
+  const maxPlan = planOptionsList.at(-1) ?? emptyPlan;
   const track = useMemo(() => trackOf(race), [race]);
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const spotById = useMemo(() => Object.fromEntries(race.spots.map((s) => [s.id, s])), [race.spots]);
@@ -114,6 +129,11 @@ export function useSupporter() {
     passages,
     passagesBySpot,
     plan,
+    maxPlan,
+    planOptions: planOptionsList,
+    wantedCount,
+    setWantedCount,
+    routes,
     chosenSpots,
     toggleSpot,
     resetSpots,

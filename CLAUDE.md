@@ -290,3 +290,36 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   https://semi-antony-supporter-1kc7ca4nt-pmachard2001-5765s-projects.vercel.app
   — Ready ; `/`, `/styleguide`, `/qr`, `/sw.js` en 200 via `vercel curl` ;
   protégée par Vercel Authentication.
+
+### 2026-10-17 — Distances réelles et choix « combien de fois » (branche `feat/plan-marche`, depuis `feat/redesign`)
+
+- Retours utilisateur sur la refonte : design validé ; questions : d'où
+  vient « 7 fois » (et si on « Passe » le prénom), « Tous les passages »
+  incompréhensible (en retard partout), vouloir doser nombre de passages ↔
+  distance à marcher (distance max → nombre de fois, meilleur spot sans
+  bouger), et ne plus calculer la marche à vol d'oiseau.
+- **Distances à pied réelles** : `scripts/compute-walking-routes.ts`
+  interroge une fois le service piéton OSRM de routing.openstreetmap.de
+  (requête « table », 30 trajets entre les 6 spots) et écrit
+  `races[].walkingRoutes.km` dans `event.json` (« idA>idB »). L'app reste
+  hors-ligne et sans backend. `walkBetweenSpots` utilise ces distances
+  (source « route »), sinon l'estimation vol d'oiseau × 1,3 (« estimate »).
+  Depuis la position GPS de l'utilisateur : estimation, affichée comme
+  telle (envoyer la position à un service externe est exclu).
+  Limite documentée : l'itinéraire ignore les traversées interdites du
+  parcours le jour J (valeurs corrigeables à la main).
+- **Compromis passages ↔ marche** : `planOptions` (lib/itinerary.ts, DP
+  « marche minimale pour k passages », options non dominées), testée contre
+  une recherche exhaustive. À 5:30 : 4× sans bouger (stade), 5× 1 km,
+  6× 2 km, 7× 3 km. Choix mémorisé (`semi-supporter:nb-passages`, null =
+  max) ; si l'allure change, meilleure option en dessous. Le choix des spots
+  filtre toujours les passages.
+- Onglet Plan : « Combien de fois veux-tu voir Léa ? » (cartes options),
+  étapes du plan choisi, « Comment c'est calculé ? », vue « Horaires »
+  (tableau par boucle, ton plan surligné, sans verdicts) à la place de
+  « Tous les passages ». Live et assistant reformulés (« 4 fois sans bouger,
+  ou jusqu'à 7 fois en marchant 3 km »).
+- Réponses données : « 7 fois » = plus longue chaîne de passages
+  atteignables (départ juste après le passage, arrivée 3 min avant la
+  fourchette suivante, marche à 4,5 km/h) ; « Passer » le prénom → « ton
+  coureur » partout.

@@ -67,7 +67,8 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
                 Arrivée de {runnerName || "ton coureur"} vers <strong className="num">{status.finish.estimatedTime}</strong>
               </span>
               <span>
-                Tu peux voir {runnerName || "ton coureur"} <strong className="num">{plan.steps.length} fois</strong>
+                Ton plan : <strong className="num">{plan.steps.length} passages</strong>
+                {plan.totalWalkKm < 0.05 ? " sans bouger" : ` · ${plan.totalWalkKm.toFixed(1).replace(".", ",")} km à pied`}
               </span>
             </div>
             <Button size="lg" block onClick={onGoPlan} icon={<ArrowRight size={20} />}>
@@ -133,7 +134,9 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
             </p>
             <GeoLine
               geo={geo}
-              walk={walk ? `${Math.ceil(walk.minutes)} min à pied (${formatWalk(walk.walkKm)})` : null}
+              // Depuis ta position, pas d'itinéraire réel (il faudrait envoyer la
+              // position à un service externe) : estimation, annoncée comme telle.
+              walk={walk ? `≈ ${Math.ceil(walk.minutes)} min à pied (${formatWalk(walk.walkKm)}, estimation)` : null}
               late={walk ? walk.minutes > status.minutesToNext : false}
             />
           </section>

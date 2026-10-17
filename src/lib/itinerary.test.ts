@@ -1,7 +1,15 @@
 import { describe, it, expect } from "vitest";
 import rawEvent from "../../public/data/event.json";
 import { parseEventConfig, type Spot } from "./event";
-import { chronologicalTransitions, evaluateTransition, indexSpots, optimalPlan, walkBetween } from "./itinerary";
+import {
+  chronologicalTransitions,
+  evaluateTransition,
+  indexSpots,
+  optimalPlan,
+  planOptions,
+  walkBetween,
+  walkBetweenSpots,
+} from "./itinerary";
 import { computeAllPassages, type Passage } from "./timing";
 
 const walking = { speedKmh: 4.5, detourFactor: 1.3, safetyMarginMinutes: 3 };
@@ -127,5 +135,85 @@ describe("chronologicalTransitions", () => {
     const spots = [spot("a", 0), spot("b", 1)];
     const t = chronologicalTransitions([passage("a", 0), passage("b", 30), passage("a", 35)], spots, walking);
     expect(t.map((x) => x.status)).toEqual(["ok", "impossible"]);
+  });
+});
+
+describe("trajets réels (walkingRoutes)", () => {
+  const a = spot("a", 0);
+  const b = spot("b", 1);
+
+  it("utilise la distance à pied réelle quand elle est connue", () => {
+    const leg = walkBetweenSpots(a, b, walking, { "a>b": 2.25 });
+    expect(leg.source).toBe("route");
+    expect(leg.walkKm).toBe(2.25);
+    expect(leg.minutes).toBeCloseTo(30); // 2,25 km à 4,5 km/h
+    expect(leg.directKm).toBeCloseTo(1, 2);
+  });
+
+  it("retombe sur l'estimation à vol d'oiseau sinon", () => {
+    const leg = walkBetweenSpots(a, b, walking, { "b>a": 2.25 });
+    expect(leg.source).toBe("estimate");
+    expect(leg.walkKm).toBeCloseTo(1.3, 2);
+  });
+
+  it("une route plus longue peut rendre une transition impossible", () => {
+    const spots = indexSpots([a, b]);
+    expect(evaluateTransition(passage("a", 0), passage("b", 23), spots, walking).status).toBe("ok");
+    expect(evaluateTransition(passage("a", 0), passage("b", 23), spots, walking, { "a>b": 2.25 }).status).toBe("impossible");
+  });
+});
+
+/** Marche minimale pour voir exactement k passages (recherche exhaustive). */
+function bruteForceMinWalk(passages: Passage[], spots: Spot[], k: number): number {
+  const byId = indexSpots(spots);
+  const sorted = [...passages].sort((x, y) => x.estimatedMinutes - y.estimatedMinutes);
+  let best = Infinity;
+  const go = (i: number, count: number, walked: number) => {
+    if (count === k) return void (best = Math.min(best, walked));
+    for (let j = i + 1; j < sorted.length; j++) {
+      const t = evaluateTransition(sorted[i], sorted[j], byId, walking);
+      if (t.status === "ok") go(j, count + 1, walked + t.walk.walkKm);
+    }
+  };
+  sorted.forEach((_, i) => go(i, 1, 0));
+  return best;
+}
+
+describe("planOptions (compromis passages ↔ marche)", () => {
+  it("chaque option voit plus de passages que la précédente, en marchant plus", () => {
+    const config = parseEventConfig(rawEvent);
+    const semi = config.races[0];
+    const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+    const options = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km);
+    expect(options.length).toBeGreaterThan(1);
+    for (let i = 1; i < options.length; i++) {
+      expect(options[i].steps.length).toBeGreaterThan(options[i - 1].steps.length);
+      expect(options[i].totalWalkKm).toBeGreaterThan(options[i - 1].totalWalkKm);
+    }
+    // La dernière option = le maximum de optimalPlan.
+    expect(options.at(-1)!.steps.length).toBe(optimalPlan(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).steps.length);
+  });
+
+  it("sur le semi, sans bouger = 4 passages au stade", () => {
+    const config = parseEventConfig(rawEvent);
+    const semi = config.races[0];
+    const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+    const [first] = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km);
+    expect(first.totalWalkKm).toBe(0);
+    expect(first.steps).toHaveLength(4);
+    expect(new Set(first.steps.map((p) => p.spotId))).toEqual(new Set(["stade-suant"]));
+  });
+
+  it("donne la marche minimale exacte pour chaque nombre de passages (cas aléatoires)", () => {
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let run = 0; run < 25; run++) {
+      const spots = ["a", "b", "c", "d"].map((id) => spot(id, rand() * 1.5));
+      const passages = Array.from({ length: 9 }, () => passage(spots[Math.floor(rand() * 4)].id, Math.round(rand() * 120)));
+      for (const option of planOptions(passages, spots, walking)) {
+        expect(option.totalWalkKm).toBeCloseTo(bruteForceMinWalk(passages, spots, option.steps.length), 6);
+        expect(option.transitions).toHaveLength(option.steps.length - 1);
+      }
+    }
   });
 });

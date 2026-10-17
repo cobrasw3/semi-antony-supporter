@@ -63,6 +63,12 @@ export interface Race {
   /** Tracé d'UNE boucle, en paires [lat, lng]. */
   track: Array<[number, number]>;
   spots: Spot[];
+  /**
+   * Distances À PIED réelles entre spots (km), clé « idDépart>idArrivée ».
+   * Générées par scripts/compute-walking-routes.ts ; à défaut, estimation à
+   * vol d'oiseau × facteur de détour.
+   */
+  walkingRoutes?: { source: string; computedAt: string; km: Record<string, number> };
 }
 
 export interface EventConfig {

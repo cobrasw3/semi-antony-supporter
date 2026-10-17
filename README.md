@@ -61,6 +61,11 @@ vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cach
   Les couleurs de texte dérivées sont recalculées pour rester lisibles.
 - `infos` (optionnel) : infos pratiques de l'onglet Infos (`title`, `text`,
   `toConfirm`).
+- `races[].walkingRoutes` : distances À PIED réelles entre spots (km),
+  générées par `node scripts/compute-walking-routes.ts` (itinéraires piétons
+  OpenStreetMap). À relancer après tout ajout ou déplacement de spot ; une
+  valeur peut être corrigée à la main (traversée interdite le jour J…).
+  Sans ce bloc, l'app estime à vol d'oiseau × facteur de détour.
 - `contentVersion` / `contentUpdatedAt` : à incrémenter à chaque modification
   (affichés dans « À propos »).
 

@@ -15,7 +15,7 @@ import type { Supporter } from "./useSupporter";
 
 export function Onboarding({ s, onDone }: { s: Supporter; onDone: () => void }) {
   const [step, setStep] = useState(0);
-  const { prefs, updatePrefs, race, config, pace, runnerName, startMinutes, plan } = s;
+  const { prefs, updatePrefs, race, config, pace, runnerName, startMinutes, maxPlan, planOptions } = s;
   const install = useInstallState();
   const [iosHelp, setIosHelp] = useState(false);
 
@@ -121,10 +121,16 @@ export function Onboarding({ s, onDone }: { s: Supporter; onDone: () => void }) 
               <p className="onboarding__summary-arrival">
                 Arrivée vers <span className="num">{arrival}</span>
               </p>
-              {plan.steps.length > 1 && (
+              {maxPlan.steps.length > 0 && (
                 <p className="onboarding__summary-plan">
-                  Tu peux voir {runnerName || "ton coureur"} <strong>{plan.steps.length} fois</strong> en
-                  marchant un peu.
+                  Tu peux voir {runnerName || "ton coureur"} <strong>{planOptions[0].steps.length} fois sans bouger</strong>
+                  {maxPlan.steps.length > planOptions[0].steps.length && (
+                    <>
+                      , ou jusqu'à <strong>{maxPlan.steps.length} fois</strong> en marchant{" "}
+                      {maxPlan.totalWalkKm.toFixed(1).replace(".", ",")} km
+                    </>
+                  )}
+                  . Tu choisiras dans l'onglet Plan.
                 </p>
               )}
             </div>

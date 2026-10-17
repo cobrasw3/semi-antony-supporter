@@ -15,7 +15,11 @@
     "tagline": "Où l’encourager, et à quelle heure il passe.",
     "logo": null,
     "official": false,
-    "colors": { "ink": "#14213d", "sprint": "#f26b3a", "signal": "#d7f205" }
+    "colors": {
+      "ink": "#14213d",
+      "sprint": "#f26b3a",
+      "signal": "#d7f205"
+    }
   },
   "infos": [
     {
@@ -210,7 +214,43 @@
           "description": "Dernier point avant la fin de la boucle (et avant l’arrivée au 3e tour) : le sprint final se joue souvent ici.",
           "km": [6.5, 13.5, 20.5]
         }
-      ]
+      ],
+      "walkingRoutes": {
+        "source": "Itinéraires piétons OSRM (routing.openstreetmap.de), données © OpenStreetMap",
+        "computedAt": "2026-10-17",
+        "km": {
+          "stade-suant>rue-marius-hue": 1.027,
+          "stade-suant>parc-heller": 0.5,
+          "stade-suant>rue-des-champs": 1.374,
+          "stade-suant>rue-des-sources-prolongee": 1.152,
+          "stade-suant>rue-des-hautes-bievres": 0.61,
+          "rue-marius-hue>stade-suant": 1.027,
+          "rue-marius-hue>parc-heller": 1.484,
+          "rue-marius-hue>rue-des-champs": 2.143,
+          "rue-marius-hue>rue-des-sources-prolongee": 2.021,
+          "rue-marius-hue>rue-des-hautes-bievres": 1.375,
+          "parc-heller>stade-suant": 0.5,
+          "parc-heller>rue-marius-hue": 1.484,
+          "parc-heller>rue-des-champs": 1.202,
+          "parc-heller>rue-des-sources-prolongee": 1.386,
+          "parc-heller>rue-des-hautes-bievres": 0.844,
+          "rue-des-champs>stade-suant": 1.374,
+          "rue-des-champs>rue-marius-hue": 2.143,
+          "rue-des-champs>parc-heller": 1.202,
+          "rue-des-champs>rue-des-sources-prolongee": 1.006,
+          "rue-des-champs>rue-des-hautes-bievres": 0.768,
+          "rue-des-sources-prolongee>stade-suant": 1.152,
+          "rue-des-sources-prolongee>rue-marius-hue": 2.021,
+          "rue-des-sources-prolongee>parc-heller": 1.386,
+          "rue-des-sources-prolongee>rue-des-champs": 1.006,
+          "rue-des-sources-prolongee>rue-des-hautes-bievres": 0.881,
+          "rue-des-hautes-bievres>stade-suant": 0.61,
+          "rue-des-hautes-bievres>rue-marius-hue": 1.375,
+          "rue-des-hautes-bievres>parc-heller": 0.844,
+          "rue-des-hautes-bievres>rue-des-champs": 0.768,
+          "rue-des-hautes-bievres>rue-des-sources-prolongee": 0.882
+        }
+      }
     }
   ]
 }
