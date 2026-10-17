@@ -330,3 +330,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   calculés restent donc valables ; mise en garde retirée de l'onglet Plan,
   remplacée par la consigne (Plan « Comment c'est calculé ? », infos
   pratiques « Se déplacer entre les spots », README, script).
+- Preview redéployée à la demande de l'utilisateur (`feat/plan-marche` @
+  7c9d1db, cible preview, prod non touchée) :
+  https://semi-antony-supporter-byxd39xj3-pmachard2001-5765s-projects.vercel.app
+  — Ready ; consigne « attention aux coureurs » bien servie dans event.json.
