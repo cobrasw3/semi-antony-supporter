@@ -2,12 +2,13 @@
 // marche), les étapes du plan choisi (✅/⚠️/❌ entre chaque), le choix des
 // spots, les horaires complets, les rappels.
 
-import { useState } from "react";
-import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, MapPin, X } from "lucide-react";
 import { spotWhere } from "../lib/event";
-import { mostLimitingSpot, type Plan, type Transition } from "../lib/itinerary";
+import { planOptions as planOptionsFor, spotsToDrop, type Plan, type Transition } from "../lib/itinerary";
 import type { Passage } from "../lib/timing";
 import { Button, Chip, Segmented, SpotCard } from "../ui/components";
+import { BottomSheet } from "../ui/overlays";
 import type { useReminders } from "./useReminders";
 import type { Supporter } from "./useSupporter";
 
@@ -72,20 +73,42 @@ export function PlanTab({
     plan,
     planOptions,
     setWantedCount,
-    chosenSpots,
-    toggleSpot,
+    setChosenSpots,
     spotMode,
     setSpotMode,
     requiredSpots,
     spotsConflict,
-    conflictPairs,
-    dropCandidates,
     routes,
   } = s;
   const walking = config.settings.walking;
   const [view, setView] = useState<"plan" | "horaires">("plan");
+  // Tiroir « Choisir mes spots » : brouillon modifié librement, appliqué
+  // seulement s'il est faisable (un plan impossible ne peut pas être validé).
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [draft, setDraft] = useState<string[]>([]);
+  const draftOptions = useMemo(
+    () => (draft.length ? planOptionsFor(passages, race.spots, walking, routes, draft, true) : []),
+    [draft, passages, race.spots, walking, routes]
+  );
+  const draftBest = draftOptions.at(-1);
+  const draftPossible = draftOptions.length > 0;
+  const draftDrop = useMemo(
+    () => (draft.length && !draftPossible ? spotsToDrop(passages, race.spots, walking, draft, routes, true) : []),
+    [draft, draftPossible, passages, race.spots, walking, routes]
+  );
   const who = runnerName || "ton coureur";
   const Who = runnerName || "Ton coureur";
+
+  const openSheet = () => {
+    setDraft(spotMode === "mine" ? requiredSpots : []);
+    setSheetOpen(true);
+  };
+  const applyDraft = () => {
+    setChosenSpots(draft);
+    setSpotMode("mine");
+    setWantedCount(null);
+    setSheetOpen(false);
+  };
 
   if (passages.length === 0) return <p className="section muted">Indique un objectif pour voir ton plan.</p>;
 
@@ -118,62 +141,33 @@ export function PlanTab({
         <h2 id="plan-choix" className="section__title display">
           Combien de fois veux-tu voir {who}&nbsp;?
         </h2>
-        <Segmented
-          label="Choix des spots"
-          value={spotMode}
-          onChange={setSpotMode}
-          options={[
-            { value: "auto", label: "Meilleurs spots" },
-            { value: "mine", label: "Mes spots" },
-          ]}
-        />
-
-        {spotMode === "auto" ? (
-          <p className="caption plan__hint">
-            L'app choisit les spots. Plus tu acceptes de marcher, plus tu peux voir de passages.
+        {spotMode === "mine" && requiredSpots.length > 0 && !spotsConflict ? (
+          <div className="my-spots">
+            <p className="my-spots__label">
+              <MapPin size={16} aria-hidden="true" /> Tes spots :{" "}
+              <strong>{requiredSpots.map((id) => spotById[id]?.shortName).join(", ")}</strong>
+            </p>
+            <div className="my-spots__actions">
+              <button type="button" className="link" onClick={openSheet}>
+                Modifier
+              </button>
+              <button type="button" className="link" onClick={() => setSpotMode("auto")}>
+                Revenir aux meilleurs spots
+              </button>
+            </div>
+          </div>
+        ) : spotMode === "mine" && spotsConflict ? (
+          <p className="notice notice--warn">
+            <AlertTriangle size={18} aria-hidden="true" />
+            <span>
+              Avec cette allure, tes spots ne passent plus tous : voici les meilleurs.{" "}
+              <button type="button" className="link" onClick={openSheet}>
+                Modifier mes spots
+              </button>
+            </span>
           </p>
         ) : (
-          <div className="plan__mine">
-            <p className="caption plan__hint">Coche les spots où tu veux aller : l'app les case tous dans ton plan.</p>
-            <div className="chips">
-              {race.spots.map((spot) => (
-                <Chip key={spot.id} selected={chosenSpots.includes(spot.id)} onClick={() => toggleSpot(spot.id)}>
-                  {spotNumbers[spot.id]}. {spot.shortName}
-                </Chip>
-              ))}
-            </div>
-            {requiredSpots.length === 0 && <p className="notice">Coche au moins un spot. En attendant, l'app te propose les meilleurs.</p>}
-            {spotsConflict && (
-              <div className="notice notice--warn notice--list" role="status">
-                <p className="notice__title">
-                  <AlertTriangle size={18} aria-hidden="true" />
-                  Impossible de caser tous ces spots.
-                </p>
-                {conflictPairs.length > 0 ? (
-                  <ul>
-                    {conflictPairs.slice(0, 3).map(([a, b]) => (
-                      <li key={`${a}+${b}`}>
-                        {spotById[a]?.shortName} et {spotById[b]?.shortName} sont trop éloignés à pied pour l'allure de {who}.
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Avec l'allure de {who}, ces spots ne s'enchaînent pas tous dans la même course.</p>
-                )}
-                <p>
-                  {dropCandidates.length > 0
-                    ? `Décoche ${dropCandidates
-                        .slice(0, 3)
-                        .map((id) => spotById[id]?.shortName)
-                        .join(" ou ")} et les autres passent.`
-                    : mostLimitingSpot(conflictPairs)
-                      ? `Décoche ${spotById[mostLimitingSpot(conflictPairs)!]?.shortName}.`
-                      : "Décoche quelques spots."}{" "}
-                  En attendant, voici les meilleurs spots.
-                </p>
-              </div>
-            )}
-          </div>
+          <p className="caption plan__hint">Plus tu acceptes de marcher, plus tu peux voir de passages.</p>
         )}
 
         <div className="options" role="radiogroup" aria-label="Nombre de passages">
@@ -203,9 +197,69 @@ export function PlanTab({
             );
           })}
         </div>
-        {planOptions.length === 1 && (
-          <p className="caption">Une seule option ici : c'est le meilleur compromis possible avec ces spots.</p>
+
+        {!(spotMode === "mine" && requiredSpots.length > 0 && !spotsConflict) && (
+          <Button variant="secondary" block icon={<MapPin size={20} />} onClick={openSheet} className="plan__choose-btn">
+            Choisir mes spots
+          </Button>
         )}
+
+        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Où veux-tu aller ?">
+          <div className="stack">
+            <p className="caption" style={{ margin: 0 }}>
+              Coche les spots qui te tentent : l'app les case tous dans ton plan.
+            </p>
+            <div className="chips">
+              {race.spots.map((spot) => (
+                <Chip
+                  key={spot.id}
+                  selected={draft.includes(spot.id)}
+                  onClick={() => setDraft((d) => (d.includes(spot.id) ? d.filter((x) => x !== spot.id) : [...d, spot.id]))}
+                >
+                  {spotNumbers[spot.id]}. {spot.shortName}
+                </Chip>
+              ))}
+            </div>
+            <div className={draftPossible || draft.length === 0 ? "draft-result" : "draft-result draft-result--ko"} aria-live="polite">
+              {draft.length === 0 ? (
+                "Coche au moins un spot."
+              ) : draftPossible && draftBest ? (
+                <span>
+                  Tu verras {who} <strong>{draftBest.steps.length} fois</strong>
+                  {draftBest.totalWalkKm < 0.05 ? " sans bouger" : ` · ${formatWalk(draftBest.totalWalkKm)} à pied`}
+                </span>
+              ) : (
+                <>
+                  <AlertTriangle size={18} aria-hidden="true" />
+                  <span>
+                    Impossible de caser tous ces spots
+                    {draftDrop.length > 0
+                      ? ` : décoche ${draftDrop
+                          .slice(0, 3)
+                          .map((id) => spotById[id]?.shortName)
+                          .join(" ou ")}.`
+                      : `, ils sont trop éloignés pour l'allure de ${who}. Décoche-en un.`}
+                  </span>
+                </>
+              )}
+            </div>
+            <Button size="lg" block disabled={!draftPossible} onClick={applyDraft}>
+              Voir ce plan
+            </Button>
+            {spotMode === "mine" && (
+              <Button
+                variant="ghost"
+                block
+                onClick={() => {
+                  setSpotMode("auto");
+                  setSheetOpen(false);
+                }}
+              >
+                Revenir aux meilleurs spots
+              </Button>
+            )}
+          </div>
+        </BottomSheet>
       </section>
 
       <section className="section" aria-label={view === "plan" ? "Étapes du plan" : "Horaires de passage"}>

@@ -963,3 +963,7 @@ div.spot-card__head {
   font-size: var(--t-xs);
   color: var(--muted);
 }
+
+.sheet:focus {
+  outline: none;
+}

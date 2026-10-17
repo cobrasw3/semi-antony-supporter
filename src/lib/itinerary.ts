@@ -167,6 +167,10 @@ export function optimalPlan(passages: Passage[], spots: Spot[], walking: Walking
  * passe alors QUE par ces spots, et par CHACUN d'eux au moins une fois.
  * Liste vide si c'est impossible (spots incompatibles).
  *
+ * `acceptTight` : accepte aussi les trajets « justes » (⚠️), tant qu'on
+ * arrive avant le début de la fourchette — moins sûr, mais techniquement
+ * possible. Utilisé quand l'utilisateur impose ses spots.
+ *
  * Programmation dynamique : best[j][k][m] = marche minimale pour une chaîne
  * de k passages finissant en j, ayant visité l'ensemble m de spots choisis
  * (masque de bits, au plus quelques spots).
@@ -176,7 +180,8 @@ export function planOptions(
   spots: Spot[],
   walking: WalkingConfig,
   routes?: WalkingRoutes,
-  requiredSpots: string[] = []
+  requiredSpots: string[] = [],
+  acceptTight = false
 ): Plan[] {
   const required = requiredSpots.filter((id) => spots.some((s) => s.id === id));
   const pool = required.length ? passages.filter((p) => required.includes(p.spotId)) : passages;
@@ -197,7 +202,8 @@ export function planOptions(
     best[idx(j, 1, bit[j])] = 0;
     for (let i = 0; i < j; i++) {
       const t = evaluateTransition(sorted[i], sorted[j], byId, walking, routes);
-      if (t.status !== "ok") continue;
+      const usable = t.status === "ok" || (acceptTight && t.status === "tight" && t.slackMinutes >= 0);
+      if (!usable) continue;
       edges[i][j] = t;
       for (let k = 2; k <= j + 1; k++) {
         for (let m = 0; m < masks; m++) {
@@ -251,13 +257,14 @@ export function incompatiblePairs(
   spots: Spot[],
   walking: WalkingConfig,
   chosen: string[],
-  routes?: WalkingRoutes
+  routes?: WalkingRoutes,
+  acceptTight = false
 ): Array<[string, string]> {
   const ids = chosen.filter((id) => spots.some((s) => s.id === id));
   const pairs: Array<[string, string]> = [];
   for (let i = 0; i < ids.length; i++) {
     for (let j = i + 1; j < ids.length; j++) {
-      if (planOptions(passages, spots, walking, routes, [ids[i], ids[j]]).length === 0) pairs.push([ids[i], ids[j]]);
+      if (planOptions(passages, spots, walking, routes, [ids[i], ids[j]], acceptTight).length === 0) pairs.push([ids[i], ids[j]]);
     }
   }
   return pairs;
@@ -282,8 +289,11 @@ export function spotsToDrop(
   spots: Spot[],
   walking: WalkingConfig,
   chosen: string[],
-  routes?: WalkingRoutes
+  routes?: WalkingRoutes,
+  acceptTight = false
 ): string[] {
-  if (chosen.length < 2 || planOptions(passages, spots, walking, routes, chosen).length > 0) return [];
-  return chosen.filter((id) => planOptions(passages, spots, walking, routes, chosen.filter((x) => x !== id)).length > 0);
+  if (chosen.length < 2 || planOptions(passages, spots, walking, routes, chosen, acceptTight).length > 0) return [];
+  return chosen.filter(
+    (id) => planOptions(passages, spots, walking, routes, chosen.filter((x) => x !== id), acceptTight).length > 0
+  );
 }

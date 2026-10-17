@@ -42,3 +42,9 @@ img,
 svg {
   max-width: 100%;
 }
+
+/* Focus clavier visible partout (y compris tiroirs rendus hors de l'app). */
+:focus-visible {
+  outline: 3px solid var(--sprint);
+  outline-offset: 2px;
+}

@@ -382,3 +382,30 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   ou B et les autres passent ». Compteurs « 3× » retirés des puces.
   Stade + rue des Sources → 4× en 1,2 km (stade au départ, puis 3× rue des
   Sources), sans message.
+- **Retours utilisateur** : imaginer tous les trajets possibles d'un
+  supporter, même non optimaux (« depuis le stade au départ on peut aller à
+  tous les spots sauf Marius Hue ») ; carte blanche sur l'implémentation
+  mais il faut que ce soit simple, sans réfléchir ni « 150 boutons », en
+  gardant les meilleurs spots.
+- Vérifié sur les données : depuis le départ, arrivée avant la fourchette
+  du 1er passage de tous les spots sauf Marius Hue ; rue des Champs n'a que
+  2 min de marge (statut « juste »). Marius Hue reste combinable avec le
+  stade au tour suivant.
+- **Trajets « justes » acceptés quand l'utilisateur impose ses spots** :
+  `planOptions(…, acceptTight)` (arrivée avant le début de la fourchette,
+  marge < 3 min), signalés ⚠️ « Juste » dans les étapes. Les « meilleurs
+  spots » gardent la marge de 3 min.
+- **UX simplifiée** : l'onglet Plan ne montre plus que la question
+  « Combien de fois veux-tu voir Léa ? » + les options (meilleurs spots) et
+  un bouton « Choisir mes spots ». Ce bouton ouvre un tiroir « Où veux-tu
+  aller ? » : puces + une ligne de résultat en direct (« Tu verras Léa 4
+  fois · 1,4 km à pied ») ; si impossible, une phrase (« décoche X ou Y »)
+  et « Voir ce plan » désactivé — un plan impossible ne peut pas être
+  validé. Une fois validé : bandeau « Tes spots : … · Modifier · Revenir
+  aux meilleurs spots ». Si l'allure change et rend la sélection
+  impossible : repli sur les meilleurs spots + lien « Modifier mes spots ».
+  Sélecteur « Meilleurs / Mes spots » et alertes détaillées retirés de la
+  page.
+- Corrigé : focus automatique du tiroir sur la 1re puce (contour noir, la
+  puce semblait cochée ; le tiroir étant hors du conteneur `.ui`) → focus
+  sur le tiroir (ou le champ texte), style de focus global.

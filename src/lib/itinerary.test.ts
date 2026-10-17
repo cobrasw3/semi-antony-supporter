@@ -329,3 +329,42 @@ describe("spotsToDrop", () => {
     }
   });
 });
+
+describe("trajets depuis le stade au départ (retour utilisateur)", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+  const routes = semi.walkingRoutes?.km;
+  const w = config.settings.walking;
+  const byId = indexSpots(semi.spots);
+  const depart = passages.find((p) => p.spotId === "stade-suant" && p.kind === "start")!;
+
+  it("depuis le départ, on arrive avant la fourchette du 1er passage de chaque spot, sauf la rue Marius Hue", () => {
+    const reachable = semi.spots
+      .filter((s) => s.id !== "stade-suant")
+      .filter((s) => {
+        const first = passages.find((p) => p.spotId === s.id)!;
+        return evaluateTransition(depart, first, byId, w, routes).slackMinutes >= 0;
+      })
+      .map((s) => s.id);
+    expect(reachable).toEqual(["parc-heller", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres"]);
+  });
+
+  it("rue des Champs est « juste » : écartée des meilleurs plans, acceptée quand l'utilisateur l'impose", () => {
+    const chosen = ["stade-suant", "rue-des-champs"];
+    const champs = passages.find((p) => p.spotId === "rue-des-champs")!;
+    expect(evaluateTransition(depart, champs, byId, w, routes).status).toBe("tight");
+    const strict = planOptions(passages, semi.spots, w, routes, chosen).at(-1)!;
+    const tolerant = planOptions(passages, semi.spots, w, routes, chosen, true).at(-1)!;
+    expect(strict.steps).not.toContain(champs);
+    expect(tolerant.steps.slice(0, 2)).toEqual([depart, champs]);
+    expect(tolerant.steps.length).toBeGreaterThan(strict.steps.length);
+    expect(tolerant.transitions[0].status).toBe("tight");
+  });
+
+  it("le stade se combine avec n'importe quel autre spot (la rue Marius Hue au tour suivant)", () => {
+    for (const s of semi.spots.filter((x) => x.id !== "stade-suant")) {
+      expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", s.id], routes)).toEqual([]);
+    }
+  });
+});

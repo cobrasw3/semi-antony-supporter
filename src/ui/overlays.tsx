@@ -33,7 +33,8 @@ export function BottomSheet({
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
     document.body.classList.add("is-locked");
-    requestAnimationFrame(() => sheetRef.current?.querySelector<HTMLElement>('input, button:not(.sheet__close), [tabindex]:not([tabindex="-1"])')?.focus());
+    // Focus : le champ texte s'il y en a un (saisie directe), sinon le tiroir lui-même.
+    requestAnimationFrame(() => (sheetRef.current?.querySelector<HTMLElement>("input") ?? sheetRef.current)?.focus({ preventScroll: true }));
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.classList.remove("is-locked");
@@ -48,10 +49,11 @@ export function BottomSheet({
       <div className="sheet-scrim" onClick={onClose} aria-hidden="true" />
       <div
         ref={sheetRef}
-        className="sheet"
+        className="sheet ui"
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         style={drag > 0 ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
       >
         <div
