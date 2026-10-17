@@ -413,3 +413,18 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   3ce545c, cible preview, prod non touchée) :
   https://semi-antony-supporter-ekfayy31m-pmachard2001-5765s-projects.vercel.app
   — Ready, `/` en 200.
+
+## Où on en est (fin de session du 2026-10-18)
+
+- Branches empilées, rien de fusionné dans `main` (prod inchangée) :
+  `main` → `feat/demo-finale` (poussée sur GitHub) → `feat/redesign` →
+  `feat/plan-marche` → `feat/spots-choisis` (branche courante, dernière
+  preview : https://semi-antony-supporter-ekfayy31m-pmachard2001-5765s-projects.vercel.app).
+  Les trois dernières branches sont seulement locales.
+- Le dépôt GitHub n'est pas relié à Vercel : previews via `npx vercel deploy`
+  (CLI connectée, compte `pmachard2001-5765`), prod via `npx vercel --prod`
+  (jamais fait sans accord explicite).
+- Pistes ouvertes : créneau de présence « j'arrive à / je pars à » (proposé,
+  pas encore validé) ; tests sur vrais iPhone/Android ; points à confirmer
+  avec l'organisateur (date 2027, dénivelé, spots, 5 km, consigne) ;
+  `npm audit fix` sur les dépendances de dev à valider.
