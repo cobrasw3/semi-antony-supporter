@@ -9,7 +9,7 @@
 :root {
   /* Marque */
   --ink: #14213d; /* bleu nuit : textes et surfaces fortes */
-  --sprint: #ff5a1f; /* orange : action principale */
+  --sprint: #f26b3a; /* orange adouci : action principale */
   --signal: #d7f205; /* jaune « dossard » : réservé au live */
 
   /* Dérivées de la marque (recalculées si la marque change) */
@@ -28,8 +28,11 @@
   --on-strong: #ffffff;
   --on-strong-muted: #c9cfdc;
   --scrim: rgba(10, 16, 32, 0.45);
-  --selected: var(--ink); /* puce / option sélectionnée */
-  --on-selected: #ffffff;
+  --soft: #e3e7ef; /* bleu nuit très léger : éléments secondaires (moins de contraste) */
+  --on-soft: var(--ink);
+  --selected: #dfe4ee; /* puce / option sélectionnée */
+  --selected-border: var(--ink);
+  --on-selected: var(--ink);
 
   /* États */
   --ok: #166534;
@@ -106,8 +109,11 @@
     --info: #9cb8ff;
     --info-bg: #1b2a52;
     --scrim: rgba(0, 0, 0, 0.6);
-    --selected: #f3f1ec;
-    --on-selected: #0d1424;
+    --soft: #26324f;
+    --on-soft: #f3f1ec;
+    --selected: #2c3b63;
+    --selected-border: #f3f1ec;
+    --on-selected: #ffffff;
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
     --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
     color-scheme: dark;
@@ -134,8 +140,11 @@
   --info: #9cb8ff;
   --info-bg: #1b2a52;
   --scrim: rgba(0, 0, 0, 0.6);
-  --selected: #f3f1ec;
-  --on-selected: #0d1424;
+  --soft: #26324f;
+  --on-soft: #f3f1ec;
+  --selected: #2c3b63;
+  --selected-border: #f3f1ec;
+  --on-selected: #ffffff;
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
   --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
   color-scheme: dark;

@@ -201,3 +201,24 @@
   outline: none;
   border-color: var(--sprint);
 }
+
+.sg-label {
+  margin: 0 0 var(--s-2);
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.sg-frame {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.sg-chipdemo {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--strong);
+}

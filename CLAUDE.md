@@ -170,3 +170,18 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   - 166 tests ✅ (dont 46 nouveaux : contrastes clair/sombre, marque),
     build ✅ (23 fichiers précachés dont 7 polices), ancienne app intacte.
   - **En attente de validation visuelle de l'utilisateur.**
+- **Retours utilisateur sur le styleguide (v1)** : barre d'onglets OK
+  (orange peut-être trop vif), typo OK, en-tête à mieux exploiter, rôle des
+  boutons et « Installer l'app » pas clairs, temps visé à rendre libre (en
+  gardant les raccourcis), prochain passage live OK, tiroir pas compris,
+  fond et bleu OK mais « beaucoup de contraste ».
+- **Styleguide v2** : orange par défaut adouci `#F26B3A` (5,3:1 avec le
+  texte bleu nuit), sélecteur Vif / Adouci / Corail pour comparer (choix en
+  attente) ; en-tête compact `AppHeader` (événement + partage, puis puce
+  coureur + J-x / date) ; légendes sous chaque bouton, « Installer l'app »
+  → « Ajouter à l'écran d'accueil » + bénéfice ; temps visé = raccourcis +
+  stepper libre à la minute ; tiroir expliqué et montré en contexte (puce
+  coureur) ; contraste allégé : tokens `--soft` / `--selected` (boutons du
+  stepper, pastilles, puces sélectionnées en tons clairs), le bleu foncé
+  réservé à l'en-tête, la carte live et les toasts. **En attente de
+  validation.**

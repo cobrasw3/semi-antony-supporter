@@ -15,7 +15,7 @@
     "tagline": "Où l’encourager, et à quelle heure il passe.",
     "logo": null,
     "official": false,
-    "colors": { "ink": "#14213d", "sprint": "#ff5a1f", "signal": "#d7f205" }
+    "colors": { "ink": "#14213d", "sprint": "#f26b3a", "signal": "#d7f205" }
   },
   "settings": {
     "margin": {

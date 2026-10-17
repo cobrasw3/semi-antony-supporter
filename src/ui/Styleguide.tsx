@@ -2,16 +2,18 @@
 // états, en clair et en sombre. Sert à valider l'identité visuelle.
 
 import { useState } from "react";
-import { Footprints, Info, Map as MapIcon, Radio, Route, Share2, WifiOff, Sparkles, RefreshCw, Megaphone } from "lucide-react";
+import { Footprints, Info, Map as MapIcon, Radio, Route, Share2, WifiOff, Smartphone, RefreshCw, Megaphone } from "lucide-react";
 import { BUNDLED_EVENT } from "../config/event";
-import { formatPace } from "../lib/format";
+import { formatDuration, formatPace } from "../lib/format";
+import { minutesToTimeString } from "../lib/timing";
+import { applyBranding } from "./branding";
 import { contrastRatio } from "./color";
-import { Button, Chip, CountdownRing, IconButton, ProgressSteps, RunnerChip, Segmented, SpotCard, Stepper } from "./components";
+import { AppHeader, Button, Chip, CountdownRing, ProgressSteps, RunnerChip, Segmented, SpotCard, Stepper } from "./components";
 import { BottomSheet, Carousel, StatusStrip, TabBar, ToastStack } from "./overlays";
 
 const SWATCHES: Array<[string, string, string]> = [
   ["--ink", "#14213d", "Bleu nuit · textes, surfaces fortes"],
-  ["--sprint", "#ff5a1f", "Orange · action principale"],
+  ["--sprint", "#f26b3a", "Orange · action principale"],
   ["--signal", "#d7f205", "Jaune dossard · live uniquement"],
   ["--bg", "#f6f4ef", "Fond chaud"],
   ["--surface", "#ffffff", "Cartes"],
@@ -20,19 +22,32 @@ const SWATCHES: Array<[string, string, string]> = [
 
 type Tab = "live" | "plan" | "carte" | "infos";
 
+// Teintes d'orange à comparer (toutes AA avec le texte bleu nuit).
+const ORANGES = {
+  vif: "#ff5a1f",
+  adouci: "#f26b3a",
+  corail: "#ee7a52",
+} as const;
+type Orange = keyof typeof ORANGES;
+
+const TIME_PRESETS = [90, 105, 120, 135, 150];
+
 export function Styleguide() {
   const [theme, setTheme] = useState<"light" | "dark">(() =>
     window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   );
   const [mode, setMode] = useState<"time" | "pace">("time");
   const [pace, setPace] = useState(330);
-  const [target, setTarget] = useState<string>("1h45");
+  const [target, setTarget] = useState(117);
+  const [orange, setOrange] = useState<Orange>("adouci");
+  const race = BUNDLED_EVENT.races[0];
+  const start = 14 * 60 + 30;
+  const arrival = minutesToTimeString(start + (mode === "time" ? target : (pace / 60) * race.distanceKm));
   const [spots, setSpots] = useState<string[]>(["1", "3"]);
   const [open, setOpen] = useState<string | null>("2");
   const [sheet, setSheet] = useState(false);
   const [tab, setTab] = useState<Tab>("live");
   const [slide, setSlide] = useState(0);
-  const race = BUNDLED_EVENT.races[0];
 
   const setDocTheme = (t: "light" | "dark") => {
     setTheme(t);
@@ -57,6 +72,23 @@ export function Styleguide() {
       </header>
 
       <Section title="Couleurs">
+        <p className="sg-label">Teinte de l'orange (à choisir)</p>
+        <Segmented
+          label="Teinte de l'orange"
+          value={orange}
+          onChange={(o) => {
+            setOrange(o);
+            applyBranding({ ...BUNDLED_EVENT.branding?.colors, sprint: ORANGES[o] });
+          }}
+          options={[
+            { value: "vif", label: "Vif" },
+            { value: "adouci", label: "Adouci" },
+            { value: "corail", label: "Corail" },
+          ]}
+        />
+        <p className="caption" style={{ marginBottom: "var(--s-4)" }}>
+          S'applique à toute la page : boutons, onglet actif, curseurs. {ORANGES[orange]}
+        </p>
         <div className="sg-swatches">
           {SWATCHES.map(([token, hex, role]) => (
             <div key={token} className="sg-swatch">
@@ -69,8 +101,8 @@ export function Styleguide() {
           ))}
         </div>
         <p className="muted sg-small">
-          Contrastes vérifiés par test (WCAG AA) : texte bleu nuit sur orange {contrastRatio("#14213d", "#ff5a1f").toFixed(1)}:1 —
-          le blanc sur orange ({contrastRatio("#ffffff", "#ff5a1f").toFixed(1)}:1) n'est pas utilisé.
+          Contrastes vérifiés par test (WCAG AA) : texte bleu nuit sur orange {contrastRatio("#14213d", ORANGES[orange]).toFixed(1)}:1 —
+          le blanc sur orange ({contrastRatio("#ffffff", ORANGES[orange]).toFixed(1)}:1) n'est pas utilisé.
         </p>
         <div className="chips">
           <Chip tone="ok">✓ 4 min d'avance</Chip>
@@ -89,33 +121,55 @@ export function Styleguide() {
       </Section>
 
       <Section title="En-tête de l'app">
-        <div className="sg-appbar">
-          <div>
-            <p className="sg-appbar__name display">{BUNDLED_EVENT.event.shortName}</p>
-            <RunnerChip name="Léa" pace="5:30" onClick={() => setSheet(true)} />
-          </div>
-          <IconButton label="Partager" className="sg-appbar__share">
-            <Share2 size={22} />
-          </IconButton>
+        <div className="sg-frame">
+          <AppHeader
+            eventName={BUNDLED_EVENT.event.shortName}
+            onShare={() => {}}
+            runner={<RunnerChip name="Léa" pace="5:30" onClick={() => setSheet(true)} />}
+            info={
+              <>
+                <strong>J-155</strong>dim. 21 mars · 14:30
+              </>
+            }
+          />
         </div>
+        <p className="caption">
+          2 lignes au lieu de 3 : événement + partage, puis le coureur suivi (touche pour le modifier, ce qui ouvre le
+          tiroir) et l'info du moment. Le jour J, l'info devient « Départ dans 12 min », puis « Km ~8 ».
+        </p>
       </Section>
 
       <Section title="Boutons">
         <div className="sg-stack">
-          <Button variant="primary" size="lg" block>
-            Voir où l'encourager
-          </Button>
-          <Button variant="secondary" block icon={<Sparkles size={20} />}>
-            Installer l'app
-          </Button>
-          <div className="sg-row">
-            <Button variant="strong" icon={<Share2 size={18} />}>
-              Partager
+          <div>
+            <Button variant="primary" size="lg" block>
+              Voir où l'encourager
             </Button>
-            <Button variant="ghost">Passer</Button>
-            <Button variant="primary" disabled>
-              Désactivé
+            <p className="caption">Action principale : fin de l'assistant, une seule par écran.</p>
+          </div>
+          <div>
+            <Button variant="secondary" block icon={<Smartphone size={20} />}>
+              Ajouter à l'écran d'accueil
             </Button>
+            <p className="caption">
+              Installe l'app comme une vraie appli (icône sur le téléphone) : ouverture en 1 geste, et elle marche sans
+              réseau le jour J.
+            </p>
+          </div>
+          <div>
+            <div className="sg-row">
+              <Button variant="strong" icon={<Share2 size={18} />}>
+                Partager
+              </Button>
+              <Button variant="ghost">Passer</Button>
+              <Button variant="primary" disabled>
+                Désactivé
+              </Button>
+            </div>
+            <p className="caption">
+              Partager : envoie le lien de suivi (WhatsApp, SMS…). Passer : sauter une étape facultative. Désactivé :
+              tant que la saisie est incomplète.
+            </p>
           </div>
         </div>
       </Section>
@@ -133,13 +187,29 @@ export function Styleguide() {
             ]}
           />
           {mode === "time" ? (
-            <div className="chips">
-              {["1h30", "1h45", "2h00", "2h15", "2h30"].map((t) => (
-                <Chip key={t} selected={t === target} onClick={() => setTarget(t)}>
-                  {t}
-                </Chip>
-              ))}
-            </div>
+            <>
+              <div className="chips chips--fit">
+                {TIME_PRESETS.map((t) => (
+                  <Chip key={t} selected={t === target} onClick={() => setTarget(t)}>
+                    {formatDuration(t).replace(":", "h")}
+                  </Chip>
+                ))}
+              </div>
+              <Stepper
+                label="Temps visé"
+                value={target}
+                onChange={setTarget}
+                min={64}
+                max={189}
+                step={1}
+                unit="heures : minutes"
+                format={(v) => formatDuration(v)}
+                valueText={(v) => `${Math.floor(v / 60)} heure ${v % 60} minutes`}
+              />
+              <p className="caption" style={{ textAlign: "center" }}>
+                Un raccourci, ou n'importe quel temps à la minute près (appui long pour aller vite).
+              </p>
+            </>
           ) : (
             <Stepper
               label="Allure"
@@ -153,7 +223,7 @@ export function Styleguide() {
             />
           )}
           <p className="sg-estimate">
-            Arrivée estimée <span className="num">16:26</span>
+            Arrivée estimée <span className="num">{arrival}</span>
           </p>
         </div>
       </Section>
@@ -229,9 +299,11 @@ export function Styleguide() {
       </Section>
 
       <Section title="Tiroir, toasts, barres">
-        <Button variant="secondary" onClick={() => setSheet(true)}>
-          Ouvrir le tiroir
-        </Button>
+        <p className="caption" style={{ marginTop: 0, marginBottom: "var(--s-3)" }}>
+          Le tiroir est le panneau qui monte du bas quand on touche « Léa · 5:30/km » dans l'en-tête : on y change le
+          prénom ou l'allure sans quitter l'écran. On le ferme en le glissant vers le bas.
+        </p>
+        <RunnerChipDemo onOpen={() => setSheet(true)} />
         <div className="sg-stack" style={{ marginTop: "var(--s-4)" }}>
           <StatusStrip tone="demo">Mode démo · 14:40, jour de la course</StatusStrip>
           <StatusStrip tone="offline">
@@ -272,6 +344,18 @@ export function Styleguide() {
           </Button>
         </div>
       </BottomSheet>
+    </div>
+  );
+}
+
+/** La puce coureur sur fond foncé, comme dans l'en-tête. */
+function RunnerChipDemo({ onOpen }: { onOpen: () => void }) {
+  return (
+    <div className="sg-chipdemo">
+      <RunnerChip name="Léa" pace="5:30" onClick={onOpen} />
+      <span className="caption" style={{ margin: 0, color: "var(--on-strong-muted)" }}>
+        ← touche ici
+      </span>
     </div>
   );
 }

@@ -17,7 +17,8 @@ const light = block(":root {");
 const dark = { ...light, ...block(':root[data-theme="dark"]') };
 light.text = light.ink;
 light.strong = light.ink;
-light.selected = light.ink;
+light["on-soft"] = light.ink;
+light["on-selected"] = light.ink;
 
 // [texte, fond, minimum] : 4.5 = texte courant, 3 = grands textes / éléments graphiques.
 const PAIRS: Array<[string, string, number]> = [
@@ -38,6 +39,7 @@ const PAIRS: Array<[string, string, number]> = [
   ["ko", "ko-bg", 4.5],
   ["info", "info-bg", 4.5],
   ["on-selected", "selected", 4.5],
+  ["on-soft", "soft", 4.5],
   ["ok", "surface", 4.5],
   ["warn", "surface", 4.5],
   ["ko", "surface", 4.5],

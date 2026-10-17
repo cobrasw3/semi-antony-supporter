@@ -3,7 +3,7 @@
 // composants. Voir /styleguide pour tous les états.
 
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { Check, Pencil } from "lucide-react";
+import { Check, Pencil, Share2 } from "lucide-react";
 import { haptic } from "./haptics";
 
 /* ------------------------------------------------------------ Boutons */
@@ -316,5 +316,42 @@ export function SpotCard({
         </div>
       )}
     </article>
+  );
+}
+
+/* ------------------------------------------------------------ En-tête de l'app */
+
+/**
+ * En-tête compact sur 2 lignes : événement + partage, puis le coureur suivi
+ * (touche = modifier) et l'info clé du moment (ex. « Dim. 21 mars · 14:30 »).
+ */
+export function AppHeader({
+  eventName,
+  logo,
+  info,
+  runner,
+  onShare,
+}: {
+  eventName: string;
+  logo?: string | null;
+  /** Info clé à droite de la puce coureur (date/heure de départ, J-x…). */
+  info?: ReactNode;
+  runner: ReactNode;
+  onShare: () => void;
+}) {
+  return (
+    <header className="app-bar">
+      <div className="app-bar__row">
+        {logo && <img className="app-bar__logo" src={logo} alt="" />}
+        <p className="app-bar__event display">{eventName}</p>
+        <button type="button" className="icon-btn app-bar__share" onClick={onShare} aria-label="Partager le suivi">
+          <Share2 size={22} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="app-bar__row app-bar__row--runner">
+        {runner}
+        {info && <span className="app-bar__info">{info}</span>}
+      </div>
+    </header>
   );
 }
