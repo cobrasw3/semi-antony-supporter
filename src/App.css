@@ -793,3 +793,50 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.a-propos-versions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-2);
+  margin: var(--space-2) 0 0;
+}
+
+.a-propos-versions dt {
+  font-weight: 700;
+}
+
+.a-propos-versions dd {
+  margin: 0;
+}
+
+/* --- Toast de mise à jour --- */
+
+.toast {
+  position: fixed;
+  z-index: 2000;
+  left: 50%;
+  bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: max-content;
+  max-width: calc(100% - 2 * var(--space-3));
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: #14171a;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-weight: 600;
+}
+
+.toast button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #e8b800;
+  color: #14171a;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}

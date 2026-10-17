@@ -8,7 +8,7 @@ import { Itineraire } from "./components/Itineraire";
 import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_EVENT } from "./config/event";
-import { findRace, trackOf } from "./lib/event";
+import { findRace, parseEventConfig, trackOf } from "./lib/event";
 import {
   buildShareText,
   buildShareUrl,
@@ -21,6 +21,8 @@ import {
 import { readJson, writeJson } from "./lib/storage";
 import { computeAllPassages, groupPassagesBySpot, minutesToTimeString, timeStringToMinutes } from "./lib/timing";
 import { IS_DEMO, useEventClock } from "./hooks/useEventClock";
+import { useRemoteJson } from "./hooks/useRemoteJson";
+import { UpdateToast } from "./components/UpdateToast";
 import "./App.css";
 
 const PREFS_KEY = "semi-supporter:prefs";
@@ -30,7 +32,10 @@ function readRaceFromUrl(): string | null {
 }
 
 function App() {
-  const config = BUNDLED_EVENT;
+  // event.json : affiché tout de suite, rafraîchi en arrière-plan (un
+  // changement d'horaire ou de spot arrive sans nouvelle version de l'app).
+  const eventData = useRemoteJson("/data/event.json", "semi-supporter:event", BUNDLED_EVENT, parseEventConfig);
+  const config = eventData.data;
   const [raceId, setRaceId] = useState<string | null>(readRaceFromUrl);
   const race = findRace(config, raceId);
   const [prefs, setPrefs] = useState<RunnerPrefs>(() =>
@@ -191,8 +196,9 @@ function App() {
 
       <footer className="app-footer">
         <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>
-        <APropos />
+        <APropos appVersion={__APP_VERSION__} contentVersion={config.contentVersion} contentUpdatedAt={config.contentUpdatedAt} fetchedAt={eventData.fetchedAt} />
       </footer>
+      <UpdateToast />
     </div>
   );
 }
