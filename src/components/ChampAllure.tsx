@@ -1,52 +1,19 @@
-import { useEffect, useState } from "react";
-import { paceFromTargetTime } from "../lib/timing";
-import {
-  autoFormatTimeInput,
-  formatDuration,
-  formatPace,
-  parseDuration,
-  parsePace,
-  readPaceFromUrl,
-  readRunnerNameFromUrl,
-} from "../lib/format";
-
-type Mode = "pace" | "duration";
+import { autoFormatTimeInput, formatDuration, formatPace, type InputMode, type RunnerPrefs } from "../lib/format";
 
 interface ChampAllureProps {
+  prefs: RunnerPrefs;
+  onChange: (patch: Partial<RunnerPrefs>) => void;
   totalDistanceKm: number;
-  defaultPace: string;
-  defaultTargetTime: string;
-  onPaceChange: (paceMinPerKm: number | null) => void;
-  onRunnerNameChange: (runnerName: string) => void;
+  /** Allure résolue (null si la saisie est invalide). */
+  activePace: number | null;
+  /** Message d'erreur de saisie, s'il y en a un. */
+  error: string | null;
 }
 
-export function ChampAllure({
-  totalDistanceKm,
-  defaultPace,
-  defaultTargetTime,
-  onPaceChange,
-  onRunnerNameChange,
-}: ChampAllureProps) {
-  const [mode, setMode] = useState<Mode>("pace");
-  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? defaultPace);
-  const [durationText, setDurationText] = useState(defaultTargetTime);
-  const [runnerName, setRunnerName] = useState(() => readRunnerNameFromUrl() ?? "");
-
-  const resolvedPace = mode === "pace" ? parsePace(paceText) : null;
-  const resolvedDuration = mode === "duration" ? parseDuration(durationText) : null;
-  const paceFromDuration = resolvedDuration ? paceFromTargetTime(resolvedDuration, totalDistanceKm) : null;
-  const activePace = mode === "pace" ? resolvedPace : paceFromDuration;
-
-  useEffect(() => {
-    onPaceChange(activePace);
-    // onPaceChange est stable (useCallback côté App) : seule activePace doit redéclencher.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePace]);
-
-  useEffect(() => {
-    onRunnerNameChange(runnerName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runnerName]);
+export function ChampAllure({ prefs, onChange, totalDistanceKm, activePace, error }: ChampAllureProps) {
+  const { mode } = prefs;
+  const setMode = (m: InputMode) => onChange({ mode: m });
+  const errorId = "champ-allure-erreur";
 
   return (
     <div className="champ-allure">
@@ -55,9 +22,13 @@ export function ChampAllure({
         <input
           className="champ-input champ-runner-input"
           type="text"
+          name="prenom"
+          autoComplete="off"
+          enterKeyHint="done"
+          maxLength={40}
           placeholder="Prénom du coureur"
-          value={runnerName}
-          onChange={(e) => setRunnerName(e.target.value)}
+          value={prefs.name}
+          onChange={(e) => onChange({ name: e.target.value })}
         />
       </label>
 
@@ -65,6 +36,7 @@ export function ChampAllure({
         <button
           type="button"
           className={mode === "pace" ? "mode-btn active" : "mode-btn"}
+          aria-pressed={mode === "pace"}
           onClick={() => setMode("pace")}
         >
           Allure (min/km)
@@ -72,6 +44,7 @@ export function ChampAllure({
         <button
           type="button"
           className={mode === "duration" ? "mode-btn active" : "mode-btn"}
+          aria-pressed={mode === "duration"}
           onClick={() => setMode("duration")}
         >
           Temps visé
@@ -80,42 +53,46 @@ export function ChampAllure({
 
       {mode === "pace" ? (
         <label className="champ-input-label">
-          Allure (min:sec / km)
+          Allure (min:s par km)
           <input
             className="champ-input"
             type="text"
             inputMode="numeric"
+            enterKeyHint="done"
             placeholder="5:30"
-            value={paceText}
-            onChange={(e) => setPaceText(autoFormatTimeInput(e.target.value))}
+            aria-invalid={error !== null}
+            aria-describedby={error ? errorId : undefined}
+            value={prefs.paceText}
+            onChange={(e) => onChange({ paceText: autoFormatTimeInput(e.target.value) })}
           />
         </label>
       ) : (
         <label className="champ-input-label">
-          Temps visé sur le semi (h:min)
+          Temps visé (h:min)
           <input
             className="champ-input"
             type="text"
             inputMode="numeric"
+            enterKeyHint="done"
             placeholder="1:57"
-            value={durationText}
-            onChange={(e) => setDurationText(autoFormatTimeInput(e.target.value))}
+            aria-invalid={error !== null}
+            aria-describedby={error ? errorId : undefined}
+            value={prefs.durationText}
+            onChange={(e) => onChange({ durationText: autoFormatTimeInput(e.target.value) })}
           />
-          {paceFromDuration && (
-            <span className="champ-hint">≈ allure {formatPace(paceFromDuration)} min/km</span>
-          )}
+          {activePace !== null && <span className="champ-hint">≈ allure {formatPace(activePace)} min/km</span>}
         </label>
       )}
 
       {activePace !== null && (
-        <p className="champ-total">
+        <p className="champ-total" aria-live="polite">
           Temps total estimé : <strong>{formatDuration(activePace * totalDistanceKm)}</strong>
         </p>
       )}
 
-      {activePace === null && (
-        <p className="champ-error">
-          Tape juste les chiffres, ex. {mode === "pace" ? "530 pour 5:30" : "157 pour 1:57"}
+      {error && (
+        <p className="champ-error" id={errorId} role="alert">
+          {error}
         </p>
       )}
     </div>

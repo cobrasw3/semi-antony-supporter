@@ -114,6 +114,7 @@
       "spots": [
         {
           "id": "stade-suant",
+          "where": "au stade Georges Suant",
           "name": "Stade Georges Suant (départ / arrivée)",
           "shortName": "Stade Georges Suant",
           "address": "165 avenue François-Molé, Antony",
@@ -126,6 +127,7 @@
         },
         {
           "id": "rue-marius-hue",
+          "where": "rue Marius Hue",
           "name": "Rue Marius Hue",
           "shortName": "Rue Marius Hue",
           "address": "Rue Marius Hue, Antony",
@@ -137,6 +139,7 @@
         },
         {
           "id": "parc-heller",
+          "where": "au parc Heller",
           "name": "Parc Heller",
           "shortName": "Parc Heller",
           "address": "Villa Henriette, Antony",
@@ -148,6 +151,7 @@
         },
         {
           "id": "rue-des-champs",
+          "where": "rue des Champs",
           "name": "Rue des Champs (montée du 4e km)",
           "shortName": "Rue des Champs",
           "address": "Rue des Champs, Antony",
@@ -159,6 +163,7 @@
         },
         {
           "id": "rue-des-sources-prolongee",
+          "where": "rue des Sources Prolongée",
           "name": "Rue des Sources Prolongée (descente)",
           "shortName": "Rue des Sources Prolongée",
           "address": "Rue des Sources Prolongée, Antony",
@@ -170,6 +175,7 @@
         },
         {
           "id": "rue-des-hautes-bievres",
+          "where": "rue des Hautes Bièvres",
           "name": "Rue des Hautes Bièvres (dernière ligne droite)",
           "shortName": "Rue des Hautes Bièvres",
           "address": "Rue des Hautes Bièvres, Antony",

@@ -6,9 +6,20 @@ import { Partage } from "./components/Partage";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_EVENT } from "./config/event";
 import { findRace, trackOf } from "./lib/event";
-import { buildShareUrl } from "./lib/format";
+import {
+  buildShareText,
+  buildShareUrl,
+  resolveInitialPrefs,
+  resolvePace,
+  sanitizeName,
+  updateCurrentUrl,
+  type RunnerPrefs,
+} from "./lib/format";
+import { readJson, writeJson } from "./lib/storage";
 import { computeAllPassages, groupPassagesBySpot } from "./lib/timing";
 import "./App.css";
+
+const PREFS_KEY = "semi-supporter:prefs";
 
 function readRaceFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("race");
@@ -18,21 +29,29 @@ function App() {
   const config = BUNDLED_EVENT;
   const [raceId, setRaceId] = useState<string | null>(readRaceFromUrl);
   const race = findRace(config, raceId);
-  const [paceMinPerKm, setPaceMinPerKm] = useState<number | null>(null);
-  const [runnerName, setRunnerName] = useState("");
-
-  const handlePaceChange = useCallback((pace: number | null) => setPaceMinPerKm(pace), []);
-  const handleRunnerNameChange = useCallback((name: string) => setRunnerName(name), []);
-
-  // Reflète l'allure et le prénom du coureur dans l'URL, pour que le lien
-  // partagé rouvre directement sur les mêmes horaires, personnalisés.
-  const shareUrl = useMemo(
-    () => buildShareUrl(paceMinPerKm, runnerName, config.races.length > 1 ? race.id : null),
-    [paceMinPerKm, runnerName, race.id, config.races.length]
+  const [prefs, setPrefs] = useState<RunnerPrefs>(() =>
+    resolveInitialPrefs(window.location.search, readJson<Partial<RunnerPrefs>>(PREFS_KEY), {
+      pace: race.defaultPace,
+      targetTime: race.defaultTargetTime,
+    })
   );
+  const updatePrefs = useCallback((patch: Partial<RunnerPrefs>) => setPrefs((p) => ({ ...p, ...patch })), []);
+
+  const { pace: paceMinPerKm, error: paceError } = resolvePace(prefs, race.distanceKm, config.settings.pace);
+  const runnerName = sanitizeName(prefs.name);
+  const sharedRaceId = config.races.length > 1 ? race.id : null;
+
+  // Mémorise localement (jamais envoyé à un serveur) pour restaurer à
+  // l'ouverture de l'app installée, dont la start_url n'a pas de paramètres.
+  useEffect(() => writeJson(PREFS_KEY, prefs), [prefs]);
+
+  // Reflète l'allure et le prénom dans l'URL courante (rechargement fidèle).
   useEffect(() => {
-    if (shareUrl) window.history.replaceState(null, "", shareUrl);
-  }, [shareUrl]);
+    window.history.replaceState(null, "", updateCurrentUrl(window.location.href, paceMinPerKm, runnerName, sharedRaceId));
+  }, [paceMinPerKm, runnerName, sharedRaceId]);
+
+  const shareUrl = buildShareUrl(window.location.origin, paceMinPerKm, runnerName, sharedRaceId);
+  const shareText = buildShareText(runnerName, config.event.shortName);
 
   const passages = useMemo(
     () => (paceMinPerKm ? computeAllPassages(race, paceMinPerKm, config.settings.margin) : []),
@@ -42,7 +61,6 @@ function App() {
   const track = useMemo(() => trackOf(race), [race]);
 
   const highlight = race.spots.find((s) => s.highlight);
-  const trimmedRunnerName = runnerName.trim();
 
   return (
     <div className="app">
@@ -69,19 +87,18 @@ function App() {
 
       <section className="saisie" aria-label="Ton coureur">
         <ChampAllure
-          key={`allure-${race.id}`}
+          prefs={prefs}
+          onChange={updatePrefs}
           totalDistanceKm={race.distanceKm}
-          defaultPace={race.defaultPace}
-          defaultTargetTime={race.defaultTargetTime}
-          onPaceChange={handlePaceChange}
-          onRunnerNameChange={handleRunnerNameChange}
+          activePace={paceMinPerKm}
+          error={paceError}
         />
-        <Partage url={shareUrl} />
+        <Partage url={shareUrl} text={shareText} title={config.event.name} />
       </section>
 
-      {trimmedRunnerName && (
+      {runnerName && (
         <div className="runner-banner">
-          🏃 Tu suis <strong>{trimmedRunnerName}</strong> — voici où et quand l'encourager.
+          🏃 Tu suis <strong>{runnerName}</strong> — voici où et quand l'encourager.
         </div>
       )}
 
@@ -92,12 +109,12 @@ function App() {
 
       {highlight && (
         <div className="best-spot-banner">
-          ⭐ Meilleur spot : <strong>{highlight.shortName}</strong> — reste ici, tu vois ton coureur
+          ⭐ Meilleur spot : <strong>{highlight.shortName}</strong> — reste ici, tu vois {runnerName || "ton coureur"}{" "}
           passer {highlight.km.length} fois sans bouger.
         </div>
       )}
 
-      <RecapPassages spots={race.spots} passagesBySpot={passagesBySpot} />
+      <RecapPassages spots={race.spots} passagesBySpot={passagesBySpot} runnerName={runnerName} />
 
       <footer className="app-footer">
         <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>

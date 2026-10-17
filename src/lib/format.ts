@@ -61,46 +61,149 @@ export function autoFormatTimeInput(raw: string): string {
   return `${digits.slice(0, -2)}:${digits.slice(-2)}`;
 }
 
-/** Paramètres d'URL utilisés pour partager l'allure et le prénom du coureur suivi. */
-const PACE_URL_PARAM = "pace";
-const RUNNER_URL_PARAM = "runner";
+export type InputMode = "pace" | "duration";
 
-/** Lit l'allure ("M:SS") depuis le paramètre d'URL, si présent. */
-export function readPaceFromUrl(): string | null {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get(PACE_URL_PARAM);
+/** Préférences du supporter : mémorisées sur l'appareil, jamais envoyées à un serveur. */
+export interface RunnerPrefs {
+  name: string;
+  mode: InputMode;
+  paceText: string;
+  durationText: string;
 }
 
-/** Lit le prénom du coureur suivi depuis le paramètre d'URL, si présent. */
-export function readRunnerNameFromUrl(): string | null {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get(RUNNER_URL_PARAM);
+/** Paramètres d'URL. `runner` est l'ancien nom de `name`, toujours accepté. */
+const PACE_URL_PARAM = "pace";
+const NAME_URL_PARAM = "name";
+const LEGACY_NAME_URL_PARAM = "runner";
+const MAX_NAME_LENGTH = 40;
+
+export function sanitizeName(name: string): string {
+  return name.replace(/\s+/g, " ").trim().slice(0, MAX_NAME_LENGTH);
 }
 
 /**
- * Construit l'URL de partage courante, avec l'allure et le prénom du
- * coureur (si renseigné) encodés en paramètres — pour qu'un lien partagé
- * rouvre directement sur les mêmes horaires, personnalisés.
+ * Préférences initiales : l'URL (lien partagé) prime, puis ce qui a été
+ * mémorisé sur l'appareil (app installée : start_url sans paramètres),
+ * puis les valeurs par défaut de la course.
  */
-export function buildShareUrl(paceMinPerKm: number | null, runnerName?: string, raceId?: string | null): string {
-  if (typeof window === "undefined") return "";
-  const url = new URL(window.location.href);
+export function resolveInitialPrefs(
+  search: string,
+  stored: Partial<RunnerPrefs> | null,
+  defaults: { pace: string; targetTime: string }
+): RunnerPrefs {
+  const params = new URLSearchParams(search);
+  const urlPace = params.get(PACE_URL_PARAM);
+  const urlName = params.get(NAME_URL_PARAM) ?? params.get(LEGACY_NAME_URL_PARAM);
+  const fromUrl = urlPace !== null || urlName !== null;
 
+  if (fromUrl) {
+    return {
+      name: sanitizeName(urlName ?? ""),
+      mode: "pace",
+      paceText: urlPace && parsePace(urlPace) ? autoFormatTimeInput(urlPace) : defaults.pace,
+      durationText: defaults.targetTime,
+    };
+  }
+  return {
+    name: sanitizeName(stored?.name ?? ""),
+    mode: stored?.mode === "duration" ? "duration" : "pace",
+    paceText: stored?.paceText ?? defaults.pace,
+    durationText: stored?.durationText ?? defaults.targetTime,
+  };
+}
+
+/** Le prénom s'il est connu, sinon « ton coureur ». */
+export function runnerLabel(name: string): string {
+  return sanitizeName(name) || "ton coureur";
+}
+
+/** Même chose avec une majuscule, pour un début de phrase. */
+export function RunnerLabel(name: string): string {
+  const label = runnerLabel(name);
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/**
+ * Lien de partage « propre » : uniquement le prénom, l'allure et la course
+ * (pas les paramètres techniques comme demo/now/calibrage).
+ */
+export function buildShareUrl(
+  base: string,
+  paceMinPerKm: number | null,
+  runnerName: string,
+  raceId?: string | null
+): string {
+  const url = new URL("/", base);
+  const name = sanitizeName(runnerName);
+  if (name) url.searchParams.set(NAME_URL_PARAM, name);
+  if (paceMinPerKm) url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));
+  if (raceId) url.searchParams.set("race", raceId);
+  return url.toString();
+}
+
+/**
+ * URL courante mise à jour avec l'allure et le prénom (conserve les autres
+ * paramètres, ex. demo/now), pour un rechargement ou un favori fidèles.
+ */
+export function updateCurrentUrl(
+  current: string,
+  paceMinPerKm: number | null,
+  runnerName: string,
+  raceId?: string | null
+): string {
+  const url = new URL(current);
+  url.searchParams.delete(LEGACY_NAME_URL_PARAM);
+  const name = sanitizeName(runnerName);
+  if (name) url.searchParams.set(NAME_URL_PARAM, name);
+  else url.searchParams.delete(NAME_URL_PARAM);
+  if (paceMinPerKm) url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));
+  else url.searchParams.delete(PACE_URL_PARAM);
   if (raceId) url.searchParams.set("race", raceId);
   else url.searchParams.delete("race");
-
-  if (paceMinPerKm) {
-    url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));
-  } else {
-    url.searchParams.delete(PACE_URL_PARAM);
-  }
-
-  const trimmedRunnerName = runnerName?.trim();
-  if (trimmedRunnerName) {
-    url.searchParams.set(RUNNER_URL_PARAM, trimmedRunnerName);
-  } else {
-    url.searchParams.delete(RUNNER_URL_PARAM);
-  }
-
   return url.toString();
+}
+
+/** Message de partage (« Suis Léa au Semi d'Antony 👉 »). */
+export function buildShareText(runnerName: string, eventShortName: string): string {
+  const name = sanitizeName(runnerName);
+  return name ? `Suis ${name} au ${eventShortName} 👉` : `Suis le ${eventShortName} en direct 👉`;
+}
+
+export interface PaceBounds {
+  minMinPerKm: number;
+  maxMinPerKm: number;
+}
+
+/**
+ * Allure active à partir de la saisie (allure directe ou temps visé), avec
+ * un message d'erreur clair si la saisie est invalide ou hors bornes.
+ */
+export function resolvePace(
+  prefs: Pick<RunnerPrefs, "mode" | "paceText" | "durationText">,
+  totalDistanceKm: number,
+  bounds: PaceBounds
+): { pace: number | null; error: string | null } {
+  const min = formatPace(bounds.minMinPerKm);
+  const max = formatPace(bounds.maxMinPerKm);
+
+  if (prefs.mode === "pace") {
+    if (!prefs.paceText.trim()) return { pace: null, error: "Indique une allure, par ex. 530 pour 5:30 min/km." };
+    const pace = parsePace(prefs.paceText);
+    if (pace === null) return { pace: null, error: "Allure non reconnue : tape juste les chiffres, par ex. 530 pour 5:30." };
+    if (pace < bounds.minMinPerKm || pace > bounds.maxMinPerKm) {
+      return { pace: null, error: `L'allure doit être comprise entre ${min} et ${max} min/km.` };
+    }
+    return { pace, error: null };
+  }
+
+  const minTime = formatDuration(Math.ceil(bounds.minMinPerKm * totalDistanceKm));
+  const maxTime = formatDuration(Math.floor(bounds.maxMinPerKm * totalDistanceKm));
+  if (!prefs.durationText.trim()) return { pace: null, error: "Indique un temps visé, par ex. 157 pour 1h57." };
+  const duration = parseDuration(prefs.durationText);
+  if (duration === null) return { pace: null, error: "Temps non reconnu : tape juste les chiffres, par ex. 157 pour 1h57." };
+  const pace = duration / totalDistanceKm;
+  if (pace < bounds.minMinPerKm || pace > bounds.maxMinPerKm) {
+    return { pace: null, error: `Le temps visé doit être compris entre ${minTime} et ${maxTime} (allure ${min} à ${max} min/km).` };
+  }
+  return { pace, error: null };
 }

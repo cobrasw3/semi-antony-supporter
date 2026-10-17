@@ -408,3 +408,33 @@
 .a-propos-text a {
   color: var(--color-primary);
 }
+
+.recap-sentence {
+  margin: var(--space-1) 0 0;
+  font-weight: 600;
+}
+
+.partage-btn {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.partage-feedback {
+  min-height: 1.2em;
+  margin: var(--space-1) 0 0;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-align: center;
+}
+
+.partage-qr-toggle {
+  display: block;
+  margin: 0 auto;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--color-primary-dark);
+  font-size: 0.95rem;
+  text-decoration: underline;
+  cursor: pointer;
+}

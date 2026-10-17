@@ -29,6 +29,8 @@ export interface Spot {
   name: string;
   /** Nom court pour les phrases (« Léa passe au Parc Heller vers… »). */
   shortName: string;
+  /** Complément de lieu pour les phrases : « au parc Heller », « rue des Champs ». */
+  where?: string;
   address: string;
   lat: number;
   lng: number;
@@ -129,4 +131,9 @@ export function trackOf(race: Race): LatLng[] {
 /** Course demandée (par id), ou la première de l'événement. */
 export function findRace(config: EventConfig, raceId: string | null | undefined): Race {
   return config.races.find((r) => r.id === raceId) ?? config.races[0];
+}
+
+/** « au parc Heller », « rue des Champs »… (repli : « à <nom court> »). */
+export function spotWhere(spot: Pick<Spot, "where" | "shortName">): string {
+  return spot.where ?? `à ${spot.shortName}`;
 }

@@ -1,12 +1,14 @@
-import type { Spot } from "../lib/event";
+import { spotWhere, type Spot } from "../lib/event";
+import { RunnerLabel } from "../lib/format";
 import type { Passage } from "../lib/timing";
 
 interface RecapPassagesProps {
   spots: Spot[];
   passagesBySpot: Record<string, Passage[]>;
+  runnerName: string;
 }
 
-export function RecapPassages({ spots, passagesBySpot }: RecapPassagesProps) {
+export function RecapPassages({ spots, passagesBySpot, runnerName }: RecapPassagesProps) {
   // Un groupe par spot (nom + accès + conseil affichés une seule fois), ses
   // passages étant déjà en ordre croissant. Les groupes eux-mêmes sont
   // ordonnés par leur premier passage, pour rester globalement chronologique.
@@ -28,6 +30,11 @@ export function RecapPassages({ spots, passagesBySpot }: RecapPassagesProps) {
               <p className="recap-group-name">
                 {spot.highlight ? "⭐ " : ""}
                 {spot.name}
+              </p>
+              <p className="recap-sentence">
+                {RunnerLabel(runnerName)} passe {passages.length > 1 ? `${passages.length} fois ` : ""}
+                {spotWhere(spot)} vers{" "}
+                {passages.map((p) => p.estimatedTime).join(", ")}.
               </p>
               <p className="recap-acces">{spot.access}</p>
               <p className="recap-astuce">{spot.description}</p>
