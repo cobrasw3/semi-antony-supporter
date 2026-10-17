@@ -364,3 +364,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   créneau de présence « j'arrive à / je pars à »).
 - Corrigé : minutes de marche arrondies différemment entre l'option et
   l'explication (8 vs 9) → arrondi supérieur partout.
+- Preview redéployée à la demande de l'utilisateur (`feat/spots-choisis` @
+  5a80ffd, cible preview, prod non touchée) :
+  https://semi-antony-supporter-7p0wcl5mj-pmachard2001-5765s-projects.vercel.app
+  — Ready, `/` en 200.
