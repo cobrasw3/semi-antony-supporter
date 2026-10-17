@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { APropos } from "./components/APropos";
+import { BandeauConnexion } from "./components/BandeauConnexion";
 import { Carte, type MapFocus } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
@@ -22,6 +23,7 @@ import { readJson, writeJson } from "./lib/storage";
 import { computeAllPassages, groupPassagesBySpot, minutesToTimeString, timeStringToMinutes } from "./lib/timing";
 import { IS_DEMO, useEventClock } from "./hooks/useEventClock";
 import { useRemoteJson } from "./hooks/useRemoteJson";
+import { useOnline } from "./hooks/useOnline";
 import { UpdateToast } from "./components/UpdateToast";
 import "./App.css";
 
@@ -85,6 +87,8 @@ function App() {
   // Numéro de chaque spot (ordre de event.json), le même sur la carte et dans les listes.
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const clock = useEventClock(config.event.date, config.event.timeZone);
+  const online = useOnline();
+  const beforeRaceDay = clock.date < config.event.date;
 
   const scrollToSpot = useCallback((spotId: string) => {
     const card = document.getElementById(`spot-${spotId}`);
@@ -116,6 +120,7 @@ function App() {
           <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
         </header>
       </div>
+      <BandeauConnexion online={online} stale={eventData.stale} fetchedAt={eventData.fetchedAt} />
 
       {config.races.length > 1 && (
         <div className="race-toggle mode-toggle" role="group" aria-label="Choix de la course">
@@ -154,6 +159,12 @@ function App() {
         runnerName={runnerName}
         onSelectSpot={scrollToSpot}
       />
+
+      {beforeRaceDay && (
+        <p className="astuce-hors-ligne">
+          💡 Ouvre l'app la veille : elle sera disponible hors-ligne le jour J, même si le réseau sature.
+        </p>
+      )}
 
       <InstallPrompt ready={engaged && paceMinPerKm !== null} />
 

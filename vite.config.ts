@@ -53,6 +53,20 @@ export default defineConfig({
               expiration: { maxEntries: 20 },
             },
           },
+          {
+            // Tuiles de carte : cache d'abord, limité en nombre et en durée.
+            // Domaines cohérents avec src/config/tiles.ts et la CSP de
+            // vercel.json. ⚠️ Fonction sérialisée telle quelle dans sw.js :
+            // elle ne doit référencer aucune variable extérieure.
+            urlPattern: ({ url }) =>
+              /(^|\.)(tile\.openstreetmap\.org|api\.maptiler\.com|tiles\.stadiamaps\.com)$/.test(url.hostname),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "tuiles",
+              expiration: { maxEntries: 400, maxAgeSeconds: 14 * 24 * 3600, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
         ],
       },
     }),
