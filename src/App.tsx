@@ -67,11 +67,28 @@ function App() {
         </div>
       )}
 
+      <section className="saisie" aria-label="Ton coureur">
+        <ChampAllure
+          key={`allure-${race.id}`}
+          totalDistanceKm={race.distanceKm}
+          defaultPace={race.defaultPace}
+          defaultTargetTime={race.defaultTargetTime}
+          onPaceChange={handlePaceChange}
+          onRunnerNameChange={handleRunnerNameChange}
+        />
+        <Partage url={shareUrl} />
+      </section>
+
       {trimmedRunnerName && (
         <div className="runner-banner">
           🏃 Tu suis <strong>{trimmedRunnerName}</strong> — voici où et quand l'encourager.
         </div>
       )}
+
+      <details className="carte-section" open>
+        <summary>🗺️ Carte du parcours</summary>
+        <Carte key={race.id} loopPoints={track} spots={race.spots} passagesBySpot={passagesBySpot} />
+      </details>
 
       {highlight && (
         <div className="best-spot-banner">
@@ -79,19 +96,6 @@ function App() {
           passer {highlight.km.length} fois sans bouger.
         </div>
       )}
-
-      <Carte key={race.id} loopPoints={track} spots={race.spots} passagesBySpot={passagesBySpot} />
-
-      <ChampAllure
-        key={`allure-${race.id}`}
-        totalDistanceKm={race.distanceKm}
-        defaultPace={race.defaultPace}
-        defaultTargetTime={race.defaultTargetTime}
-        onPaceChange={handlePaceChange}
-        onRunnerNameChange={handleRunnerNameChange}
-      />
-
-      <Partage url={shareUrl} />
 
       <RecapPassages spots={race.spots} passagesBySpot={passagesBySpot} />
 

@@ -48,6 +48,18 @@ function FitToRoute({ loopPoints }: { loopPoints: LatLng[] }) {
   return null;
 }
 
+/** Recalcule la taille de la carte quand son conteneur change (carte repliée puis dépliée). */
+function InvalidateOnResize() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 interface CalibrageResult {
   lat: number;
   lng: number;
@@ -161,6 +173,7 @@ export function Carte({ loopPoints, spots, passagesBySpot }: CarteProps) {
           );
         })}
         <FitToRoute loopPoints={loopPoints} />
+        <InvalidateOnResize />
         {calibrage && <CalibrageClickListener loopPoints={loopPoints} onResult={setCalibrageResult} />}
         {calibrage && calibrageResult && (
           <Marker position={[calibrageResult.lat, calibrageResult.lng]} icon={calibrageMarkerIcon} />

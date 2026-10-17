@@ -49,7 +49,7 @@ export function ChampAllure({
   }, [runnerName]);
 
   return (
-    <section className="champ-allure" aria-label="Allure du coureur">
+    <div className="champ-allure">
       <label className="champ-input-label champ-runner-label">
         Qui encourages-tu ? (optionnel)
         <input
@@ -89,11 +89,6 @@ export function ChampAllure({
             value={paceText}
             onChange={(e) => setPaceText(autoFormatTimeInput(e.target.value))}
           />
-          {paceFromDuration === null && resolvedPace && (
-            <span className="champ-hint">
-              ≈ temps total {formatDuration(resolvedPace * totalDistanceKm)}
-            </span>
-          )}
         </label>
       ) : (
         <label className="champ-input-label">
@@ -112,11 +107,17 @@ export function ChampAllure({
         </label>
       )}
 
+      {activePace !== null && (
+        <p className="champ-total">
+          Temps total estimé : <strong>{formatDuration(activePace * totalDistanceKm)}</strong>
+        </p>
+      )}
+
       {activePace === null && (
         <p className="champ-error">
           Tape juste les chiffres, ex. {mode === "pace" ? "530 pour 5:30" : "157 pour 1:57"}
         </p>
       )}
-    </section>
+    </div>
   );
 }
