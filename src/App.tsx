@@ -3,6 +3,7 @@ import { APropos } from "./components/APropos";
 import { Carte } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
+import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_EVENT } from "./config/event";
 import { findRace, trackOf } from "./lib/event";
@@ -16,7 +17,8 @@ import {
   type RunnerPrefs,
 } from "./lib/format";
 import { readJson, writeJson } from "./lib/storage";
-import { computeAllPassages, groupPassagesBySpot } from "./lib/timing";
+import { computeAllPassages, groupPassagesBySpot, minutesToTimeString, timeStringToMinutes } from "./lib/timing";
+import { IS_DEMO, useEventClock } from "./hooks/useEventClock";
 import "./App.css";
 
 const PREFS_KEY = "semi-supporter:prefs";
@@ -61,9 +63,19 @@ function App() {
   const track = useMemo(() => trackOf(race), [race]);
 
   const highlight = race.spots.find((s) => s.highlight);
+  const clock = useEventClock(config.event.date, config.event.timeZone);
+
+  const scrollToSpot = useCallback((spotId: string) => {
+    document.getElementById(`spot-${spotId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   return (
     <div className="app">
+      {IS_DEMO && (
+        <div className="demo-banner" role="status">
+          🎬 Mode démo — heure simulée {minutesToTimeString(clock.minutes)}, jour de la course
+        </div>
+      )}
       <header className="app-header">
         <h1>{config.event.name}</h1>
         <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
@@ -96,11 +108,16 @@ function App() {
         <Partage url={shareUrl} text={shareText} title={config.event.name} />
       </section>
 
-      {runnerName && (
-        <div className="runner-banner">
-          🏃 Tu suis <strong>{runnerName}</strong> — voici où et quand l'encourager.
-        </div>
-      )}
+      <ProchainPassage
+        passages={passages}
+        spots={race.spots}
+        startMinutes={timeStringToMinutes(race.startTime)}
+        clock={clock}
+        eventDate={config.event.date}
+        dateToConfirm={config.event.dateToConfirm}
+        runnerName={runnerName}
+        onSelectSpot={scrollToSpot}
+      />
 
       <details className="carte-section" open>
         <summary>🗺️ Carte du parcours</summary>

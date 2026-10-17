@@ -26,7 +26,7 @@ export function RecapPassages({ spots, passagesBySpot, runnerName }: RecapPassag
       ) : (
         <ul className="recap-list">
           {groups.map(({ spot, passages }) => (
-            <li key={spot.id} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
+            <li key={spot.id} id={`spot-${spot.id}`} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
               <p className="recap-group-name">
                 {spot.highlight ? "⭐ " : ""}
                 {spot.name}
