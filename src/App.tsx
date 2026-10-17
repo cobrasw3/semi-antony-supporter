@@ -22,6 +22,7 @@ import {
   type RunnerPrefs,
 } from "./lib/format";
 import { readJson, writeJson } from "./lib/storage";
+import { track as trackEvent } from "./lib/analytics";
 import { computeAllPassages, groupPassagesBySpot, minutesToTimeString, timeStringToMinutes } from "./lib/timing";
 import { IS_DEMO, useEventClock } from "./hooks/useEventClock";
 import { useRemoteJson } from "./hooks/useRemoteJson";
@@ -151,7 +152,7 @@ function App() {
           activePace={paceMinPerKm}
           error={paceError}
         />
-        <Partage url={shareUrl} text={shareText} title={config.event.name} />
+        <Partage url={shareUrl} text={shareText} title={config.event.name} onShared={(method) => trackEvent("partage", { methode: method })} />
       </section>
 
       <ProchainPassage
@@ -180,6 +181,8 @@ function App() {
         runnerName={runnerName}
         spotNumbers={spotNumbers}
         onSelectSpot={scrollToSpot}
+        onOpen={() => trackEvent("itineraire_ouvert")}
+        onPlan={() => trackEvent("plan_optimal")}
       />
 
       <details className="carte-section" open ref={mapSectionRef}>

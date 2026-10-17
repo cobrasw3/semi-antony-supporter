@@ -3,7 +3,6 @@ import { dismissInstall, promptInstall, useInstallState } from "../pwa/install";
 interface InstallPromptProps {
   /** N'afficher qu'après la saisie de l'allure (pas au premier écran). */
   ready: boolean;
-  onInstalled?: () => void;
 }
 
 /** Icône « Partager » d'iOS (carré avec flèche vers le haut). */
@@ -16,13 +15,11 @@ function IosShareIcon() {
   );
 }
 
-export function InstallPrompt({ ready, onInstalled }: InstallPromptProps) {
+export function InstallPrompt({ ready }: InstallPromptProps) {
   const { installed, canPrompt, iosInstructions, dismissed } = useInstallState();
   if (!ready || installed || dismissed || (!canPrompt && !iosInstructions)) return null;
 
-  const install = async () => {
-    if ((await promptInstall()) === "accepted") onInstalled?.();
-  };
+  const install = () => promptInstall();
 
   return (
     <aside className="install-prompt" aria-label="Installer l'application">

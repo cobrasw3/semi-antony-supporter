@@ -6,6 +6,7 @@
 import { useSyncExternalStore } from "react";
 import { isIOS, isStandalone } from "./platform";
 import { readJson, writeJson } from "../lib/storage";
+import { track } from "../lib/analytics";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -46,6 +47,8 @@ window.addEventListener("beforeinstallprompt", (e) => {
 });
 
 window.addEventListener("appinstalled", () => {
+  // Unique point de comptage : se déclenche aussi après notre invite.
+  track("installation");
   deferred = null;
   set({ installed: true, canPrompt: false });
 });
