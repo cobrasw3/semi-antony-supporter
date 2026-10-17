@@ -409,3 +409,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - Corrigé : focus automatique du tiroir sur la 1re puce (contour noir, la
   puce semblait cochée ; le tiroir étant hors du conteneur `.ui`) → focus
   sur le tiroir (ou le champ texte), style de focus global.
+- Preview redéployée à la demande de l'utilisateur (`feat/spots-choisis` @
+  3ce545c, cible preview, prod non touchée) :
+  https://semi-antony-supporter-ekfayy31m-pmachard2001-5765s-projects.vercel.app
+  — Ready, `/` en 200.
