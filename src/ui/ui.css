@@ -821,6 +821,47 @@ div.spot-card__head {
   opacity: 1;
 }
 
+/* ------------------------------------------------------------ Champ texte */
+
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.field__label {
+  font-weight: 700;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.field__input {
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0 var(--s-4);
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font: 700 var(--t-lg) / 1 var(--font-body);
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--sprint);
+}
+
+.field__input--xl {
+  min-height: 68px;
+  font: 800 var(--t-2xl) / 1 var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+.field__input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
 /* ------------------------------------------------------------ Mouvement réduit */
 
 @media (prefers-reduced-motion: reduce) {

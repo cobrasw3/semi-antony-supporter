@@ -190,3 +190,21 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   https://semi-antony-supporter-1ly48vjxr-pmachard2001-5765s-projects.vercel.app/styleguide
   — Ready, `/styleguide` et `/` en 200 via `vercel curl` ; protégée par
   Vercel Authentication (302 sans connexion).
+- Choix utilisateur : **orange adouci `#F26B3A` retenu**, contraste validé.
+- **Étape 2 — assistant de premier lancement** :
+  - Logique sortie de l'affichage : `src/app/useSupporter.ts` assemble
+    données SWR, course, préférences (URL + localStorage), allure, passages,
+    plan, horloge, annonces (aucun calcul nouveau). Règle pure
+    `needsOnboarding` (`src/app/onboardingRule.ts`, testée) : assistant
+    sauté si l'URL contient `pace`, ou s'il a déjà été fait (localStorage
+    `semi-supporter:onboarded`).
+  - `src/app/Onboarding.tsx` : 1) prénom (ou Passer), 2) objectif temps visé
+    (raccourcis + stepper à la minute, par défaut au 1er lancement) ou
+    allure (stepper 5 s), arrivée estimée en direct, 3) résumé « Léa ·
+    5:30/km · arrivée 16:26 · tu peux voir Léa 7 fois », boutons « Voir où
+    l'encourager » et « Ajouter à l'écran d'accueil » (invite native ou
+    marche à suivre iOS).
+  - `src/app/Root.tsx` : assistant puis ancienne app (temporaire jusqu'à
+    la coque à onglets).
+  - Corrigé après capture : champ prénom qui débordait (défilement
+    horizontal).

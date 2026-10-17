@@ -6,7 +6,7 @@ import "./ui/tokens.css";
 import "./ui/ui.css";
 import { applyBranding } from "./ui/branding";
 import { BUNDLED_EVENT } from "./config/event";
-import App from "./App.tsx";
+import { Root } from "./app/Root";
 import { QrPage } from "./components/QrPage";
 import { initAnalytics, track } from "./lib/analytics";
 import { parseDemoParams } from "./lib/clock";
@@ -28,7 +28,7 @@ createRoot(document.getElementById("root")!).render(
         <Styleguide />
       </Suspense>
     ) : (
-      <App />
+      <Root />
     )}
   </StrictMode>
 );
