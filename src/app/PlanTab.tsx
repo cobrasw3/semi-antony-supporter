@@ -64,7 +64,6 @@ export function PlanTab({
 }) {
   const {
     passages,
-    passagesBySpot,
     race,
     config,
     spotById,
@@ -79,7 +78,8 @@ export function PlanTab({
     setSpotMode,
     requiredSpots,
     spotsConflict,
-    spotLimits,
+    conflictPairs,
+    dropCandidates,
     routes,
   } = s;
   const walking = config.settings.walking;
@@ -134,42 +134,43 @@ export function PlanTab({
           </p>
         ) : (
           <div className="plan__mine">
-            <p className="caption plan__hint">Coche les spots où tu veux aller : ton plan passera par chacun d'eux.</p>
+            <p className="caption plan__hint">Coche les spots où tu veux aller : l'app les case tous dans ton plan.</p>
             <div className="chips">
               {race.spots.map((spot) => (
                 <Chip key={spot.id} selected={chosenSpots.includes(spot.id)} onClick={() => toggleSpot(spot.id)}>
                   {spotNumbers[spot.id]}. {spot.shortName}
-                  <span className="chip__count">{passagesBySpot[spot.id]?.length ?? 0}×</span>
                 </Chip>
               ))}
             </div>
             {requiredSpots.length === 0 && <p className="notice">Coche au moins un spot. En attendant, l'app te propose les meilleurs.</p>}
-            {(spotsConflict || spotLimits.length > 0) && (
-              <div className={spotsConflict ? "notice notice--warn notice--list" : "notice notice--list"} role="status">
+            {spotsConflict && (
+              <div className="notice notice--warn notice--list" role="status">
                 <p className="notice__title">
-                  {spotsConflict && <AlertTriangle size={18} aria-hidden="true" />}
-                  {spotsConflict
-                    ? "Impossible de passer par tous ces spots."
-                    : race.loops > 1
-                      ? "Certains spots ne s'enchaînent pas sur la même boucle :"
-                      : "Certains spots ne s'enchaînent pas :"}
+                  <AlertTriangle size={18} aria-hidden="true" />
+                  Impossible de caser tous ces spots.
                 </p>
-                <ul>
-                  {spotLimits.slice(0, 3).map((l) => (
-                    <li key={`${l.fromSpotId}>${l.toSpotId}`}>
-                      {spotById[l.fromSpotId]?.shortName} → {spotById[l.toSpotId]?.shortName} : tu as{" "}
-                      {Math.floor(l.availableMinutes)} min, il en faut {Math.ceil(l.walkMinutes)} à pied.
-                    </li>
-                  ))}
-                </ul>
-                {spotsConflict && (
-                  <p>
-                    {mostLimitingSpot(spotLimits)
-                      ? `Essaie de décocher ${spotById[mostLimitingSpot(spotLimits)!]?.shortName}.`
-                      : "Décoche un spot."}{" "}
-                    En attendant, voici les meilleurs spots.
-                  </p>
+                {conflictPairs.length > 0 ? (
+                  <ul>
+                    {conflictPairs.slice(0, 3).map(([a, b]) => (
+                      <li key={`${a}+${b}`}>
+                        {spotById[a]?.shortName} et {spotById[b]?.shortName} sont trop éloignés à pied pour l'allure de {who}.
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Avec l'allure de {who}, ces spots ne s'enchaînent pas tous dans la même course.</p>
                 )}
+                <p>
+                  {dropCandidates.length > 0
+                    ? `Décoche ${dropCandidates
+                        .slice(0, 3)
+                        .map((id) => spotById[id]?.shortName)
+                        .join(" ou ")} et les autres passent.`
+                    : mostLimitingSpot(conflictPairs)
+                      ? `Décoche ${spotById[mostLimitingSpot(conflictPairs)!]?.shortName}.`
+                      : "Décoche quelques spots."}{" "}
+                  En attendant, voici les meilleurs spots.
+                </p>
               </div>
             )}
           </div>

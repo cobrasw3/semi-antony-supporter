@@ -368,3 +368,17 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   5a80ffd, cible preview, prod non touchée) :
   https://semi-antony-supporter-7p0wcl5mj-pmachard2001-5765s-projects.vercel.app
   — Ready, `/` en 200.
+- **Retour utilisateur** : stade + rue des Sources Prolongée affichait « ne
+  s'enchaînent pas sur la même boucle » alors que le plan est possible
+  (stade au départ puis rue des Sources) ; trop d'horaires et de messages,
+  pas intuitif. Règle donnée : « si je coche un spot, c'est que je veux y
+  aller, il faut pouvoir le caser ».
+- **Simplifié** : plus aucun message quand la sélection est possible (le
+  plan la case, c'est tout). `spotPairLimits` supprimée, remplacée par
+  `incompatiblePairs` (paires qu'aucun plan ne peut réunir, quelle que soit
+  la boucle) et `spotsToDrop` (spots dont le retrait suffit), testées. Si
+  impossible : une seule alerte « Impossible de caser tous ces spots » +
+  « X et Y sont trop éloignés à pied pour l'allure de Léa » ou « Décoche A
+  ou B et les autres passent ». Compteurs « 3× » retirés des puces.
+  Stade + rue des Sources → 4× en 1,2 km (stade au départ, puis 3× rue des
+  Sources), sans message.

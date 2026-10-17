@@ -20,7 +20,7 @@ import {
   updateCurrentUrl,
   type RunnerPrefs,
 } from "../lib/format";
-import { planOptions, spotPairLimits } from "../lib/itinerary";
+import { incompatiblePairs, planOptions, spotsToDrop } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
@@ -105,11 +105,15 @@ export function useSupporter() {
   );
   // Spots incompatibles : on le signale, et le reste de l'app garde un plan valable.
   const spotsConflict = required.length > 0 && mineOptions.length === 0;
-  // Paires de spots choisis qu'on ne peut pas enchaîner (trop loin à pied, ou
-  // trop rapprochées sur le parcours) : expliquées à l'utilisateur.
-  const spotLimits = useMemo(
-    () => (required.length > 1 ? spotPairLimits(passages, race.spots, config.settings.walking, required, routes) : []),
-    [required, passages, race.spots, config.settings.walking, routes]
+  // Si c'est impossible : quelles paires de spots ne vont pas ensemble
+  // (pour dire clairement quoi décocher). Rien à signaler sinon.
+  const conflictPairs = useMemo(
+    () => (spotsConflict ? incompatiblePairs(passages, race.spots, config.settings.walking, required, routes) : []),
+    [spotsConflict, required, passages, race.spots, config.settings.walking, routes]
+  );
+  const dropCandidates = useMemo(
+    () => (spotsConflict ? spotsToDrop(passages, race.spots, config.settings.walking, required, routes) : []),
+    [spotsConflict, required, passages, race.spots, config.settings.walking, routes]
   );
   const planOptionsList = spotsConflict ? autoOptions : mineOptions;
   // Nombre de passages voulu (null = le maximum). Si l'allure change et que
@@ -156,7 +160,8 @@ export function useSupporter() {
     setSpotMode,
     requiredSpots: required,
     spotsConflict,
-    spotLimits,
+    conflictPairs,
+    dropCandidates,
     wantedCount,
     setWantedCount,
     routes,

@@ -241,66 +241,49 @@ export function planOptions(
   return options;
 }
 
-/** Limite entre deux spots choisis : le coureur va plus vite que toi de A à B. */
-export interface SpotPairLimit {
-  fromSpotId: string;
-  toSpotId: string;
-  /** Temps mis par le coureur de A au passage suivant en B (le plus court constaté), en minutes. */
-  runnerMinutes: number;
-  /**
-   * Temps dont tu disposerais au mieux pour aller de A à B : du passage en A
-   * jusqu'au début de la fourchette en B, moins la marge de sécurité.
-   */
-  availableMinutes: number;
-  /** Temps de marche de A à B, en minutes. */
-  walkMinutes: number;
-}
-
 /**
- * Pour chaque paire ordonnée de spots choisis (A puis B) : peut-on voir le
- * coureur en A puis le rattraper à son PROCHAIN passage en B ? Si ce n'est
- * jamais possible (spots trop loin à pied, ou trop rapprochés sur le
- * parcours), on renvoie la limite pour l'expliquer à l'utilisateur.
- * Triées de la plus contraignante à la moins contraignante.
+ * Paires de spots choisis qu'on ne peut PAS voir ensemble dans un même plan
+ * (quelle que soit la boucle) : trop éloignées à pied pour l'allure du
+ * coureur. Sert à dire clairement à l'utilisateur quoi décocher.
  */
-export function spotPairLimits(
+export function incompatiblePairs(
   passages: Passage[],
   spots: Spot[],
   walking: WalkingConfig,
   chosen: string[],
   routes?: WalkingRoutes
-): SpotPairLimit[] {
-  const byId = indexSpots(spots);
-  const sorted = [...passages].sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
-  const limits: SpotPairLimit[] = [];
-  for (const from of chosen) {
-    for (const to of chosen) {
-      if (from === to || !byId[from] || !byId[to]) continue;
-      let anyOk = false;
-      let shortest = Infinity;
-      let available = -Infinity;
-      let walkMinutes = 0;
-      for (const a of sorted.filter((p) => p.spotId === from)) {
-        const b = sorted.find((p) => p.spotId === to && p.estimatedMinutes > a.estimatedMinutes);
-        if (!b) continue;
-        const t = evaluateTransition(a, b, byId, walking, routes);
-        walkMinutes = t.walk.minutes;
-        shortest = Math.min(shortest, b.estimatedMinutes - a.estimatedMinutes);
-        available = Math.max(available, b.windowStartMinutes - a.estimatedMinutes - walking.safetyMarginMinutes);
-        if (t.status === "ok") anyOk = true;
-      }
-      if (!anyOk && shortest !== Infinity)
-        limits.push({ fromSpotId: from, toSpotId: to, runnerMinutes: shortest, availableMinutes: Math.max(0, available), walkMinutes });
+): Array<[string, string]> {
+  const ids = chosen.filter((id) => spots.some((s) => s.id === id));
+  const pairs: Array<[string, string]> = [];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      if (planOptions(passages, spots, walking, routes, [ids[i], ids[j]]).length === 0) pairs.push([ids[i], ids[j]]);
     }
   }
-  return limits.sort((x, y) => x.availableMinutes - x.walkMinutes - (y.availableMinutes - y.walkMinutes));
+  return pairs;
 }
 
-/** Le spot qui bloque le plus souvent (à proposer de décocher), ou null. */
-export function mostLimitingSpot(limits: SpotPairLimit[]): string | null {
+/** Le spot présent dans le plus de paires incompatibles (à proposer de décocher), ou null. */
+export function mostLimitingSpot(pairs: Array<[string, string]>): string | null {
   const counts = new Map<string, number>();
-  for (const l of limits) for (const id of [l.fromSpotId, l.toSpotId]) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const pair of pairs) for (const id of pair) counts.set(id, (counts.get(id) ?? 0) + 1);
   let best: string | null = null;
   for (const [id, c] of counts) if (best === null || c > counts.get(best)!) best = id;
   return best;
+}
+
+/**
+ * Spots dont le retrait suffit à rendre la sélection possible (à proposer de
+ * décocher). Vide si la sélection est déjà possible, ou s'il faut en retirer
+ * plusieurs.
+ */
+export function spotsToDrop(
+  passages: Passage[],
+  spots: Spot[],
+  walking: WalkingConfig,
+  chosen: string[],
+  routes?: WalkingRoutes
+): string[] {
+  if (chosen.length < 2 || planOptions(passages, spots, walking, routes, chosen).length > 0) return [];
+  return chosen.filter((id) => planOptions(passages, spots, walking, routes, chosen.filter((x) => x !== id)).length > 0);
 }

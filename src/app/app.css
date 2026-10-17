@@ -1354,20 +1354,6 @@ a.btn {
   margin-top: 0;
 }
 
-.chip__count {
-  margin-left: 2px;
-  padding: 2px 6px;
-  border-radius: var(--r-pill);
-  background: var(--soft);
-  color: var(--on-soft);
-  font: 700 var(--t-xs) / 1 var(--font-display);
-}
-
-.chip[aria-pressed="true"] .chip__count {
-  background: var(--surface);
-  color: var(--text);
-}
-
 .notice {
   display: flex;
   gap: var(--s-2);

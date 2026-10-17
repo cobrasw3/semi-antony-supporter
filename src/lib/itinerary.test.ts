@@ -7,8 +7,9 @@ import {
   indexSpots,
   optimalPlan,
   planOptions,
-  spotPairLimits,
+  incompatiblePairs,
   mostLimitingSpot,
+  spotsToDrop,
   walkBetween,
   walkBetweenSpots,
 } from "./itinerary";
@@ -277,43 +278,54 @@ describe("planOptions avec spots choisis", () => {
   });
 });
 
-describe("spotPairLimits", () => {
+describe("incompatiblePairs", () => {
   const config = parseEventConfig(rawEvent);
   const semi = config.races[0];
   const passages = computeAllPassages(semi, 5.5, config.settings.margin);
   const routes = semi.walkingRoutes?.km;
+  const w = config.settings.walking;
 
-  it("spots trop rapprochés sur le parcours : rue des Hautes Bièvres → stade (3 min pour le coureur)", () => {
-    const limits = spotPairLimits(passages, semi.spots, config.settings.walking, ["stade-suant", "rue-des-hautes-bievres"], routes);
-    expect(limits).toHaveLength(1);
-    expect(limits[0]).toMatchObject({ fromSpotId: "rue-des-hautes-bievres", toSpotId: "stade-suant" });
-    expect(limits[0].runnerMinutes).toBeLessThan(limits[0].walkMinutes);
-    expect(Math.round(limits[0].runnerMinutes)).toBe(3);
-    expect(limits[0].availableMinutes).toBeLessThan(limits[0].walkMinutes);
+  it("stade + rue des Sources Prolongée : compatibles (stade au départ, puis rue des Sources)", () => {
+    expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", "rue-des-sources-prolongee"], routes)).toEqual([]);
+    const options = planOptions(passages, semi.spots, w, routes, ["stade-suant", "rue-des-sources-prolongee"]);
+    expect(options.length).toBeGreaterThan(0);
   });
 
-  it("explique les cas où le coureur met plus longtemps que la marche, mais sans marge suffisante", () => {
-    const chosen = ["rue-des-champs", "rue-des-hautes-bievres"];
-    for (const l of spotPairLimits(passages, semi.spots, config.settings.walking, chosen, routes)) {
-      expect(l.availableMinutes).toBeLessThan(l.walkMinutes);
-    }
+  it("stade + rue des Hautes Bièvres : compatibles", () => {
+    expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", "rue-des-hautes-bievres"], routes)).toEqual([]);
   });
 
-  it("désigne le spot le plus bloquant", () => {
-    const chosen = ["rue-marius-hue", "rue-des-champs", "parc-heller"];
-    const limits = spotPairLimits(passages, semi.spots, config.settings.walking, chosen, routes);
-    expect(mostLimitingSpot(limits)).toBe("rue-marius-hue");
+  it("spots trop éloignés à pied : paire incompatible, spot à décocher désigné", () => {
+    const spots = [spot("a", 0), spot("b", 3), spot("c", 0.1)];
+    const ps = [passage("a", 0), passage("b", 10), passage("c", 15), passage("a", 20), passage("b", 30)];
+    const pairs = incompatiblePairs(ps, spots, walking, ["a", "b", "c"]);
+    expect(pairs).toEqual([
+      ["a", "b"],
+      ["b", "c"],
+    ]);
+    expect(mostLimitingSpot(pairs)).toBe("b");
     expect(mostLimitingSpot([])).toBeNull();
   });
+});
 
-  it("spots compatibles dans les deux sens : aucune limite", () => {
-    expect(spotPairLimits(passages, semi.spots, config.settings.walking, ["stade-suant", "parc-heller"], routes)).toEqual([]);
+describe("spotsToDrop", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+  const routes = semi.walkingRoutes?.km;
+  const w = config.settings.walking;
+
+  it("sélection possible : rien à décocher", () => {
+    expect(spotsToDrop(passages, semi.spots, w, ["stade-suant", "rue-des-sources-prolongee"], routes)).toEqual([]);
   });
 
-  it("spots trop loin à pied : limite dans les deux sens", () => {
-    const spots = [spot("a", 0), spot("b", 3)];
-    const ps = [passage("a", 0), passage("b", 10), passage("a", 20), passage("b", 30)];
-    const limits = spotPairLimits(ps, spots, walking, ["a", "b"]);
-    expect(limits.map((l) => `${l.fromSpotId}>${l.toSpotId}`).sort()).toEqual(["a>b", "b>a"]);
+  it("sélection impossible : propose les spots dont le retrait suffit", () => {
+    const chosen = ["rue-marius-hue", "parc-heller", "rue-des-champs", "rue-des-sources-prolongee"];
+    expect(planOptions(passages, semi.spots, w, routes, chosen)).toEqual([]);
+    const drop = spotsToDrop(passages, semi.spots, w, chosen, routes);
+    expect(drop.length).toBeGreaterThan(0);
+    for (const id of drop) {
+      expect(planOptions(passages, semi.spots, w, routes, chosen.filter((x) => x !== id)).length).toBeGreaterThan(0);
+    }
   });
 });
