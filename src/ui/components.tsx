@@ -106,8 +106,10 @@ export function Stepper({ value, onChange, min, max, step, format, label, unit, 
         aria-valuenow={value}
         aria-valuetext={valueText?.(value) ?? format(value)}
         onKeyDown={(e) => {
-          if (e.key === "ArrowUp" || e.key === "ArrowRight") (e.preventDefault(), bump(1));
-          if (e.key === "ArrowDown" || e.key === "ArrowLeft") (e.preventDefault(), bump(-1));
+          const dir = e.key === "ArrowUp" || e.key === "ArrowRight" ? 1 : e.key === "ArrowDown" || e.key === "ArrowLeft" ? -1 : 0;
+          if (dir === 0) return;
+          e.preventDefault();
+          bump(dir);
         }}
       >
         <span className="stepper__number">{format(value)}</span>

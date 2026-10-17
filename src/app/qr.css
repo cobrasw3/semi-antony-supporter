@@ -1,0 +1,69 @@
+/* Page /qr (affiches, stand des dossards). */
+
+.qr-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+}
+
+.qr-page h1 {
+  margin: 0 0 var(--s-3);
+  color: var(--text);
+  font: 800 var(--t-3xl) / 1 var(--font-display);
+  text-transform: uppercase;
+}
+
+.qr-lead {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.qr-code {
+  display: inline-block;
+  margin: var(--s-4) 0;
+  padding: var(--s-3);
+  border: 3px solid var(--ink);
+  border-radius: var(--r-md);
+  background: #fff;
+}
+
+.qr-url {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.qr-points {
+  display: inline-block;
+  margin: var(--s-4) 0;
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.qr-footer {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.qr-print {
+  margin-top: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--sprint);
+  color: var(--on-sprint);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media print {
+  .qr-print {
+    display: none;
+  }
+
+  .qr-page {
+    padding-top: 0;
+  }
+}

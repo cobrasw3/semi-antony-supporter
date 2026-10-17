@@ -209,7 +209,10 @@ export function Carousel({
       [...box.children].forEach((child, i) => {
         const el = child as HTMLElement;
         const d = Math.abs(el.offsetLeft + el.clientWidth / 2 - center);
-        if (d < bestDist) (best = i), (bestDist = d);
+        if (d < bestDist) {
+          best = i;
+          bestDist = d;
+        }
       });
       if (best !== reported.current) {
         reported.current = best;

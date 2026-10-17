@@ -1,67 +1,44 @@
-:root {
-  /* Design tokens — palette sobre, gros contrastes pour lecture au soleil */
-  --color-bg: #ffffff;
-  --color-text: #14171a;
-  --color-text-muted: #52585e;
-  --color-primary: #0a5c36; /* vert course, contraste fort sur blanc */
-  --color-primary-dark: #073d24;
-  --color-accent: #d64545; /* points d'observation / repères */
-  --color-border: #d7dbdd;
-  --color-surface: #f4f6f5;
+/* Reset minimal. Couleurs, typo et composants : src/ui/tokens.css et ui.css. */
 
-  --space-1: 0.5rem;
-  --space-2: 0.75rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2rem;
-
-  --radius: 12px;
-  --font-sans: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-
-  color-scheme: light;
-}
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
   -webkit-text-size-adjust: 100%;
 }
 
 h1,
 h2,
-h3 {
-  margin: 0 0 var(--space-2);
-  line-height: 1.2;
-}
-
+h3,
 p {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--s-2);
 }
 
-button {
+h1,
+h2,
+h3 {
+  line-height: 1.15;
+}
+
+button,
+input {
   font-family: inherit;
 }
 
-/* Focus clavier toujours visible (accessibilité) */
-:focus-visible {
-  outline: 3px solid #e8b800;
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    scroll-behavior: auto !important;
-  }
+img,
+svg {
+  max-width: 100%;
 }

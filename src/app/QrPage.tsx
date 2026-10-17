@@ -1,5 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { BUNDLED_EVENT } from "../config/event";
+import "./qr.css";
 
 /**
  * Page /qr (non liée dans l'app) : QR code imprimable vers l'app, pour les
@@ -8,7 +9,7 @@ import { BUNDLED_EVENT } from "../config/event";
 export function QrPage() {
   const url = `${window.location.origin}/`;
   return (
-    <main className="qr-page">
+    <main className="ui qr-page">
       <h1>{BUNDLED_EVENT.event.name}</h1>
       <p className="qr-lead">Supporters : où vous placer, et à quelle heure votre coureur passe ?</p>
       <div className="qr-code">
@@ -20,7 +21,9 @@ export function QrPage() {
         <li>Le meilleur enchaînement de spots à pied</li>
         <li>Fonctionne hors-ligne le jour J</li>
       </ul>
-      <p className="qr-footer">Application non officielle — prototype en attente de validation par l'organisateur.</p>
+      {BUNDLED_EVENT.branding?.official !== true && (
+        <p className="qr-footer">Application non officielle — prototype en attente de validation par l'organisateur.</p>
+      )}
       <button type="button" className="qr-print" onClick={() => window.print()}>
         Imprimer
       </button>

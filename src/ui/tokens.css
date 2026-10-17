@@ -33,6 +33,7 @@
   --selected: #dfe4ee; /* puce / option sélectionnée */
   --selected-border: var(--ink);
   --on-selected: var(--ink);
+  --thumb: #ffffff; /* curseur du sélecteur segmenté */
 
   /* États */
   --ok: #166534;
@@ -114,6 +115,7 @@
     --selected: #2c3b63;
     --selected-border: #f3f1ec;
     --on-selected: #ffffff;
+    --thumb: #3a4a75;
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
     --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
     color-scheme: dark;
@@ -145,6 +147,7 @@
   --selected: #2c3b63;
   --selected-border: #f3f1ec;
   --on-selected: #ffffff;
+  --thumb: #3a4a75;
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
   --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
   color-scheme: dark;

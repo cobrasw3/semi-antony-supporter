@@ -40,6 +40,7 @@ const PAIRS: Array<[string, string, number]> = [
   ["info", "info-bg", 4.5],
   ["on-selected", "selected", 4.5],
   ["on-soft", "soft", 4.5],
+  ["text", "thumb", 4.5],
   ["ok", "surface", 4.5],
   ["warn", "surface", 4.5],
   ["ko", "surface", 4.5],

@@ -6,7 +6,6 @@ import { Footprints, Info, Map as MapIcon, Radio, Route, Share2, WifiOff, Smartp
 import { BUNDLED_EVENT } from "../config/event";
 import { formatDuration, formatPace } from "../lib/format";
 import { minutesToTimeString } from "../lib/timing";
-import { applyBranding } from "./branding";
 import { contrastRatio } from "./color";
 import { AppHeader, Button, Chip, CountdownRing, ProgressSteps, RunnerChip, Segmented, SpotCard, Stepper } from "./components";
 import { BottomSheet, Carousel, StatusStrip, TabBar, ToastStack } from "./overlays";
@@ -22,14 +21,6 @@ const SWATCHES: Array<[string, string, string]> = [
 
 type Tab = "live" | "plan" | "carte" | "infos";
 
-// Teintes d'orange à comparer (toutes AA avec le texte bleu nuit).
-const ORANGES = {
-  vif: "#ff5a1f",
-  adouci: "#f26b3a",
-  corail: "#ee7a52",
-} as const;
-type Orange = keyof typeof ORANGES;
-
 const TIME_PRESETS = [90, 105, 120, 135, 150];
 
 export function Styleguide() {
@@ -39,7 +30,6 @@ export function Styleguide() {
   const [mode, setMode] = useState<"time" | "pace">("time");
   const [pace, setPace] = useState(330);
   const [target, setTarget] = useState(117);
-  const [orange, setOrange] = useState<Orange>("adouci");
   const race = BUNDLED_EVENT.races[0];
   const start = 14 * 60 + 30;
   const arrival = minutesToTimeString(start + (mode === "time" ? target : (pace / 60) * race.distanceKm));
@@ -72,23 +62,6 @@ export function Styleguide() {
       </header>
 
       <Section title="Couleurs">
-        <p className="sg-label">Teinte de l'orange (à choisir)</p>
-        <Segmented
-          label="Teinte de l'orange"
-          value={orange}
-          onChange={(o) => {
-            setOrange(o);
-            applyBranding({ ...BUNDLED_EVENT.branding?.colors, sprint: ORANGES[o] });
-          }}
-          options={[
-            { value: "vif", label: "Vif" },
-            { value: "adouci", label: "Adouci" },
-            { value: "corail", label: "Corail" },
-          ]}
-        />
-        <p className="caption" style={{ marginBottom: "var(--s-4)" }}>
-          S'applique à toute la page : boutons, onglet actif, curseurs. {ORANGES[orange]}
-        </p>
         <div className="sg-swatches">
           {SWATCHES.map(([token, hex, role]) => (
             <div key={token} className="sg-swatch">
@@ -101,8 +74,8 @@ export function Styleguide() {
           ))}
         </div>
         <p className="muted sg-small">
-          Contrastes vérifiés par test (WCAG AA) : texte bleu nuit sur orange {contrastRatio("#14213d", ORANGES[orange]).toFixed(1)}:1 —
-          le blanc sur orange ({contrastRatio("#ffffff", ORANGES[orange]).toFixed(1)}:1) n'est pas utilisé.
+          Contrastes vérifiés par test (WCAG AA) : texte bleu nuit sur orange {contrastRatio("#14213d", "#f26b3a").toFixed(1)}:1 —
+          le blanc sur orange ({contrastRatio("#ffffff", "#f26b3a").toFixed(1)}:1) n'est pas utilisé.
         </p>
         <div className="chips">
           <Chip tone="ok">✓ 4 min d'avance</Chip>

@@ -258,3 +258,13 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   installation (invite native / marche à suivre iOS), à propos (mention
   « non officielle » pilotée par `branding.official`, vie privée, versions,
   contact).
+- **Étape 4 — ancien affichage supprimé** : `src/App.tsx`, `src/App.css` et
+  les 12 composants de `src/components/` (ChampAllure, Partage,
+  ProchainPassage, InstallPrompt, Itineraire, Rappels, Carte,
+  RecapPassages, Annonces, BandeauConnexion, UpdateToast, APropos) ; leur
+  logique utile a été reprise dans `src/app/` (hooks) avant suppression.
+  Page /qr déplacée (`src/app/QrPage.tsx` + `qr.css`, tokens), mention non
+  officielle pilotée par `branding.official`. `index.css` réduit à un reset
+  sur tokens. Comparateur d'orange retiré du styleguide. Token `--thumb`
+  (curseur du sélecteur segmenté, peu visible en sombre). README : structure
+  et URLs mises à jour.

@@ -216,7 +216,7 @@ body.is-locked {
   left: 4px;
   width: calc((100% - 8px) / var(--count));
   border-radius: var(--r-pill);
-  background: var(--surface);
+  background: var(--thumb);
   box-shadow: var(--shadow-1);
   transform: translateX(calc(100% * var(--index)));
   transition: transform var(--dur-2) var(--ease);

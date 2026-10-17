@@ -17,6 +17,8 @@ l'allure restent sur l'appareil.
 | `/?race=5k` | Choix de la course (si plusieurs courses dans event.json) |
 | `/?calibrage=1` | Clic sur la carte → position km sur la boucle (pour caler les spots) |
 | `/qr` | QR code imprimable vers l'app (affiches, stand des dossards), non lié dans l'app |
+| `/styleguide` | Design system : tous les composants et états (non lié dans l'app) |
+| `#live`, `#plan`, `#carte`, `#infos` | Onglet ouvert directement (ex. `/?name=Léa&pace=5:30#plan`) |
 
 ## Structure
 
@@ -33,7 +35,11 @@ src/lib/                       Logique pure, testée (*.test.ts) :
   annonces.ts, remoteData.ts     annonces, données en stale-while-revalidate
   format.ts, event.ts, geo.ts, mapMarkers.ts, analytics.ts, gpxKml.ts
 src/pwa/                       Service worker (mises à jour auto), installation, plateforme
-src/components/                Écrans (Carte chargée en différé)
+src/app/                       Écrans : assistant (Onboarding), coque à onglets (Shell),
+                                 LiveTab, PlanTab, MapTab (chargé à la demande), InfosTab,
+                                 useSupporter (assemble l'état, sans calcul), page /qr
+src/ui/                        Design system : tokens.css (couleurs, typo, formes), composants,
+                                 marque par événement (branding.ts), page /styleguide
 vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cache, réécriture /qr
 ```
 
@@ -50,6 +56,11 @@ vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cach
 - `spots[].km` : **toutes** les positions (km depuis le départ) où le
   parcours passe par ce spot. Les passages et leurs étiquettes en découlent.
   Ex. stade : `[0, 7, 14, 21.0975]` → Départ, Fin boucle 1, Fin boucle 2, Arrivée.
+- `branding` (optionnel) : `colors` (`ink`, `sprint`, `signal`), `logo`,
+  `tagline`, `official` (false = mention « Application non officielle »).
+  Les couleurs de texte dérivées sont recalculées pour rester lisibles.
+- `infos` (optionnel) : infos pratiques de l'onglet Infos (`title`, `text`,
+  `toConfirm`).
 - `contentVersion` / `contentUpdatedAt` : à incrémenter à chaque modification
   (affichés dans « À propos »).
 
