@@ -3,6 +3,7 @@ import { APropos } from "./components/APropos";
 import { Carte } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
+import { Itineraire } from "./components/Itineraire";
 import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_EVENT } from "./config/event";
@@ -63,6 +64,8 @@ function App() {
   const track = useMemo(() => trackOf(race), [race]);
 
   const highlight = race.spots.find((s) => s.highlight);
+  // Numéro de chaque spot (ordre de event.json), le même sur la carte et dans les listes.
+  const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const clock = useEventClock(config.event.date, config.event.timeZone);
 
   const scrollToSpot = useCallback((spotId: string) => {
@@ -116,6 +119,15 @@ function App() {
         eventDate={config.event.date}
         dateToConfirm={config.event.dateToConfirm}
         runnerName={runnerName}
+        onSelectSpot={scrollToSpot}
+      />
+
+      <Itineraire
+        passages={passages}
+        spots={race.spots}
+        walking={config.settings.walking}
+        runnerName={runnerName}
+        spotNumbers={spotNumbers}
         onSelectSpot={scrollToSpot}
       />
 
