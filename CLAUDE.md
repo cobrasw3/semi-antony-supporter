@@ -10,8 +10,11 @@
 PWA prototype (React 19 + Vite 8 + TypeScript, Leaflet, Vitest) pour les
 supporters du semi-marathon d'Antony : où se placer et à quelle heure le
 coureur passe, à partir de son allure ou d'un temps visé. Déployée sur
-Vercel ; **`main` est déployé automatiquement en production**, donc on
-travaille sur des branches (actuellement `feat/demo-finale`).
+Vercel (projet `semi-antony-supporter`, cf. `.vercel/project.json`).
+⚠️ Constaté le 2026-10-17 : **le dépôt GitHub n'est PAS relié à Vercel**
+(aucun déploiement/statut sur aucun commit) ; les déploiements se font via
+la CLI (`npx vercel`). Si l'intégration Git est activée, `main` partira en
+production automatiquement : travailler sur des branches.
 Public visé par la démo : club Antony Athlétisme 92 et Direction des Sports
 de la mairie.
 
@@ -111,8 +114,13 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (Chromium `getInstallabilityErrors`) : aucune erreur.
 - L'utilisateur demande de tenir ce `CLAUDE.md` à jour à chaque action
   (fichier créé à ce moment-là, journal reconstitué ci-dessus).
-- **Non fait / à faire** : pas de push sur GitHub ni de déploiement (en
-  attente d'accord) ; `npm audit` signale des vulnérabilités dans des
+- **Non fait / à faire** : `npm audit` signale des vulnérabilités dans des
   dépendances de dev (vitest, nanoid, source-map-js) — `npm audit fix` à
   valider ; tests sur vrais iPhone/Android à faire (checklist dans la
   réponse de fin de session).
+- Push de `feat/demo-finale` sur GitHub (accord de l'utilisateur). Aucune
+  preview Vercel déclenchée : constat que le dépôt n'est pas relié à Vercel
+  (déploiements précédents via CLI). CLI Vercel non connectée sur la
+  machine (`vercel whoami` → Logged out) : connexion à faire par
+  l'utilisateur (`npx vercel login`) ou intégration Git à activer dans le
+  tableau de bord Vercel. README corrigé (il affirmait un déploiement auto).

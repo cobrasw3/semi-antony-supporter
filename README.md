@@ -177,7 +177,11 @@ npm run test
    `https://semi-antony-supporter.vercel.app` — c'est le lien à partager
    (et à transformer en QR code).
 
-Chaque nouveau `git push` redéploie automatiquement.
+Chaque nouveau `git push` redéploie automatiquement **si le dépôt est relié
+à Vercel** (Settings → Git → Connect Git Repository) : `main` en
+production, les autres branches en preview. ⚠️ Au 17/10/2026, ce projet
+n'est pas relié : il se déploie avec la CLI (`npx vercel` pour une
+preview, `npx vercel --prod` pour la production).
 
 ### Option Netlify (équivalente)
 
