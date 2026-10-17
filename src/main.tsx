@@ -1,6 +1,11 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import "./ui/fonts";
+import "./ui/tokens.css";
+import "./ui/ui.css";
+import { applyBranding } from "./ui/branding";
+import { BUNDLED_EVENT } from "./config/event";
 import App from "./App.tsx";
 import { QrPage } from "./components/QrPage";
 import { initAnalytics, track } from "./lib/analytics";
@@ -8,8 +13,24 @@ import { parseDemoParams } from "./lib/clock";
 import { isStandalone } from "./pwa/platform";
 import { registerServiceWorker, restoreScrollAfterUpdate } from "./pwa/serviceWorker";
 
+// Pages hors app (non liées) : chargées à part.
+const Styleguide = lazy(() => import("./ui/StyleguidePage"));
+
+applyBranding(BUNDLED_EVENT.branding?.colors);
+
+const path = window.location.pathname.replace(/\/$/, "");
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>{window.location.pathname.replace(/\/$/, "") === "/qr" ? <QrPage /> : <App />}</StrictMode>
+  <StrictMode>
+    {path === "/qr" ? (
+      <QrPage />
+    ) : path === "/styleguide" ? (
+      <Suspense fallback={null}>
+        <Styleguide />
+      </Suspense>
+    ) : (
+      <App />
+    )}
+  </StrictMode>
 );
 
 restoreScrollAfterUpdate();

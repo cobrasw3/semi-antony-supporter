@@ -38,7 +38,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         // Shell de l'app : JS, CSS, HTML, icônes, plan statique du parcours.
         // event.json est embarqué dans le JS (donc précaché lui aussi).
-        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+        // woff2 : polices auto-hébergées, disponibles hors-ligne.
+        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/_vercel\//, /^\/data\//],
         runtimeCaching: [

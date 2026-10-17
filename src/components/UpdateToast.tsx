@@ -7,7 +7,7 @@ export function UpdateToast() {
   useEffect(() => onUpdateReady(setReady), []);
   if (!ready) return null;
   return (
-    <div className="toast" role="status">
+    <div className="update-toast" role="status">
       <span>Nouvelle version disponible</span>
       <button type="button" onClick={reloadKeepingState}>
         Mettre à jour

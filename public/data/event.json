@@ -11,6 +11,12 @@
     "dateToConfirm": true,
     "timeZone": "Europe/Paris"
   },
+  "branding": {
+    "tagline": "Où l’encourager, et à quelle heure il passe.",
+    "logo": null,
+    "official": false,
+    "colors": { "ink": "#14213d", "sprint": "#ff5a1f", "signal": "#d7f205" }
+  },
   "settings": {
     "margin": {
       "percentage": 0.035,

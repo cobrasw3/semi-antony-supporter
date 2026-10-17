@@ -33,6 +33,16 @@ de la mairie.
 - Nouveau fournisseur de tuiles = mettre à jour `src/config/tiles.ts`, la
   CSP de `vercel.json` (img-src ET connect-src) et la règle de cache SW.
 
+- Design system (branche `feat/redesign`) : tokens dans `src/ui/tokens.css`
+  (aucune couleur en dur dans les composants), composants dans
+  `src/ui/components.tsx` et `src/ui/overlays.tsx`, page `/styleguide`.
+  Couleurs de marque surchargeables via `event.json` → `branding.colors`
+  (textes dérivés recalculés pour rester AA, `src/ui/branding.ts`).
+  Contrastes vérifiés par `src/ui/contrast.test.ts` : toute nouvelle paire
+  texte/fond doit y être ajoutée. Texte sur `--sprint` = `--on-sprint`
+  (bleu nuit), jamais blanc (3,1:1). Icônes : lucide-react uniquement, pas
+  d'emoji dans l'UI sauf 🏁.
+
 ## Commandes
 
 ```bash
@@ -132,3 +142,31 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   connexion). Vérifié via `vercel curl` : `/`, `/sw.js`,
   `/manifest.webmanifest`, `/data/event.json`, `/qr`, `/parcours-plan.svg`
   en 200, en-têtes CSP/HSTS/Cache-Control conformes à `vercel.json`.
+
+### 2026-10-17 — Refonte UX/UI (branche `feat/redesign`, depuis `feat/demo-finale`)
+
+- Brief : assistant 3 écrans, 4 onglets (Live, Plan, Carte, Infos),
+  identité « app de course » (bleu nuit / orange / jaune dossard, Barlow
+  Condensed + Manrope), marque configurable par événement, logique métier
+  intouchée. Méthode : styleguide validé par l'utilisateur avant la suite.
+- **Étape 1 — tokens + composants + `/styleguide`** :
+  - `src/ui/tokens.css` (clair + sombre), `color.ts` (contraste WCAG),
+    `branding.ts` (marque depuis `event.json`, bloc `branding` ajouté :
+    tagline, logo null, official false, couleurs).
+  - Écarts au brief pour l'accessibilité : texte blanc sur orange refusé
+    (3,1:1) → texte bleu nuit (5,1:1) ; `--muted` #6B7280 → #5D6470
+    (4,4:1 sur le fond chaud) ; ajout `--sprint-text` #C2410C pour l'orange
+    en texte ; tokens `--selected` pour les puces sélectionnées.
+  - Polices fontsource (latin, woff2) précachées ; lucide-react.
+  - Composants : Button, IconButton, Stepper (appui long accéléré, clavier,
+    vibration), Segmented, Chip, ProgressSteps, RunnerChip, CountdownRing,
+    SpotCard (horaire + fourchette, détails repliables), BottomSheet
+    (glisser pour fermer, Échap), ToastStack, StatusStrip, TabBar, Carousel.
+  - Classe `.toast` de l'ancienne UI renommée `.update-toast` (conflit).
+  - Captures 390×844 relues ; corrigés : cartes de spot tassées (horaire
+    trop large, fourchette tronquée), puces sélectionnées peu visibles en
+    sombre, thème initial du styleguide. Reste : variante compacte de carte
+    pour le carrousel (à faire avec l'onglet Carte).
+  - 166 tests ✅ (dont 46 nouveaux : contrastes clair/sombre, marque),
+    build ✅ (23 fichiers précachés dont 7 polices), ancienne app intacte.
+  - **En attente de validation visuelle de l'utilisateur.**

@@ -1,0 +1,149 @@
+/*
+ * Design tokens. Source unique des couleurs, typo, formes et mouvements.
+ * Les couleurs de marque (--ink, --sprint, --signal) peuvent être
+ * remplacées par événement via event.json (branding.colors), appliquées au
+ * démarrage par src/ui/branding.ts — sans toucher au code.
+ * Contrastes vérifiés automatiquement : src/ui/contrast.test.ts.
+ */
+
+:root {
+  /* Marque */
+  --ink: #14213d; /* bleu nuit : textes et surfaces fortes */
+  --sprint: #ff5a1f; /* orange : action principale */
+  --signal: #d7f205; /* jaune « dossard » : réservé au live */
+
+  /* Dérivées de la marque (recalculées si la marque change) */
+  --on-sprint: #14213d; /* texte sur bouton orange (le blanc ne passe pas AA) */
+  --sprint-text: #c2410c; /* orange lisible en texte sur fond clair */
+  --on-signal: #14213d;
+
+  /* Surfaces et textes */
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-2: #efece4;
+  --text: var(--ink);
+  --muted: #5d6470;
+  --line: rgba(20, 33, 61, 0.12);
+  --strong: var(--ink); /* fond des cartes « héros » */
+  --on-strong: #ffffff;
+  --on-strong-muted: #c9cfdc;
+  --scrim: rgba(10, 16, 32, 0.45);
+  --selected: var(--ink); /* puce / option sélectionnée */
+  --on-selected: #ffffff;
+
+  /* États */
+  --ok: #166534;
+  --ok-bg: #dcf3e3;
+  --warn: #8a4b00;
+  --warn-bg: #fdf0d5;
+  --ko: #b42318;
+  --ko-bg: #fde4e1;
+  --info: #1d4ed8;
+  --info-bg: #e3ebfd;
+
+  /* Typographie */
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  --t-xs: 0.8125rem;
+  --t-sm: 0.9375rem;
+  --t-md: 1.0625rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.75rem;
+  --t-2xl: 2.5rem;
+  --t-3xl: 3.5rem;
+  --t-hero: 4.75rem;
+
+  /* Espacements */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* Formes */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(20, 33, 61, 0.06), 0 4px 14px rgba(20, 33, 61, 0.07);
+  --shadow-2: 0 2px 6px rgba(20, 33, 61, 0.08), 0 12px 32px rgba(20, 33, 61, 0.14);
+  --tap: 48px;
+
+  /* Mouvement */
+  --dur-1: 150ms;
+  --dur-2: 220ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Gabarit */
+  --app-width: 480px;
+  --tabbar-h: 64px;
+
+  color-scheme: light;
+}
+
+/* Mode sombre : mêmes rôles, valeurs adaptées. Le clair reste le défaut
+   (lisibilité en plein soleil le jour J). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1424;
+    --surface: #172036;
+    --surface-2: #1f2a44;
+    --text: #f3f1ec;
+    --muted: #a7afbf;
+    --line: rgba(243, 241, 236, 0.14);
+    --strong: #22305a;
+    --on-strong: #ffffff;
+    --on-strong-muted: #c9cfdc;
+    --sprint-text: #ff8a5c;
+    --ok: #6ee7a0;
+    --ok-bg: #12372a;
+    --warn: #fbbf5a;
+    --warn-bg: #3a2a0c;
+    --ko: #ff8f85;
+    --ko-bg: #42161a;
+    --info: #9cb8ff;
+    --info-bg: #1b2a52;
+    --scrim: rgba(0, 0, 0, 0.6);
+    --selected: #f3f1ec;
+    --on-selected: #0d1424;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+    --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1424;
+  --surface: #172036;
+  --surface-2: #1f2a44;
+  --text: #f3f1ec;
+  --muted: #a7afbf;
+  --line: rgba(243, 241, 236, 0.14);
+  --strong: #22305a;
+  --on-strong: #ffffff;
+  --on-strong-muted: #c9cfdc;
+  --sprint-text: #ff8a5c;
+  --ok: #6ee7a0;
+  --ok-bg: #12372a;
+  --warn: #fbbf5a;
+  --warn-bg: #3a2a0c;
+  --ko: #ff8f85;
+  --ko-bg: #42161a;
+  --info: #9cb8ff;
+  --info-bg: #1b2a52;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --selected: #f3f1ec;
+  --on-selected: #0d1424;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+  }
+}

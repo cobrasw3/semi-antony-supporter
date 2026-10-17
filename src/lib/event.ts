@@ -78,6 +78,16 @@ export interface EventConfig {
     dateToConfirm?: boolean;
     timeZone: string;
   };
+  /** Identité visuelle de l'événement (optionnelle) : réutilisable par d'autres organisateurs. */
+  branding?: {
+    /** Accroche sous le nom de l'événement. */
+    tagline?: string;
+    /** Chemin d'un logo (ex. /logo.svg), null tant que non autorisé. */
+    logo?: string | null;
+    /** false = afficher « Application non officielle ». */
+    official?: boolean;
+    colors?: { ink?: string; sprint?: string; signal?: string };
+  };
   settings: {
     margin: MarginConfig;
     walking: WalkingConfig;
