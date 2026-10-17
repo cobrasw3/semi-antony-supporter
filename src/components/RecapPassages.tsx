@@ -11,21 +11,19 @@ interface RecapPassagesProps {
 }
 
 export function RecapPassages({ spots, passagesBySpot, runnerName, spotNumbers, onShowOnMap }: RecapPassagesProps) {
-  // Un groupe par spot (nom + accès + conseil affichés une seule fois), ses
-  // passages étant déjà en ordre croissant. Les groupes eux-mêmes sont
-  // ordonnés par leur premier passage, pour rester globalement chronologique.
+  // Un groupe par spot, ordonnés par premier passage sur le parcours (donc
+  // chronologiquement). Les spots restent visibles même sans allure valide.
   const groups = spots
     .map((spot) => ({ spot, passages: passagesBySpot[spot.id] ?? [] }))
-    .filter((g) => g.passages.length > 0)
-    .sort((a, b) => a.passages[0].estimatedMinutes - b.passages[0].estimatedMinutes);
+    .sort((a, b) => Math.min(...a.spot.km) - Math.min(...b.spot.km));
+  const hasTimes = groups.some((g) => g.passages.length > 0);
 
   return (
-    <section className="recap" aria-label="Récapitulatif des passages">
-      <h2>Récapitulatif des passages</h2>
-      <p className="recap-disclaimer">Horaires estimés — arrive quelques minutes avant par sécurité.</p>
-      {groups.length === 0 ? (
-        <p className="recap-empty">Entre une allure ou un temps visé pour voir les horaires.</p>
-      ) : (
+    <section className="recap" aria-labelledby="recap-titre">
+      <h2 id="recap-titre">Les spots en détail</h2>
+      <p className="recap-disclaimer">Horaires estimés : arrive quelques minutes avant le début de la fourchette.</p>
+      {!hasTimes && <p className="recap-empty">Indique une allure ou un temps visé pour voir les horaires.</p>}
+      {(
         <ul className="recap-list">
           {groups.map(({ spot, passages }) => (
             <li key={spot.id} id={`spot-${spot.id}`} tabIndex={-1} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
@@ -34,11 +32,13 @@ export function RecapPassages({ spots, passagesBySpot, runnerName, spotNumbers, 
                 {spot.highlight ? "⭐ " : ""}
                 {spot.name}
               </h3>
+              {passages.length > 0 && (
               <p className="recap-sentence">
                 {RunnerLabel(runnerName)} passe {passages.length > 1 ? `${passages.length} fois ` : ""}
                 {spotWhere(spot)} vers{" "}
                 {passages.map((p) => p.estimatedTime).join(", ")}.
               </p>
+              )}
               <p className="recap-acces">{spot.access}</p>
               <p className="recap-astuce">{spot.description}</p>
               <button type="button" className="recap-map-btn" onClick={() => onShowOnMap(spot.id)}>

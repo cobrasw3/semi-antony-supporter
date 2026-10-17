@@ -53,3 +53,15 @@ p {
 button {
   font-family: inherit;
 }
+
+/* Focus clavier toujours visible (accessibilité) */
+:focus-visible {
+  outline: 3px solid #e8b800;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}

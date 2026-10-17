@@ -31,7 +31,11 @@
 .app-header p {
   margin: 0;
   font-size: 1rem;
-  opacity: 0.92;
+}
+
+.app-header-facts {
+  margin-top: 4px !important;
+  font-size: 0.9rem !important;
 }
 
 /* --- Bandeaux "coureur suivi" / "meilleur spot" --- */

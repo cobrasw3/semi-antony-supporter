@@ -120,8 +120,9 @@ export function Itineraire({ passages, spots, walking, runnerName, spotNumbers, 
           </p>
         ) : (
           <p className="iti-intro">
-            Tous les passages dans l'ordre. Entre deux lignes : le temps de marche et s'il est possible d'y être à temps
-            (✅ avec {walking.safetyMarginMinutes} min de marge, ⚠️ juste, ❌ impossible).
+            Tous les passages dans l'ordre, avec entre deux lignes le temps de marche et s'il est possible d'y être à
+            temps (✅ avec {walking.safetyMarginMinutes} min de marge, ⚠️ juste, ❌ impossible). Le coureur va plus vite
+            que toi : impossible de tout voir. Le <strong>plan optimal</strong> choisit les spots à enchaîner.
           </p>
         )}
 

@@ -38,7 +38,7 @@ function spotIcon(number: number, highlight: boolean, active: boolean): L.DivIco
 
 function arrowIcon(bearing: number): L.DivIcon {
   return L.divIcon({
-    html: `<div class="marker-arrow" style="transform: rotate(${bearing - 90}deg)">➤</div>`,
+    html: `<div class="marker-arrow" aria-hidden="true" style="transform: rotate(${bearing - 90}deg)">➤</div>`,
     className: "marker-arrow-wrapper",
     iconSize: [16, 16],
     iconAnchor: [8, 8],
@@ -47,7 +47,7 @@ function arrowIcon(bearing: number): L.DivIcon {
 
 function kmIcon(label: string): L.DivIcon {
   return L.divIcon({
-    html: `<div class="marker-km">km ${label}</div>`,
+    html: `<div class="marker-km" aria-hidden="true">km ${label}</div>`,
     className: "marker-km-wrapper",
     iconSize: [0, 0],
     iconAnchor: [0, 0],

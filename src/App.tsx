@@ -11,7 +11,7 @@ import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_ANNONCES, BUNDLED_EVENT } from "./config/event";
 import { activeAnnonces, parseAnnonces } from "./lib/annonces";
-import { findRace, parseEventConfig, trackOf } from "./lib/event";
+import { findRace, parseEventConfig, trackOf, type Race } from "./lib/event";
 import {
   buildShareText,
   buildShareUrl,
@@ -34,6 +34,18 @@ const PREFS_KEY = "semi-supporter:prefs";
 
 function readRaceFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("race");
+}
+
+/** « Départ 14:30 · 21,1 km · 3 boucles de 7 km · dénivelé ≈ 180 m » */
+function raceFacts(race: Race): string {
+  const km = (n: number) => `${Number(n.toFixed(1)).toLocaleString("fr-FR")} km`;
+  const parts = [`Départ ${race.startTime}`, km(race.distanceKm)];
+  if (race.loops > 1) parts.push(`${race.loops} boucles de ${km(race.loopLengthKm)}`);
+  // TODO organisateur : le dénivelé (180 m) n'est pas vérifié. Le corriger
+  // dans public/data/event.json (elevationGainM) puis passer
+  // elevationToConfirm à false.
+  if (race.elevationGainM) parts.push(`dénivelé ≈ ${race.elevationGainM} m${race.elevationToConfirm ? " (à confirmer)" : ""}`);
+  return parts.join(" · ");
 }
 
 function App() {
@@ -122,10 +134,12 @@ function App() {
         )}
         <header className="app-header">
           <h1>{config.event.name}</h1>
-          <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
+          <p>Où se placer, et à quelle heure ton coureur passe.</p>
+          <p className="app-header-facts">{raceFacts(race)}</p>
         </header>
       </div>
       <Annonces annonces={annonces} />
+      <main>
       <BandeauConnexion online={online} stale={eventData.stale} fetchedAt={eventData.fetchedAt} />
 
       {config.races.length > 1 && (
@@ -213,8 +227,9 @@ function App() {
         onShowOnMap={showOnMap}
       />
 
+      </main>
       <footer className="app-footer">
-        <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>
+        <p>Application non officielle — prototype en attente de validation par l'organisateur.</p>
         <APropos appVersion={__APP_VERSION__} contentVersion={config.contentVersion} contentUpdatedAt={config.contentUpdatedAt} fetchedAt={eventData.fetchedAt} />
       </footer>
       <UpdateToast />

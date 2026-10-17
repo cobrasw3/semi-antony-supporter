@@ -39,10 +39,7 @@ function parseArgs(argv: string[]) {
 
 function formatPointsArray(points: LatLng[]): string {
   const lines = points.map((p) => `  [${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}]`);
-  return `[
-${lines.join(",
-")}
-]`;
+  return `[\n${lines.join(",\n")}\n]`;
 }
 
 function main() {
@@ -82,10 +79,8 @@ function main() {
   }
 
   const outputPath = resolve("track.imported.json");
-  writeFileSync(outputPath, formatPointsArray(singleLoop) + "
-", "utf-8");
-  console.log(`
-Écrit dans ${outputPath}`);
+  writeFileSync(outputPath, formatPointsArray(singleLoop) + "\n", "utf-8");
+  console.log(`\nÉcrit dans ${outputPath}`);
   console.log(
     "Prochaine étape : recopier ce tableau dans public/data/event.json (races[].track), " +
       `puis caler les km des spots avec ?calibrage=1. Longueur totale (x${loopCount}) : ${(singleLoopLengthKm * loopCount).toFixed(2)} km`
