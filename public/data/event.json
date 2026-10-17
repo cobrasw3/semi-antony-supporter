@@ -122,7 +122,7 @@
           "access": "165 avenue François-Molé, Antony — départ et arrivée du semi.",
           "description": "Le seul endroit où l’on voit son coureur plusieurs fois sans bouger : au départ, à la fin de chaque boucle et à l’arrivée.",
           "highlight": true,
-          "km": [0, 7, 14]
+          "km": [0, 7, 14, 21.0975]
         },
         {
           "id": "rue-marius-hue",

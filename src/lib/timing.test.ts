@@ -11,7 +11,11 @@ import {
   computeAllPassages,
   groupPassagesBySpot,
   loopIndexAt,
+  passageKind,
+  passageLabel,
 } from "./timing";
+import rawEvent from "../../public/data/event.json";
+import { parseEventConfig } from "./event";
 import type { Race } from "./event";
 
 describe("timeStringToMinutes / minutesToTimeString", () => {
@@ -139,5 +143,42 @@ describe("loopIndexAt", () => {
 
   it("vaut toujours 1 pour un parcours sans boucle", () => {
     expect(loopIndexAt(4.5, { loops: 1, loopLengthKm: 5 })).toBe(1);
+  });
+});
+
+describe("étiquettes de passage", () => {
+  const semi = { loops: 3, loopLengthKm: 7, distanceKm: 21.0975 };
+
+  it("nomme Départ / Boucle N / Fin boucle N / Arrivée selon la position", () => {
+    expect(passageLabel(0, semi)).toBe("Départ");
+    expect(passageLabel(2.7, semi)).toBe("Boucle 1");
+    expect(passageLabel(7, semi)).toBe("Fin boucle 1");
+    expect(passageLabel(9.7, semi)).toBe("Boucle 2");
+    expect(passageLabel(14, semi)).toBe("Fin boucle 2");
+    expect(passageLabel(20.5, semi)).toBe("Boucle 3");
+    expect(passageLabel(21.0975, semi)).toBe("Arrivée 🏁");
+    expect(passageKind(21.0975, semi)).toBe("finish");
+  });
+
+  it("utilise le km pour un parcours sans boucle (ex. 5 km)", () => {
+    expect(passageLabel(2.5, { loops: 1, loopLengthKm: 5, distanceKm: 5 })).toBe("km 2,5");
+    expect(passageLabel(5, { loops: 1, loopLengthKm: 5, distanceKm: 5 })).toBe("Arrivée 🏁");
+  });
+});
+
+describe("semi d'Antony (event.json livré)", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const stade = semi.spots.find((s) => s.id === "stade-suant")!;
+
+  it("le stade a 4 passages : départ, fin boucle 1, fin boucle 2, arrivée", () => {
+    const passages = computeSpotPassages(stade, semi, 5.5, config.settings.margin);
+    expect(passages.map((p) => p.label)).toEqual(["Départ", "Fin boucle 1", "Fin boucle 2", "Arrivée 🏁"]);
+  });
+
+  it("à 5:30 min/km, l'arrivée est estimée vers 16:26", () => {
+    const passages = computeSpotPassages(stade, semi, 5.5, config.settings.margin);
+    const arrivee = passages.find((p) => p.kind === "finish")!;
+    expect(arrivee.estimatedTime).toBe("16:26");
   });
 });

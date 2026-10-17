@@ -33,7 +33,7 @@ export function RecapPassages({ spots, passagesBySpot }: RecapPassagesProps) {
               <p className="recap-astuce">{spot.description}</p>
               <ul className="recap-crossings">
                 {passages.map((c) => (
-                  <li key={c.km} className="recap-crossing-row">
+                  <li key={c.km} className={c.kind === "finish" ? "recap-crossing-row recap-finish" : "recap-crossing-row"}>
                     <span className="recap-time">
                       {c.windowStart}–{c.windowEnd}
                     </span>

@@ -7,13 +7,17 @@ import type { MarginConfig, Race, Spot } from "./event";
 
 export type { MarginConfig } from "./event";
 
+export type PassageKind = "start" | "loop" | "loopEnd" | "finish";
+
 export interface Passage {
   spotId: string;
   /** Distance depuis le départ, en km. */
   km: number;
   /** Numéro de la boucle en cours (1..loops). */
   loopIndex: number;
-  /** Étiquette lisible (« Boucle 2 »…). */
+  /** Nature du passage, déduite de sa position sur le parcours. */
+  kind: PassageKind;
+  /** Étiquette lisible (« Départ », « Boucle 2 », « Fin boucle 1 », « Arrivée »…). */
   label: string;
   /** Heure estimée, en minutes depuis minuit. */
   estimatedMinutes: number;
@@ -85,9 +89,39 @@ export function loopIndexAt(km: number, race: Pick<Race, "loops" | "loopLengthKm
   return Math.min(race.loops, Math.floor((km + KM_EPSILON) / race.loopLengthKm) + 1);
 }
 
-/** Étiquette d'un passage selon sa position sur le parcours. */
-export function passageLabel(km: number, race: Pick<Race, "loops" | "loopLengthKm" | "distanceKm">): string {
-  return `Boucle ${loopIndexAt(km, race)}`;
+type RaceShape = Pick<Race, "loops" | "loopLengthKm" | "distanceKm">;
+
+/** Nature d'un passage selon sa position : départ, fin de boucle, arrivée, ou en cours de boucle. */
+export function passageKind(km: number, race: RaceShape): PassageKind {
+  if (km <= KM_EPSILON) return "start";
+  if (Math.abs(km - race.distanceKm) <= KM_EPSILON) return "finish";
+  if (race.loops > 1) {
+    const n = Math.round(km / race.loopLengthKm);
+    if (n >= 1 && n < race.loops && Math.abs(km - n * race.loopLengthKm) <= KM_EPSILON) return "loopEnd";
+  }
+  return "loop";
+}
+
+function formatKm(km: number): string {
+  return `km ${Number(km.toFixed(1)).toLocaleString("fr-FR")}`;
+}
+
+/**
+ * Étiquette d'un passage, générée automatiquement depuis sa position :
+ * « Départ », « Boucle N », « Fin boucle N », « Arrivée » (ou « km X » pour
+ * un parcours sans boucle).
+ */
+export function passageLabel(km: number, race: RaceShape): string {
+  switch (passageKind(km, race)) {
+    case "start":
+      return "Départ";
+    case "finish":
+      return "Arrivée 🏁";
+    case "loopEnd":
+      return `Fin boucle ${Math.round(km / race.loopLengthKm)}`;
+    default:
+      return race.loops > 1 ? `Boucle ${loopIndexAt(km, race)}` : formatKm(km);
+  }
 }
 
 /** Calcule un passage à la position `km`. */
@@ -109,6 +143,7 @@ export function computePassage(params: {
     spotId,
     km,
     loopIndex: loopIndexAt(km, race),
+    kind: passageKind(km, race),
     label: passageLabel(km, race),
     estimatedMinutes,
     windowStartMinutes,

@@ -335,6 +335,18 @@
   white-space: nowrap;
 }
 
+.recap-finish {
+  margin: 2px -8px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #14171a;
+  color: #fff;
+}
+
+.recap-finish .recap-loop {
+  color: #fff;
+}
+
 .recap-loop {
   font-size: 0.9rem;
   font-weight: 600;
