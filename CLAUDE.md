@@ -241,3 +241,12 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   rappels (agenda .ics, alertes app ouverte, cas iPhone non installé).
   Corrigé : taps rapides sur les puces (mise à jour fonctionnelle), « 0 m »
   → « sans bouger ».
+- **Étape 3c — onglet Carte** (`src/app/MapTab.tsx`, chargé à la demande) :
+  carte plein écran, tracé aux couleurs de la marque (classe CSS, plus de
+  couleur en dur), flèches de sens, bornes km, marqueurs numérotés, point
+  « position estimée du coureur » animé (jour J / démo) ; tiroir en bas
+  avec carrousel des spots (prochain passage) : défiler recentre la carte,
+  toucher un marqueur sélectionne la carte du carrousel, toucher une carte
+  ouvre le tiroir du spot ; tiroir repliable. Repris de l'ancienne carte :
+  tuiles configurables, plan statique de repli, mode `?calibrage=1`.
+  Corrigé : noms tronqués dans le carrousel (2 lignes, horaire réduit).

@@ -696,3 +696,287 @@ a.btn {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ------------------------------------------------------------ Carte */
+
+.shell--carte {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+
+.shell--carte .shell__main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.map-tab {
+  position: absolute;
+  inset: 0;
+}
+
+.map-tab__map {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-2);
+}
+
+.map-tab .leaflet-container {
+  background: var(--surface-2);
+  font-family: var(--font-body);
+}
+
+.map-route {
+  stroke: var(--ink);
+  stroke-opacity: 0.9;
+}
+
+.pin-wrap {
+  background: transparent;
+  border: none;
+}
+
+.pin {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--strong);
+  color: var(--on-strong);
+  font: 800 1.25rem / 1 var(--font-display);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.pin--fort {
+  background: var(--sprint);
+  color: var(--on-sprint);
+}
+
+.pin.is-active {
+  transform: scale(1.22);
+  outline: 4px solid var(--signal);
+}
+
+.map-arrow {
+  width: 16px;
+  height: 16px;
+  color: var(--signal);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.map-km {
+  transform: translate(8px, -50%);
+  white-space: nowrap;
+  font: 800 12px / 1 var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-shadow:
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 3px #fff;
+}
+
+.map-runner {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.map-runner span,
+.map-runner::before {
+  position: absolute;
+  inset: 4px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--signal);
+  content: "";
+}
+
+.map-runner::before {
+  inset: 0;
+  border: none;
+  background: color-mix(in srgb, var(--signal) 55%, transparent);
+  animation: runner-pulse 1.6s ease-out infinite;
+}
+
+@keyframes runner-pulse {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.map-calib {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--ko);
+}
+
+.map-calib-banner,
+.map-badge,
+.map-legend {
+  position: absolute;
+  z-index: 1000;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  background: var(--strong);
+  color: var(--on-strong);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-1);
+}
+
+.map-calib-banner,
+.map-legend {
+  top: var(--s-3);
+}
+
+.map-badge {
+  top: var(--s-3);
+}
+
+.map-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-legend__dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--on-strong);
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+.map-plan {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: 200px;
+  background: var(--surface-2);
+}
+
+.map-plan img {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+}
+
+.map-tab .leaflet-control-attribution {
+  margin-bottom: 4px;
+  font-size: 10px;
+}
+
+/* Tiroir des spots */
+.map-drawer .carousel__item {
+  flex-basis: 86%;
+}
+
+.map-drawer {
+  position: absolute;
+  z-index: 1200;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--bg);
+  box-shadow: 0 -6px 24px rgba(20, 33, 61, 0.18);
+}
+
+.map-drawer__handle {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 8px 0 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.map-drawer__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 700 var(--t-xs) / 1 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.map-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 84px;
+  padding: var(--s-3) var(--s-4);
+  border: none;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-card__main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.map-card__name {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 800;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.map-card__meta {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-card__time {
+  flex: none;
+  font: 800 2rem / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-runner::before {
+    animation: none;
+  }
+}
