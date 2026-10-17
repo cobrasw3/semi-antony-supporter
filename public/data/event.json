@@ -17,6 +17,25 @@
     "official": false,
     "colors": { "ink": "#14213d", "sprint": "#f26b3a", "signal": "#d7f205" }
   },
+  "infos": [
+    {
+      "title": "Départ et arrivée",
+      "text": "Stade Georges Suant, 165 avenue François-Molé, Antony."
+    },
+    {
+      "title": "Se déplacer entre les spots",
+      "text": "Les rues du parcours sont fermées pendant la course : on se déplace à pied. Le plan de l’onglet Plan tient compte du temps de marche."
+    },
+    {
+      "title": "Consigne et vestiaires",
+      "text": "Informations publiées ici par l’organisateur avant la course.",
+      "toConfirm": true
+    },
+    {
+      "title": "Zéro papier",
+      "text": "Cette app remplace les plans imprimés : partage le lien ou le QR code plutôt que d’imprimer."
+    }
+  ],
   "settings": {
     "margin": {
       "percentage": 0.035,

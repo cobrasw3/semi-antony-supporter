@@ -250,3 +250,11 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   ouvre le tiroir du spot ; tiroir repliable. Repris de l'ancienne carte :
   tuiles configurables, plan statique de repli, mode `?calibrage=1`.
   Corrigé : noms tronqués dans le carrousel (2 lignes, horaire réduit).
+- **Étape 3d — onglet Infos** : annonces (toutes, info/importante),
+  programme de la journée (toutes les courses de `event.json`, « Suivre »
+  si plusieurs, dénivelé avec TODO), infos pratiques dépliables (nouveau
+  bloc optionnel `infos` dans `event.json` ; « Consigne et vestiaires »
+  marqué « à confirmer », aucun fait inventé), partage avec QR code,
+  installation (invite native / marche à suivre iOS), à propos (mention
+  « non officielle » pilotée par `branding.official`, vie privée, versions,
+  contact).

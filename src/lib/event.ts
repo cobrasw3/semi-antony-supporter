@@ -88,6 +88,8 @@ export interface EventConfig {
     official?: boolean;
     colors?: { ink?: string; sprint?: string; signal?: string };
   };
+  /** Infos pratiques affichées dans l'onglet Infos (optionnelles). */
+  infos?: Array<{ title: string; text: string; toConfirm?: boolean }>;
   settings: {
     margin: MarginConfig;
     walking: WalkingConfig;
