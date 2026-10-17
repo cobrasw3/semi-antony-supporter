@@ -3,6 +3,7 @@ import { APropos } from "./components/APropos";
 import { Carte, type MapFocus } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
+import { InstallPrompt } from "./components/InstallPrompt";
 import { Itineraire } from "./components/Itineraire";
 import { ProchainPassage } from "./components/ProchainPassage";
 import { RecapPassages } from "./components/RecapPassages";
@@ -38,7 +39,19 @@ function App() {
       targetTime: race.defaultTargetTime,
     })
   );
-  const updatePrefs = useCallback((patch: Partial<RunnerPrefs>) => setPrefs((p) => ({ ...p, ...patch })), []);
+  // « Engagé » = a modifié la saisie ou fait défiler l'écran : l'invite
+  // d'installation n'apparaît qu'à ce moment-là, jamais au premier écran.
+  const [engaged, setEngaged] = useState(false);
+  const updatePrefs = useCallback((patch: Partial<RunnerPrefs>) => {
+    setPrefs((p) => ({ ...p, ...patch }));
+    setEngaged(true);
+  }, []);
+  useEffect(() => {
+    if (engaged) return;
+    const onScroll = () => window.scrollY > 300 && setEngaged(true);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [engaged]);
 
   const { pace: paceMinPerKm, error: paceError } = resolvePace(prefs, race.distanceKm, config.settings.pace);
   const runnerName = sanitizeName(prefs.name);
@@ -87,15 +100,17 @@ function App() {
 
   return (
     <div className="app">
-      {IS_DEMO && (
-        <div className="demo-banner" role="status">
-          🎬 Mode démo — heure simulée {minutesToTimeString(clock.minutes)}, jour de la course
-        </div>
-      )}
-      <header className="app-header">
-        <h1>{config.event.name}</h1>
-        <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
-      </header>
+      <div className="app-top">
+        {IS_DEMO && (
+          <div className="demo-banner" role="status">
+            🎬 Mode démo — heure simulée {minutesToTimeString(clock.minutes)}, jour de la course
+          </div>
+        )}
+        <header className="app-header">
+          <h1>{config.event.name}</h1>
+          <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
+        </header>
+      </div>
 
       {config.races.length > 1 && (
         <div className="race-toggle mode-toggle" role="group" aria-label="Choix de la course">
@@ -134,6 +149,8 @@ function App() {
         runnerName={runnerName}
         onSelectSpot={scrollToSpot}
       />
+
+      <InstallPrompt ready={engaged && paceMinPerKm !== null} />
 
       <Itineraire
         passages={passages}
