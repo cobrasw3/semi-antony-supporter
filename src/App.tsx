@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Annonces } from "./components/Annonces";
 import { APropos } from "./components/APropos";
 import { BandeauConnexion } from "./components/BandeauConnexion";
-import { Carte, type MapFocus } from "./components/Carte";
+import type { MapFocus } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
 import { InstallPrompt } from "./components/InstallPrompt";
@@ -37,6 +37,10 @@ const PREFS_KEY = "semi-supporter:prefs";
 function readRaceFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("race");
 }
+
+// Leaflet (~150 Ko) est chargé à part : la carte est sous la ligne de
+// flottaison, l'essentiel (horaires, prochain passage) s'affiche avant.
+const Carte = lazy(() => import("./components/Carte").then((m) => ({ default: m.Carte })));
 
 /** « Départ 14:30 · 21,1 km · 3 boucles de 7 km · dénivelé ≈ 180 m » */
 function raceFacts(race: Race): string {
@@ -213,15 +217,17 @@ function App() {
 
       <details className="carte-section" open ref={mapSectionRef}>
         <summary>🗺️ Carte du parcours</summary>
-        <Carte
-          key={race.id}
-          loopPoints={track}
-          race={race}
-          spots={race.spots}
-          spotNumbers={spotNumbers}
-          focus={mapFocus}
-          onSelectSpot={scrollToSpot}
-        />
+        <Suspense fallback={<div className="carte-wrapper carte-attente">Chargement de la carte…</div>}>
+          <Carte
+            key={race.id}
+            loopPoints={track}
+            race={race}
+            spots={race.spots}
+            spotNumbers={spotNumbers}
+            focus={mapFocus}
+            onSelectSpot={scrollToSpot}
+          />
+        </Suspense>
       </details>
 
       {highlight && (

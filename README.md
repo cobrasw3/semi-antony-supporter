@@ -1,39 +1,109 @@
 # Semi d'Antony — Assistant Supporter
 
-Prototype de démonstration : une web app mobile-first qui répond à *« où je
-me place et à quelle heure mon coureur passe ? »* pour les supporters du
-semi-marathon d'Antony (3 boucles de 7 km).
+Web app mobile-first, **installable sur téléphone (PWA)** et **utilisable
+hors-ligne**, qui répond à *« où je me place et à quelle heure mon coureur
+passe ? »* pour les supporters du semi-marathon d'Antony (3 boucles de 7 km).
 
-Pas d'installation, pas de compte : un lien (ou un QR code) ouvert au
-navigateur suffit. Tout le calcul se fait côté client, à partir de fichiers
-de config.
+Pas de compte, pas de backend : un lien (ou un QR code) suffit. Tout est
+calculé sur le téléphone à partir de `public/data/event.json`. Le prénom et
+l'allure restent sur l'appareil.
+
+## URLs utiles
+
+| URL | Usage |
+| --- | --- |
+| `/?name=Léa&pace=5:30` | Lien de suivi partagé (`runner=` est toujours accepté) |
+| `/?demo=1&now=14:40&name=Léa&pace=5:30` | Mode démo : simule le jour J à 14:40 (l'heure avance en temps réel) |
+| `/?race=5k` | Choix de la course (si plusieurs courses dans event.json) |
+| `/?calibrage=1` | Clic sur la carte → position km sur la boucle (pour caler les spots) |
+| `/qr` | QR code imprimable vers l'app (affiches, stand des dossards), non lié dans l'app |
 
 ## Structure
 
 ```
-src/config/course.ts             Tracé du parcours (placeholder pour l'instant) + nb/longueur de boucles
-src/config/observationPoints.ts  Points d'observation (nom, coordonnées, distance sur une boucle, accès, astuce)
-src/config/settings.ts           Heure de départ, marge d'incertitude
-src/lib/timing.ts                Calcul pur des horaires de passage (testé, voir timing.test.ts)
-src/lib/format.ts                Parsing/formatage des saisies allure & temps visé + URL de partage
-src/lib/geo.ts                   Distances, projection d'un point sur un tracé, découpage multi-boucles (testé)
-src/lib/gpxKml.ts                Parsing GPX/KML -> tableau de coordonnées (testé)
-scripts/import-track.ts          CLI : convertit un GPX/KML en coordonnées prêtes à intégrer (voir plus bas)
-src/components/Carte.tsx         Carte Leaflet (tracé + marqueurs + popups + mode calibrage)
-src/components/ChampAllure.tsx   Saisie allure / temps visé
-src/components/Partage.tsx       Bouton de partage (QR code + lien avec allure encodée)
-src/components/RecapPassages.tsx Récapitulatif trié des créneaux de passage
+public/data/event.json         TOUTE la config de l'événement (voir ci-dessous)
+public/data/annonces.json      Annonces de l'organisateur (bandeau)
+public/manifest.webmanifest    Manifest PWA ; icônes dans public/icons (scripts/generate-icons.mjs)
+public/parcours-plan.svg       Plan statique de repli (scripts/generate-route-plan.ts)
+src/lib/                       Logique pure, testée (*.test.ts) :
+  timing.ts                      horaires de passage, étiquettes Départ/Boucle/Fin boucle/Arrivée
+  itinerary.ts                   temps de marche, faisabilité ✅⚠️❌, plan optimal (DP sur DAG)
+  dayStatus.ts, clock.ts         mode jour J (prochain passage), fuseau, mode démo
+  reminders.ts                   rappels 10 min avant, export agenda .ics
+  annonces.ts, remoteData.ts     annonces, données en stale-while-revalidate
+  format.ts, event.ts, geo.ts, mapMarkers.ts, analytics.ts, gpxKml.ts
+src/pwa/                       Service worker (mises à jour auto), installation, plateforme
+src/components/                Écrans (Carte chargée en différé)
+vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cache, réécriture /qr
 ```
 
-## ⚠️ Données à remplacer avant la démo
+## Configurer un événement (`public/data/event.json`)
 
-- `src/config/course.ts` : `PLACEHOLDER_LOOP_POINTS` est un tracé fictif. Voir
-  "Intégrer le vrai tracé" ci-dessous pour le remplacer à partir d'un GPX/KML.
-- `src/config/observationPoints.ts` : 3 points (Stade Georges Suant, Parc
-  Heller, `⟨3e point à nommer⟩`) — accès et astuces encore marqués
-  `⟨à vérifier⟩` par endroits, à confirmer avec le club.
-- `src/config/settings.ts` : heure de départ (`14:30`) et marge
-  d'incertitude (`±1 %` à `±3 %`), facilement ajustables.
+- `event` : nom, date (`AAAA-MM-JJ`), `dateToConfirm`, fuseau.
+- `settings.margin` : demi-largeur des fourchettes (`max(temps écoulé × %, plancher)`).
+- `settings.walking` : vitesse de marche, facteur de détour (× vol d'oiseau),
+  marge de sécurité de l'itinéraire.
+- `settings.pace` : allure min/max acceptée (3:00–9:00).
+- `races[]` : une entrée par course (le sélecteur n'apparaît que s'il y en a
+  plusieurs) : distance, heure de départ, boucles, dénivelé
+  (`elevationToConfirm`), tracé d'UNE boucle, `spots[]`.
+- `spots[].km` : **toutes** les positions (km depuis le départ) où le
+  parcours passe par ce spot. Les passages et leurs étiquettes en découlent.
+  Ex. stade : `[0, 7, 14, 21.0975]` → Départ, Fin boucle 1, Fin boucle 2, Arrivée.
+- `contentVersion` / `contentUpdatedAt` : à incrémenter à chaque modification
+  (affichés dans « À propos »).
+
+Une modification poussée sur `main` arrive chez les utilisateurs **sans
+nouvelle version de l'app** (fichier relu au retour au premier plan). Après
+un changement de tracé ou de spots : `node scripts/generate-route-plan.ts`.
+
+### Ajouter le 5 km
+
+Ajouter une 2e entrée dans `races` (ex. `"id": "5k"`, `"startTime": "13:15"`,
+`"loops": 1`, son tracé et ses spots). Le sélecteur de course s'affiche alors
+automatiquement.
+
+## Variables d'environnement (Vercel → Settings → Environment Variables)
+
+| Variable | Valeurs |
+| --- | --- |
+| `VITE_TILE_PROVIDER` | `osm` (défaut), `maptiler`, `stadia` |
+| `VITE_TILE_API_KEY` | clé MapTiler / Stadia |
+
+Un nouveau fournisseur de tuiles doit aussi être ajouté à la CSP
+(`vercel.json`) et à la règle de cache du service worker (`vite.config.ts`).
+
+## Mises à jour et hors-ligne
+
+- Le service worker (vite-plugin-pwa / Workbox) précache l'app, event.json
+  (embarqué), les icônes et le plan statique ; les tuiles vues sont mises en
+  cache (400 max, 14 jours).
+- Nouvelle version : vérifiée au retour au premier plan, au retour du réseau
+  et toutes les 15 min ; l'app se recharge seule (état conservé) ou affiche
+  « Nouvelle version disponible » si l'utilisateur est en train de saisir.
+
+## Mesure d'audience
+
+Vercel Web Analytics (sans cookie) : à activer dans le tableau de bord
+Vercel (projet → Analytics). URL envoyée sans paramètres (aucun prénom ni
+allure). Événements : `partage`, `installation`, `ouverture_app_installee`,
+`notifications_activees`, `agenda_telecharge`, `itineraire_ouvert`,
+`plan_optimal`. ⚠️ Les événements personnalisés nécessitent un plan Vercel
+Pro ; sur le plan Hobby, seules les pages vues sont comptées.
+
+## Rappels « il arrive dans 10 min » : limite connue
+
+Sans serveur de push, une PWA ne peut pas planifier une notification fiable
+quand l'app est fermée (iOS suspend le JS en arrière-plan, l'API Notification
+Triggers a été abandonnée). L'app propose donc :
+1. **Ajouter à mon agenda** (.ics, alarme 10 min avant chaque passage du plan
+   optimal) : fiable, app fermée et hors-ligne ;
+2. des alertes (notification + vibration) **tant que l'app est ouverte** ;
+   sur iPhone, uniquement une fois l'app installée (iOS 16.4+).
+
+Un vrai push app fermée demanderait un petit backend (clés VAPID + envoi
+planifié, ex. fonction Vercel + cron), ce qui implique de stocker un
+abonnement push par appareil.
 
 ## Intégrer le vrai tracé (GPX/KML)
 
@@ -41,22 +111,10 @@ src/components/RecapPassages.tsx Récapitulatif trié des créneaux de passage
 node scripts/import-track.ts chemin/vers/tracé.gpx
 ```
 
-Le script détecte automatiquement si le fichier contient 1 seule boucle
-(7 km) ou les 3 (21 km, il les découpe alors en 3 tracés égaux et ne garde
-que le premier), vérifie que la longueur obtenue est cohérente avec
-7 km/boucle (prévient sinon), et écrit le résultat dans
-`src/config/course.imported.ts` — à relire, puis à recopier dans
-`course.ts` (remplace `PLACEHOLDER_LOOP_POINTS`) une fois le tracé validé
-visuellement sur la carte.
-
-Options : `--loop-length=7` (longueur de boucle attendue, en km) et
-`--loops=3` pour forcer le nombre de boucles si la détection automatique se
-trompe.
-
-Une fois le vrai tracé en place, cale précisément la `distanceInLoopKm` de
-chaque point d'observation en ouvrant l'app avec `?calibrage=1` (ex.
-`http://localhost:5173/?calibrage=1`) : un clic sur la carte affiche
-instantanément la distance-dans-la-boucle du point cliqué.
+Le script détecte si le fichier contient 1 boucle ou les 3 (il découpe et
+garde la première), vérifie la longueur, et écrit `track.imported.json` à
+recopier dans `races[].track` de `event.json`. Options : `--loop-length=7`,
+`--loops=3`. Caler ensuite les `km` des spots avec `?calibrage=1`.
 
 ## Publier une annonce (2 minutes)
 
@@ -100,7 +158,7 @@ npm run dev
 Ouvre `http://localhost:5173`. Recharge à chaud (HMR) : modifier un fichier
 de config met à jour l'app instantanément.
 
-Lancer les tests de `timing.ts` :
+Lancer les tests (toute la logique de calcul) :
 
 ```bash
 npm run test
@@ -135,8 +193,7 @@ Chaque nouveau `git push` redéploie automatiquement.
 déployer directement depuis la machine locale, sans dépôt Git — pratique
 pour un test rapide avant de mettre en place un dépôt propre.
 
-## Ce qui n'est volontairement pas fait (hors périmètre v1)
+## Hors périmètre
 
-Itinéraire piéton entre points, alertes "il arrive dans X min", suivi de
-plusieurs coureurs, suivi temps réel — voir la conversation de conception
-pour le contexte complet.
+Suivi de plusieurs coureurs, suivi temps réel (puce/chronométrage), push
+serveur app fermée.

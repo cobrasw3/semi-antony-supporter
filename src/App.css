@@ -1012,3 +1012,11 @@
   background: #fff;
   color: var(--color-primary);
 }
+
+.carte-attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
