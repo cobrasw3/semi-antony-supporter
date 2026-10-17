@@ -323,3 +323,6 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   atteignables (départ juste après le passage, arrivée 3 min avant la
   fourchette suivante, marche à 4,5 km/h) ; « Passer » le prénom → « ton
   coureur » partout.
+- Preview Vercel de `feat/plan-marche` @ 8ed7bde (cible preview, prod non
+  touchée) : https://semi-antony-supporter-r25pw6s4j-pmachard2001-5765s-projects.vercel.app
+  — Ready ; `event.json` servi avec `walkingRoutes`. 193 tests ✅.
