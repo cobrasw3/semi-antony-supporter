@@ -3,73 +3,69 @@ import { APropos } from "./components/APropos";
 import { Carte } from "./components/Carte";
 import { ChampAllure } from "./components/ChampAllure";
 import { Partage } from "./components/Partage";
-import { RecapPassages, type RecapPoint } from "./components/RecapPassages";
-import { LOOP_COUNT, LOOP_LENGTH_KM, LOOP_POINTS, TOTAL_DISTANCE_KM } from "./config/course";
-import { OBSERVATION_POINTS } from "./config/observationPoints";
-import { MARGE_MIN_MINUTES, MARGE_POURCENTAGE, RACE_NAME, RACE_START_TIME } from "./config/settings";
+import { RecapPassages } from "./components/RecapPassages";
+import { BUNDLED_EVENT } from "./config/event";
+import { findRace, trackOf } from "./lib/event";
 import { buildShareUrl } from "./lib/format";
-import { computeAllCrossings, timeStringToMinutes, type PointCrossings } from "./lib/timing";
+import { computeAllPassages, groupPassagesBySpot } from "./lib/timing";
 import "./App.css";
 
+function readRaceFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("race");
+}
+
 function App() {
-  const [paceMinPerKm, setPaceMinPerKm] = useState<number | null>(5.5);
+  const config = BUNDLED_EVENT;
+  const [raceId, setRaceId] = useState<string | null>(readRaceFromUrl);
+  const race = findRace(config, raceId);
+  const [paceMinPerKm, setPaceMinPerKm] = useState<number | null>(null);
   const [runnerName, setRunnerName] = useState("");
 
-  const handlePaceChange = useCallback((pace: number | null) => {
-    setPaceMinPerKm(pace);
-  }, []);
+  const handlePaceChange = useCallback((pace: number | null) => setPaceMinPerKm(pace), []);
+  const handleRunnerNameChange = useCallback((name: string) => setRunnerName(name), []);
 
-  const handleRunnerNameChange = useCallback((name: string) => {
-    setRunnerName(name);
-  }, []);
-
-  // Reflète l'allure et le prénom du coureur dans l'URL (?pace=...&runner=...),
-  // pour que le lien partagé (bouton "Partager") rouvre directement sur les
-  // mêmes horaires, personnalisés.
+  // Reflète l'allure et le prénom du coureur dans l'URL, pour que le lien
+  // partagé rouvre directement sur les mêmes horaires, personnalisés.
+  const shareUrl = useMemo(
+    () => buildShareUrl(paceMinPerKm, runnerName, config.races.length > 1 ? race.id : null),
+    [paceMinPerKm, runnerName, race.id, config.races.length]
+  );
   useEffect(() => {
-    const url = buildShareUrl(paceMinPerKm, runnerName);
-    if (url) window.history.replaceState(null, "", url);
-  }, [paceMinPerKm, runnerName]);
+    if (shareUrl) window.history.replaceState(null, "", shareUrl);
+  }, [shareUrl]);
 
-  const crossings: PointCrossings[] = useMemo(() => {
-    if (!paceMinPerKm) return [];
-    return computeAllCrossings(OBSERVATION_POINTS, {
-      startTimeMinutes: timeStringToMinutes(RACE_START_TIME),
-      paceMinPerKm,
-      loopCount: LOOP_COUNT,
-      loopLengthKm: LOOP_LENGTH_KM,
-      margin: { percentage: MARGE_POURCENTAGE, minMinutes: MARGE_MIN_MINUTES },
-    });
-  }, [paceMinPerKm]);
-
-  const crossingsByPointId = useMemo(
-    () => Object.fromEntries(crossings.map((c) => [c.pointId, c])),
-    [crossings]
+  const passages = useMemo(
+    () => (paceMinPerKm ? computeAllPassages(race, paceMinPerKm, config.settings.margin) : []),
+    [race, paceMinPerKm, config.settings.margin]
   );
+  const passagesBySpot = useMemo(() => groupPassagesBySpot(passages), [passages]);
+  const track = useMemo(() => trackOf(race), [race]);
 
-  const recapPoints: RecapPoint[] = useMemo(
-    () =>
-      OBSERVATION_POINTS.map((point) => ({
-        id: point.id,
-        name: point.name,
-        acces: point.acces,
-        astuce: point.astuce,
-        pointFort: point.pointFort,
-        crossings: crossingsByPointId[point.id]?.crossings ?? [],
-      })),
-    [crossingsByPointId]
-  );
-
-  const pointFort = OBSERVATION_POINTS.find((p) => p.pointFort);
-  const shareUrl = useMemo(() => buildShareUrl(paceMinPerKm, runnerName), [paceMinPerKm, runnerName]);
+  const highlight = race.spots.find((s) => s.highlight);
   const trimmedRunnerName = runnerName.trim();
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>{RACE_NAME}</h1>
-        <p>Départ {RACE_START_TIME} — où se placer, et à quelle heure ton coureur passe.</p>
+        <h1>{config.event.name}</h1>
+        <p>Départ {race.startTime} — où se placer, et à quelle heure ton coureur passe.</p>
       </header>
+
+      {config.races.length > 1 && (
+        <div className="race-toggle mode-toggle" role="group" aria-label="Choix de la course">
+          {config.races.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              className={r.id === race.id ? "mode-btn active" : "mode-btn"}
+              aria-pressed={r.id === race.id}
+              onClick={() => setRaceId(r.id)}
+            >
+              {r.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {trimmedRunnerName && (
         <div className="runner-banner">
@@ -77,24 +73,27 @@ function App() {
         </div>
       )}
 
-      {pointFort && (
+      {highlight && (
         <div className="best-spot-banner">
-          ⭐ Meilleur spot : <strong>{pointFort.name}</strong> — reste ici, tu vois ton coureur
-          passer 3 fois sans bouger.
+          ⭐ Meilleur spot : <strong>{highlight.shortName}</strong> — reste ici, tu vois ton coureur
+          passer {highlight.km.length} fois sans bouger.
         </div>
       )}
 
-      <Carte loopPoints={LOOP_POINTS} points={OBSERVATION_POINTS} crossingsByPointId={crossingsByPointId} />
+      <Carte key={race.id} loopPoints={track} spots={race.spots} passagesBySpot={passagesBySpot} />
 
       <ChampAllure
-        totalDistanceKm={TOTAL_DISTANCE_KM}
+        key={`allure-${race.id}`}
+        totalDistanceKm={race.distanceKm}
+        defaultPace={race.defaultPace}
+        defaultTargetTime={race.defaultTargetTime}
         onPaceChange={handlePaceChange}
         onRunnerNameChange={handleRunnerNameChange}
       />
 
       <Partage url={shareUrl} />
 
-      <RecapPassages points={recapPoints} />
+      <RecapPassages spots={race.spots} passagesBySpot={passagesBySpot} />
 
       <footer className="app-footer">
         <p>Prototype de démonstration — parcours et points d'observation à confirmer.</p>

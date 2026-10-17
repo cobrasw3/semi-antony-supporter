@@ -1,27 +1,19 @@
-import type { CrossingEstimate } from "../lib/timing";
-
-export interface RecapPoint {
-  id: string;
-  name: string;
-  acces: string;
-  astuce: string;
-  pointFort?: boolean;
-  crossings: CrossingEstimate[];
-}
+import type { Spot } from "../lib/event";
+import type { Passage } from "../lib/timing";
 
 interface RecapPassagesProps {
-  points: RecapPoint[];
+  spots: Spot[];
+  passagesBySpot: Record<string, Passage[]>;
 }
 
-export function RecapPassages({ points }: RecapPassagesProps) {
-  // Un groupe par point d'observation (nom + acces + astuce affichés une
-  // seule fois), ses 3 passages étant déjà en ordre croissant. Les groupes
-  // eux-mêmes sont ordonnés par leur premier passage, pour rester globalement
-  // chronologique.
-  const groups = points
-    .filter((p) => p.crossings.length > 0)
-    .slice()
-    .sort((a, b) => a.crossings[0].windowStartMinutes - b.crossings[0].windowStartMinutes);
+export function RecapPassages({ spots, passagesBySpot }: RecapPassagesProps) {
+  // Un groupe par spot (nom + accès + conseil affichés une seule fois), ses
+  // passages étant déjà en ordre croissant. Les groupes eux-mêmes sont
+  // ordonnés par leur premier passage, pour rester globalement chronologique.
+  const groups = spots
+    .map((spot) => ({ spot, passages: passagesBySpot[spot.id] ?? [] }))
+    .filter((g) => g.passages.length > 0)
+    .sort((a, b) => a.passages[0].estimatedMinutes - b.passages[0].estimatedMinutes);
 
   return (
     <section className="recap" aria-label="Récapitulatif des passages">
@@ -31,24 +23,21 @@ export function RecapPassages({ points }: RecapPassagesProps) {
         <p className="recap-empty">Entre une allure ou un temps visé pour voir les horaires.</p>
       ) : (
         <ul className="recap-list">
-          {groups.map((point) => (
-            <li
-              key={point.id}
-              className={point.pointFort ? "recap-group recap-group-fort" : "recap-group"}
-            >
+          {groups.map(({ spot, passages }) => (
+            <li key={spot.id} className={spot.highlight ? "recap-group recap-group-fort" : "recap-group"}>
               <p className="recap-group-name">
-                {point.pointFort ? "⭐ " : ""}
-                {point.name}
+                {spot.highlight ? "⭐ " : ""}
+                {spot.name}
               </p>
-              <p className="recap-acces">{point.acces}</p>
-              <p className="recap-astuce">{point.astuce}</p>
+              <p className="recap-acces">{spot.access}</p>
+              <p className="recap-astuce">{spot.description}</p>
               <ul className="recap-crossings">
-                {point.crossings.map((c) => (
-                  <li key={c.loopIndex} className="recap-crossing-row">
+                {passages.map((c) => (
+                  <li key={c.km} className="recap-crossing-row">
                     <span className="recap-time">
                       {c.windowStart}–{c.windowEnd}
                     </span>
-                    <span className="recap-loop">Boucle {c.loopIndex}</span>
+                    <span className="recap-loop">{c.label}</span>
                   </li>
                 ))}
               </ul>

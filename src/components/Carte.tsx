@@ -3,24 +3,14 @@ import "../lib/leafletIcons";
 import L from "leaflet";
 import { useEffect, useState } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import type { LatLng } from "../config/course";
+import type { LatLng, Spot } from "../lib/event";
 import { projectPointOntoRoute } from "../lib/geo";
-import type { PointCrossings } from "../lib/timing";
-
-interface CartePoint {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  acces: string;
-  astuce: string;
-  pointFort?: boolean;
-}
+import type { Passage } from "../lib/timing";
 
 interface CarteProps {
   loopPoints: LatLng[];
-  points: CartePoint[];
-  crossingsByPointId: Record<string, PointCrossings>;
+  spots: Spot[];
+  passagesBySpot: Record<string, Passage[]>;
 }
 
 // Marqueur distinct pour le "point fort" (celui où l'on voit son coureur le
@@ -103,7 +93,7 @@ function isCalibrageMode(): boolean {
   return new URLSearchParams(window.location.search).get("calibrage") === "1";
 }
 
-export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
+export function Carte({ loopPoints, spots, passagesBySpot }: CarteProps) {
   const polylinePositions = loopPoints.map((p) => [p.lat, p.lng]) as [number, number][];
   const fallbackCenter: [number, number] = polylinePositions[0] ?? [48.753, 2.297];
   const calibrage = isCalibrageMode();
@@ -145,23 +135,23 @@ export function Carte({ loopPoints, points, crossingsByPointId }: CarteProps) {
           }}
         />
         <Polyline positions={polylinePositions} pathOptions={{ color: "#0a5c36", weight: 5 }} />
-        {points.map((point) => {
-          const pointCrossings = crossingsByPointId[point.id];
+        {spots.map((point) => {
+          const passages = passagesBySpot[point.id];
           return (
             <Marker
               key={point.id}
               position={[point.lat, point.lng]}
-              icon={point.pointFort ? pointFortIcon : defaultIcon}
+              icon={point.highlight ? pointFortIcon : defaultIcon}
             >
               <Popup>
-                <strong>{point.pointFort ? "⭐ " : ""}{point.name}</strong>
-                <p className="popup-acces">{point.acces}</p>
-                <p className="popup-astuce">{point.astuce}</p>
-                {pointCrossings && (
+                <strong>{point.highlight ? "⭐ " : ""}{point.name}</strong>
+                <p className="popup-acces">{point.access}</p>
+                <p className="popup-astuce">{point.description}</p>
+                {passages && (
                   <ul className="popup-crossings">
-                    {pointCrossings.crossings.map((c) => (
-                      <li key={c.loopIndex}>
-                        Boucle {c.loopIndex} : {c.windowStart}–{c.windowEnd}
+                    {passages.map((c) => (
+                      <li key={c.km}>
+                        {c.label} : {c.windowStart}–{c.windowEnd}
                       </li>
                     ))}
                   </ul>

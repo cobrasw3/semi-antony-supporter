@@ -1,7 +1,7 @@
 // Utilitaire CLI : convertit un fichier GPX/KML en tableau de coordonnées
-// et l'écrit dans src/config/course.imported.ts pour relecture — il ne
-// touche PAS course.ts directement, pour permettre de vérifier le résultat
-// (tracé affiché sur la carte, longueur cohérente) avant de l'intégrer.
+// et l'écrit dans track.imported.json pour relecture — il ne touche PAS
+// public/data/event.json directement, pour permettre de vérifier le résultat
+// (longueur cohérente) avant de recopier le tableau dans `races[].track`.
 //
 // Usage :
 //   node scripts/import-track.ts <fichier.gpx|.kml> [--loop-length=7] [--loops=3]
@@ -38,8 +38,11 @@ function parseArgs(argv: string[]) {
 }
 
 function formatPointsArray(points: LatLng[]): string {
-  const lines = points.map((p) => `  [${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}],`);
-  return `[\n${lines.join("\n")}\n]`;
+  const lines = points.map((p) => `  [${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}]`);
+  return `[
+${lines.join(",
+")}
+]`;
 }
 
 function main() {
@@ -78,21 +81,15 @@ function main() {
     console.log("✅ Longueur cohérente avec la longueur de boucle attendue.");
   }
 
-  const outputPath = resolve("src/config/course.imported.ts");
-  const fileContent = `// Généré par \`node scripts/import-track.ts ${filePath}\` — À VÉRIFIER puis
-// à recopier dans course.ts (remplacer PLACEHOLDER_LOOP_POINTS) une fois
-// que le tracé affiché sur la carte est validé. Ce fichier n'est pas
-// utilisé par l'application tant qu'il n'est pas intégré manuellement.
-
-export const IMPORTED_LOOP_POINTS: Array<[number, number]> = ${formatPointsArray(singleLoop)};
-
-// Longueur calculée de cette boucle : ${singleLoopLengthKm.toFixed(2)} km
-// Longueur totale (x${loopCount}) : ${(singleLoopLengthKm * loopCount).toFixed(2)} km
-`;
-
-  writeFileSync(outputPath, fileContent, "utf-8");
-  console.log(`\nÉcrit dans ${outputPath}`);
-  console.log("Prochaine étape : je vais brancher ce fichier dans course.ts pour que tu vérifies le tracé sur la carte.");
+  const outputPath = resolve("track.imported.json");
+  writeFileSync(outputPath, formatPointsArray(singleLoop) + "
+", "utf-8");
+  console.log(`
+Écrit dans ${outputPath}`);
+  console.log(
+    "Prochaine étape : recopier ce tableau dans public/data/event.json (races[].track), " +
+      `puis caler les km des spots avec ?calibrage=1. Longueur totale (x${loopCount}) : ${(singleLoopLengthKm * loopCount).toFixed(2)} km`
+  );
 }
 
 main();

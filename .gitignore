@@ -25,5 +25,5 @@ dist-ssr
 
 .vercel
 
-# Sortie brute du script d'import GPX/KML, a relire avant integration dans course.ts
-src/config/course.imported.ts
+# Sortie brute du script d'import GPX/KML, a relire avant integration dans public/data/event.json
+track.imported.json

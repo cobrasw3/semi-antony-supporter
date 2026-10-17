@@ -1,33 +1,30 @@
 // Logique de calcul des horaires de passage. Fonctions pures uniquement :
-// pas d'accès aux fichiers de config ici, tout est passé en paramètre pour
-// rester facilement testable.
+// tout est passé en paramètre (course, allure, marge) pour rester testable.
+// Les passages découlent UNIQUEMENT des positions kilométriques des spots
+// (event.json) : aucune hypothèse codée en dur sur le nombre de boucles.
 
-export interface MarginConfig {
-  /** Part du temps écoulé appliquée comme demi-largeur de marge (ex. 0.035 = ±3,5 %). */
-  percentage: number;
-  /** Plancher de la demi-largeur, en minutes, même tout près du départ. */
-  minMinutes: number;
-}
+import type { MarginConfig, Race, Spot } from "./event";
 
-export interface CrossingEstimate {
-  /** Numéro de la boucle (1, 2, 3, ...). */
+export type { MarginConfig } from "./event";
+
+export interface Passage {
+  spotId: string;
+  /** Distance depuis le départ, en km. */
+  km: number;
+  /** Numéro de la boucle en cours (1..loops). */
   loopIndex: number;
-  /** Distance cumulée depuis le départ, en km. */
-  cumulativeDistanceKm: number;
-  /** Heure de passage estimée, au centre de la fenêtre ("HH:MM"). */
-  estimatedTime: string;
-  /** Début de la fenêtre de passage ("HH:MM"). */
-  windowStart: string;
-  /** Fin de la fenêtre de passage ("HH:MM"). */
-  windowEnd: string;
-  /** Début de fenêtre en minutes depuis minuit, pour trier facilement. */
+  /** Étiquette lisible (« Boucle 2 »…). */
+  label: string;
+  /** Heure estimée, en minutes depuis minuit. */
+  estimatedMinutes: number;
   windowStartMinutes: number;
-}
-
-export interface PointCrossings {
-  pointId: string;
-  pointName: string;
-  crossings: CrossingEstimate[];
+  windowEndMinutes: number;
+  /** "HH:MM" au centre de la fenêtre. */
+  estimatedTime: string;
+  /** Début de fenêtre "HH:MM" (arrondi vers le bas). */
+  windowStart: string;
+  /** Fin de fenêtre "HH:MM" (arrondi vers le haut). */
+  windowEnd: string;
 }
 
 /** Convertit "HH:MM" en minutes depuis minuit. */
@@ -74,76 +71,78 @@ export function paceFromTargetTime(targetTimeMinutes: number, totalDistanceKm: n
 /**
  * Demi-largeur de la fenêtre de passage, en minutes : un pourcentage du
  * temps déjà écoulé, avec un plancher pour rester significative même juste
- * après le départ. Croît naturellement avec la distance parcourue (donc
- * avec le temps écoulé), sans avoir besoin de connaître la distance totale
- * du parcours — volontairement plus simple que l'ancien modèle par
- * interpolation sur la distance.
+ * après le départ.
  */
 export function computeMarginMinutes(elapsedMinutes: number, margin: MarginConfig): number {
   return Math.max(elapsedMinutes * margin.percentage, margin.minMinutes);
 }
 
-/**
- * Calcule, pour un point d'observation situé à `distanceInLoopKm` sur une
- * boucle, ses heures de passage estimées à chaque boucle (1..loopCount).
- */
-export function computeCrossingsForPoint(params: {
-  startTimeMinutes: number;
-  paceMinPerKm: number;
-  distanceInLoopKm: number;
-  loopCount: number;
-  loopLengthKm: number;
-  margin: MarginConfig;
-}): CrossingEstimate[] {
-  const { startTimeMinutes, paceMinPerKm, distanceInLoopKm, loopCount, loopLengthKm, margin } = params;
+const KM_EPSILON = 0.05;
 
-  const crossings: CrossingEstimate[] = [];
-
-  for (let loopIndex = 1; loopIndex <= loopCount; loopIndex++) {
-    const cumulativeDistanceKm = distanceInLoopKm + (loopIndex - 1) * loopLengthKm;
-    const elapsedMinutes = cumulativeDistanceKm * paceMinPerKm;
-    const marginMinutes = computeMarginMinutes(elapsedMinutes, margin);
-
-    const estimatedMinutes = startTimeMinutes + elapsedMinutes;
-    const windowStartMinutes = estimatedMinutes - marginMinutes;
-    const windowEndMinutes = estimatedMinutes + marginMinutes;
-
-    crossings.push({
-      loopIndex,
-      cumulativeDistanceKm,
-      estimatedTime: minutesToTimeString(estimatedMinutes),
-      // Bornes arrondies "vers l'extérieur" (floor/ceil) : la fenêtre ne se
-      // rétrécit jamais à l'arrondi, elle ne fait que s'élargir un peu plus.
-      windowStart: floorMinutesToTimeString(windowStartMinutes),
-      windowEnd: ceilMinutesToTimeString(windowEndMinutes),
-      windowStartMinutes,
-    });
-  }
-
-  return crossings;
+/** Numéro de boucle (1..loops) dans laquelle se trouve la position `km`. */
+export function loopIndexAt(km: number, race: Pick<Race, "loops" | "loopLengthKm">): number {
+  if (race.loops <= 1) return 1;
+  return Math.min(race.loops, Math.floor((km + KM_EPSILON) / race.loopLengthKm) + 1);
 }
 
-/**
- * Calcule les passages pour une liste de points d'observation, et retourne
- * aussi une liste "à plat" de tous les créneaux triés par heure croissante —
- * c'est cette liste triée qui alimente le récapitulatif.
- */
-export function computeAllCrossings(
-  points: Array<{ id: string; name: string; distanceInLoopKm: number }>,
-  params: {
-    startTimeMinutes: number;
-    paceMinPerKm: number;
-    loopCount: number;
-    loopLengthKm: number;
-    margin: MarginConfig;
-  }
-): PointCrossings[] {
-  return points.map((point) => ({
-    pointId: point.id,
-    pointName: point.name,
-    crossings: computeCrossingsForPoint({
-      ...params,
-      distanceInLoopKm: point.distanceInLoopKm,
-    }),
-  }));
+/** Étiquette d'un passage selon sa position sur le parcours. */
+export function passageLabel(km: number, race: Pick<Race, "loops" | "loopLengthKm" | "distanceKm">): string {
+  return `Boucle ${loopIndexAt(km, race)}`;
+}
+
+/** Calcule un passage à la position `km`. */
+export function computePassage(params: {
+  spotId: string;
+  km: number;
+  race: Pick<Race, "loops" | "loopLengthKm" | "distanceKm" | "startTime">;
+  paceMinPerKm: number;
+  margin: MarginConfig;
+}): Passage {
+  const { spotId, km, race, paceMinPerKm, margin } = params;
+  const elapsedMinutes = km * paceMinPerKm;
+  const marginMinutes = computeMarginMinutes(elapsedMinutes, margin);
+  const estimatedMinutes = timeStringToMinutes(race.startTime) + elapsedMinutes;
+  const windowStartMinutes = estimatedMinutes - marginMinutes;
+  const windowEndMinutes = estimatedMinutes + marginMinutes;
+
+  return {
+    spotId,
+    km,
+    loopIndex: loopIndexAt(km, race),
+    label: passageLabel(km, race),
+    estimatedMinutes,
+    windowStartMinutes,
+    windowEndMinutes,
+    estimatedTime: minutesToTimeString(estimatedMinutes),
+    // Bornes arrondies "vers l'extérieur" (floor/ceil) : la fenêtre ne se
+    // rétrécit jamais à l'arrondi, elle ne fait que s'élargir un peu plus.
+    windowStart: floorMinutesToTimeString(windowStartMinutes),
+    windowEnd: ceilMinutesToTimeString(windowEndMinutes),
+  };
+}
+
+/** Passages d'un spot, dans l'ordre du parcours. */
+export function computeSpotPassages(
+  spot: Pick<Spot, "id" | "km">,
+  race: Pick<Race, "loops" | "loopLengthKm" | "distanceKm" | "startTime">,
+  paceMinPerKm: number,
+  margin: MarginConfig
+): Passage[] {
+  return [...spot.km]
+    .sort((a, b) => a - b)
+    .map((km) => computePassage({ spotId: spot.id, km, race, paceMinPerKm, margin }));
+}
+
+/** Tous les passages de la course, tous spots confondus, triés chronologiquement. */
+export function computeAllPassages(race: Race, paceMinPerKm: number, margin: MarginConfig): Passage[] {
+  return race.spots
+    .flatMap((spot) => computeSpotPassages(spot, race, paceMinPerKm, margin))
+    .sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
+}
+
+/** Passages regroupés par spot (clé = id du spot). */
+export function groupPassagesBySpot(passages: Passage[]): Record<string, Passage[]> {
+  const result: Record<string, Passage[]> = {};
+  for (const p of passages) (result[p.spotId] ??= []).push(p);
+  return result;
 }

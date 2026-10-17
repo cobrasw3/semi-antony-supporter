@@ -14,14 +14,22 @@ type Mode = "pace" | "duration";
 
 interface ChampAllureProps {
   totalDistanceKm: number;
+  defaultPace: string;
+  defaultTargetTime: string;
   onPaceChange: (paceMinPerKm: number | null) => void;
   onRunnerNameChange: (runnerName: string) => void;
 }
 
-export function ChampAllure({ totalDistanceKm, onPaceChange, onRunnerNameChange }: ChampAllureProps) {
+export function ChampAllure({
+  totalDistanceKm,
+  defaultPace,
+  defaultTargetTime,
+  onPaceChange,
+  onRunnerNameChange,
+}: ChampAllureProps) {
   const [mode, setMode] = useState<Mode>("pace");
-  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? "5:30");
-  const [durationText, setDurationText] = useState("1:57");
+  const [paceText, setPaceText] = useState(() => readPaceFromUrl() ?? defaultPace);
+  const [durationText, setDurationText] = useState(defaultTargetTime);
   const [runnerName, setRunnerName] = useState(() => readRunnerNameFromUrl() ?? "");
 
   const resolvedPace = mode === "pace" ? parsePace(paceText) : null;

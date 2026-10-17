@@ -82,9 +82,12 @@ export function readRunnerNameFromUrl(): string | null {
  * coureur (si renseigné) encodés en paramètres — pour qu'un lien partagé
  * rouvre directement sur les mêmes horaires, personnalisés.
  */
-export function buildShareUrl(paceMinPerKm: number | null, runnerName?: string): string {
+export function buildShareUrl(paceMinPerKm: number | null, runnerName?: string, raceId?: string | null): string {
   if (typeof window === "undefined") return "";
   const url = new URL(window.location.href);
+
+  if (raceId) url.searchParams.set("race", raceId);
+  else url.searchParams.delete("race");
 
   if (paceMinPerKm) {
     url.searchParams.set(PACE_URL_PARAM, formatPace(paceMinPerKm));

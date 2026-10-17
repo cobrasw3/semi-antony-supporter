@@ -6,9 +6,13 @@ import {
   ceilMinutesToTimeString,
   paceFromTargetTime,
   computeMarginMinutes,
-  computeCrossingsForPoint,
-  computeAllCrossings,
+  computePassage,
+  computeSpotPassages,
+  computeAllPassages,
+  groupPassagesBySpot,
+  loopIndexAt,
 } from "./timing";
+import type { Race } from "./event";
 
 describe("timeStringToMinutes / minutesToTimeString", () => {
   it("convertit dans les deux sens", () => {
@@ -59,87 +63,81 @@ describe("computeMarginMinutes", () => {
   });
 });
 
-describe("computeCrossingsForPoint", () => {
-  // Cas de l'énoncé : départ 14h30, allure 5 min/km, point au km 2 d'une
-  // boucle de 7 km -> passage boucle 1 à 14h40.
-  const baseParams = {
-    startTimeMinutes: timeStringToMinutes("14:30"),
-    paceMinPerKm: 5,
-    distanceInLoopKm: 2,
-    loopCount: 3,
-    loopLengthKm: 7,
-    margin: { percentage: 0, minMinutes: 0 }, // marge désactivée pour isoler le calcul central
-  };
+const race: Race = {
+  id: "test",
+  name: "Test",
+  distanceKm: 21,
+  startTime: "14:30",
+  loops: 3,
+  loopLengthKm: 7,
+  defaultPace: "5:00",
+  defaultTargetTime: "1:45",
+  track: [
+    [48.75, 2.29],
+    [48.76, 2.3],
+  ],
+  spots: [
+    { id: "a", name: "A", shortName: "A", address: "", lat: 48.75, lng: 2.29, access: "", description: "", km: [2, 9, 16] },
+    { id: "b", name: "B", shortName: "B", address: "", lat: 48.76, lng: 2.3, access: "", description: "", km: [5, 12, 19] },
+  ],
+};
+const noMargin = { percentage: 0, minMinutes: 0 };
 
-  it("calcule l'heure de passage exacte de la boucle 1", () => {
-    const [loop1] = computeCrossingsForPoint(baseParams);
-    expect(loop1.cumulativeDistanceKm).toBe(2);
-    expect(loop1.estimatedTime).toBe("14:40");
+describe("computePassage", () => {
+  it("calcule l'heure de passage à partir du km et de l'allure", () => {
+    // Départ 14h30, allure 5 min/km, km 2 -> 14h40.
+    const p = computePassage({ spotId: "a", km: 2, race, paceMinPerKm: 5, margin: noMargin });
+    expect(p.estimatedTime).toBe("14:40");
+    expect(p.loopIndex).toBe(1);
   });
+});
 
-  it("calcule les 3 passages cumulés (d, d+7, d+14)", () => {
-    const crossings = computeCrossingsForPoint(baseParams);
-    expect(crossings).toHaveLength(3);
-    expect(crossings.map((c) => c.cumulativeDistanceKm)).toEqual([2, 9, 16]);
-    // 9 km * 5 min/km = 45 min -> 14:30 + 45 = 15:15
-    expect(crossings[1].estimatedTime).toBe("15:15");
-    // 16 km * 5 min/km = 80 min -> 14:30 + 80 = 15:50
-    expect(crossings[2].estimatedTime).toBe("15:50");
+describe("computeSpotPassages", () => {
+  it("produit un passage par position km, dans l'ordre", () => {
+    const passages = computeSpotPassages({ id: "a", km: [16, 2, 9] }, race, 5, noMargin);
+    expect(passages.map((p) => p.km)).toEqual([2, 9, 16]);
+    // 9 km * 5 = 45 min -> 15:15 ; 16 km * 5 = 80 min -> 15:50
+    expect(passages.map((p) => p.estimatedTime)).toEqual(["14:40", "15:15", "15:50"]);
+    expect(passages.map((p) => p.loopIndex)).toEqual([1, 2, 3]);
   });
 
   it("élargit la fenêtre avec la distance quand la marge est active", () => {
-    const withMargin = computeCrossingsForPoint({
-      ...baseParams,
-      margin: { percentage: 0.035, minMinutes: 1.5 },
-    });
-
-    const [loop1, , loop3] = withMargin;
-    const widthLoop1 = timeStringToMinutes(loop1.windowEnd) - timeStringToMinutes(loop1.windowStart);
-    const widthLoop3 = timeStringToMinutes(loop3.windowEnd) - timeStringToMinutes(loop3.windowStart);
-
-    // La fenêtre du 3e passage (16 km, donc plus de temps écoulé) doit être
-    // plus large que celle du 1er passage (2 km).
-    expect(widthLoop3).toBeGreaterThan(widthLoop1);
-    // Le plancher garantit au moins 3 min de large (±1.5 min) dès le 1er passage.
-    expect(widthLoop1).toBeGreaterThanOrEqual(3);
-    // L'heure centrale reste identique au cas sans marge.
-    expect(loop1.estimatedTime).toBe("14:40");
+    const [p1, , p3] = computeSpotPassages(race.spots[0], race, 5, { percentage: 0.035, minMinutes: 1.5 });
+    const width = (p: typeof p1) => p.windowEndMinutes - p.windowStartMinutes;
+    expect(width(p3)).toBeGreaterThan(width(p1));
+    expect(width(p1)).toBeGreaterThanOrEqual(3);
+    expect(p1.estimatedTime).toBe("14:40");
   });
 
   it("la fenêtre n'est jamais inversée ni nulle, même avec une marge minimale", () => {
-    const withTinyMargin = computeCrossingsForPoint({
-      ...baseParams,
-      margin: { percentage: 0.0001, minMinutes: 0.01 },
-    });
-
-    for (const crossing of withTinyMargin) {
-      const startMin = timeStringToMinutes(crossing.windowStart);
-      const endMin = timeStringToMinutes(crossing.windowEnd);
-      expect(endMin).toBeGreaterThan(startMin);
+    for (const p of computeSpotPassages(race.spots[0], race, 5, { percentage: 0.0001, minMinutes: 0.01 })) {
+      expect(timeStringToMinutes(p.windowEnd)).toBeGreaterThan(timeStringToMinutes(p.windowStart));
     }
   });
 });
 
-describe("computeAllCrossings", () => {
-  it("trie implicitement calculable via windowStartMinutes toutes boucles/points confondus", () => {
-    const points = [
-      { id: "a", name: "Point A", distanceInLoopKm: 2 },
-      { id: "b", name: "Point B", distanceInLoopKm: 5 },
-    ];
+describe("computeAllPassages", () => {
+  it("trie tous les passages chronologiquement, spots confondus", () => {
+    const passages = computeAllPassages(race, 5, noMargin);
+    expect(passages.map((p) => `${p.spotId}${p.km}`)).toEqual(["a2", "b5", "a9", "b12", "a16", "b19"]);
+  });
 
-    const result = computeAllCrossings(points, {
-      startTimeMinutes: timeStringToMinutes("14:30"),
-      paceMinPerKm: 5,
-      loopCount: 3,
-      loopLengthKm: 7,
-      margin: { percentage: 0.035, minMinutes: 1.5 },
-    });
+  it("se regroupe par spot", () => {
+    const grouped = groupPassagesBySpot(computeAllPassages(race, 5, noMargin));
+    expect(grouped.a).toHaveLength(3);
+    expect(grouped.b.map((p) => p.km)).toEqual([5, 12, 19]);
+  });
+});
 
-    expect(result).toHaveLength(2);
-    expect(result[0].crossings).toHaveLength(3);
+describe("loopIndexAt", () => {
+  it("rattache une fin de boucle à la boucle qui commence", () => {
+    expect(loopIndexAt(0, race)).toBe(1);
+    expect(loopIndexAt(6.9, race)).toBe(1);
+    expect(loopIndexAt(7, race)).toBe(2);
+    expect(loopIndexAt(21, race)).toBe(3);
+  });
 
-    const allStarts = result.flatMap((p) => p.crossings.map((c) => c.windowStartMinutes));
-    const sorted = [...allStarts].sort((a, b) => a - b);
-    expect(allStarts.some((_, i) => allStarts[i] !== sorted[i])).toBe(true); // les deux points s'entremêlent dans le temps
+  it("vaut toujours 1 pour un parcours sans boucle", () => {
+    expect(loopIndexAt(4.5, { loops: 1, loopLengthKm: 5 })).toBe(1);
   });
 });
