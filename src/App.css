@@ -966,3 +966,49 @@
     padding-top: 0;
   }
 }
+
+/* --- Rappels --- */
+
+.rappels {
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.rappels h2 {
+  font-size: 1.1rem;
+}
+
+.rappels-intro,
+.rappels-note {
+  font-size: 0.95rem;
+}
+
+.rappels-note {
+  color: var(--color-text-muted);
+}
+
+.rappels-alerte {
+  padding: var(--space-2);
+  border-radius: 8px;
+  background: #fff6d8;
+  color: #4a3b00;
+  font-weight: 800;
+}
+
+.rappels-btn {
+  width: 100%;
+  margin: var(--space-1) 0;
+  padding: var(--space-2);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rappels-btn-secondaire {
+  background: #fff;
+  color: var(--color-primary);
+}

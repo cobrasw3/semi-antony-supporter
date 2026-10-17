@@ -8,6 +8,8 @@ import { Partage } from "./components/Partage";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { Itineraire } from "./components/Itineraire";
 import { ProchainPassage } from "./components/ProchainPassage";
+import { Rappels } from "./components/Rappels";
+import { optimalPlan } from "./lib/itinerary";
 import { RecapPassages } from "./components/RecapPassages";
 import { BUNDLED_ANNONCES, BUNDLED_EVENT } from "./config/event";
 import { activeAnnonces, parseAnnonces } from "./lib/annonces";
@@ -96,6 +98,7 @@ function App() {
     [race, paceMinPerKm, config.settings.margin]
   );
   const passagesBySpot = useMemo(() => groupPassagesBySpot(passages), [passages]);
+  const plan = useMemo(() => optimalPlan(passages, race.spots, config.settings.walking), [passages, race.spots, config.settings.walking]);
   const track = useMemo(() => trackOf(race), [race]);
 
   const highlight = race.spots.find((s) => s.highlight);
@@ -197,6 +200,15 @@ function App() {
         onSelectSpot={scrollToSpot}
         onOpen={() => trackEvent("itineraire_ouvert")}
         onPlan={() => trackEvent("plan_optimal")}
+      />
+
+      <Rappels
+        passages={plan.steps}
+        spots={race.spots}
+        runnerName={runnerName}
+        clock={clock}
+        event={config.event}
+        onTrack={trackEvent}
       />
 
       <details className="carte-section" open ref={mapSectionRef}>
