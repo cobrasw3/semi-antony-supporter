@@ -124,3 +124,11 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   machine (`vercel whoami` → Logged out) : connexion à faire par
   l'utilisateur (`npx vercel login`) ou intégration Git à activer dans le
   tableau de bord Vercel. README corrigé (il affirmait un déploiement auto).
+- Connexion CLI Vercel faite par l'utilisateur (`npx vercel login`, compte
+  `pmachard2001-5765`). **Preview déployée** via `npx vercel deploy`
+  (cible preview, prod non touchée) depuis `feat/demo-finale` @ 6f2dd80 :
+  https://semi-antony-supporter-kyof9rqbt-pmachard2001-5765s-projects.vercel.app
+  — statut Ready ; protégée par Vercel Authentication (HTTP 302 sans
+  connexion). Vérifié via `vercel curl` : `/`, `/sw.js`,
+  `/manifest.webmanifest`, `/data/event.json`, `/qr`, `/parcours-plan.svg`
+  en 200, en-têtes CSP/HSTS/Cache-Control conformes à `vercel.json`.
