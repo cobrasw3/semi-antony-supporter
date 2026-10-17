@@ -132,8 +132,10 @@ export function Shell({ s }: { s: Supporter }) {
         />
       </div>
 
-      <main className="shell__main" id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
-        {panels[tab]}
+      <main className="shell__main">
+        <div className="shell__panel" id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
+          {panels[tab]}
+        </div>
       </main>
 
       <ToastStack items={toasts} />
@@ -197,12 +199,12 @@ export function Shell({ s }: { s: Supporter }) {
                 />
               ))}
             </div>
-            <div className="row">
-              <Button variant="secondary" onClick={() => showOnMap(spot.id)} icon={<MapIcon size={18} />}>
-                Sur la carte
+            <div className="stack stack--tight">
+              <Button variant="secondary" block onClick={() => showOnMap(spot.id)} icon={<MapIcon size={18} />}>
+                Voir sur la carte
               </Button>
               <a
-                className="btn btn--strong btn--md"
+                className="btn btn--strong btn--md btn--block"
                 href={`https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}&travelmode=walking`}
                 target="_blank"
                 rel="noopener noreferrer"

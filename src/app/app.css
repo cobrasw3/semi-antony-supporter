@@ -210,7 +210,7 @@ body {
   z-index: 1500;
 }
 
-.shell__main {
+.shell__panel {
   animation: panel-in var(--dur-2) var(--ease);
 }
 
@@ -577,7 +577,7 @@ a.btn {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shell__main,
+  .shell__panel,
   .onboarding__step,
   .confetti span,
   .hero--now .ring__bar,
@@ -707,10 +707,15 @@ a.btn {
   padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
-.shell--carte .shell__main {
+.shell--carte .shell__main,
+.shell--carte .shell__panel {
   position: relative;
   flex: 1;
   min-height: 0;
+}
+
+.shell--carte .shell__main {
+  display: flex;
 }
 
 .map-tab {
@@ -727,11 +732,6 @@ a.btn {
 .map-tab .leaflet-container {
   background: var(--surface-2);
   font-family: var(--font-body);
-}
-
-.map-route {
-  stroke: var(--ink);
-  stroke-opacity: 0.9;
 }
 
 .pin-wrap {

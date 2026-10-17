@@ -115,6 +115,8 @@ export default function MapTab({
   const [calib, setCalib] = useState<{ lat: number; lng: number; km: number; off: number } | null>(null);
 
   const arrows = useMemo(() => directionArrows(track), [track]);
+  // Couleur de marque (tokens) : Leaflet écrit la couleur en attribut SVG.
+  const routeColor = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#14213d", []);
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
   const raceDay = clock.date === config.event.date;
   const now = raceDay ? clock.minutes : null;
@@ -182,7 +184,7 @@ export default function MapTab({
               },
             }}
           />
-          <Polyline positions={track.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ className: "map-route", weight: 7 }} />
+          <Polyline positions={track.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ color: routeColor, weight: 7, opacity: 0.9 }} />
           {arrows.map((a, i) => (
             <Marker key={`a${i}`} position={[a.lat, a.lng]} icon={arrowIcon(a.bearing)} interactive={false} keyboard={false} />
           ))}

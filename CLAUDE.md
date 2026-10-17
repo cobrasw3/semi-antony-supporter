@@ -268,3 +268,20 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   sur tokens. Comparateur d'orange retiré du styleguide. Token `--thumb`
   (curseur du sélecteur segmenté, peu visible en sombre). README : structure
   et URLs mises à jour.
+- **Vérification finale de la refonte** (build de prod servi localement avec
+  les en-têtes de `vercel.json` + gzip, Edge headless 390×844) :
+  - 187 tests ✅, build ✅ (23 fichiers précachés dont polices), oxlint : 1
+    avertissement sans impact (composant `lazy` défini dans `main.tsx`).
+  - Lighthouse mobile — perf / a11y / bonnes pratiques / SEO : assistant
+    97/100/96/100 ; Live 93/100/96/100 ; Plan 93/100/96/100 ; Infos
+    94/100/96/100 ; Carte ouverte directement 78/100/93/100 (LCP = tuiles
+    OSM sur réseau simulé lent). Bonnes pratiques 96 = script analytics
+    absent en local (404). Lighthouse renvoie parfois NO_NAVSTART : relancé.
+  - Installabilité (Chromium `getInstallabilityErrors`) : aucune erreur.
+  - Hors-ligne (réseau coupé) : polices (Barlow/Manrope), icônes, 4 onglets
+    (carte avec tuiles en cache), assistant et bandeau « Hors connexion » OK.
+  - Corrigé pendant la vérification : `role="tabpanel"` sur `<main>`
+    (non autorisé) → `div` ; nom accessible de la puce coureur ; tracé de la
+    carte bleu Leaflet par défaut (la classe CSS n'était pas transmise) →
+    couleur lue dans les tokens ; boutons du tiroir spot sur 2 lignes ;
+    focus automatique du tiroir sur une carte non interactive.

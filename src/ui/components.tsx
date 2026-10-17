@@ -207,11 +207,12 @@ export function ProgressSteps({ current, total, label }: { current: number; tota
 
 export function RunnerChip({ name, pace, onClick }: { name: string; pace: string; onClick: () => void }) {
   return (
-    <button type="button" className="runner-chip" onClick={onClick} aria-label={`Modifier : ${name}, allure ${pace} par km`}>
+    <button type="button" className="runner-chip" onClick={onClick}>
       <span className="runner-chip__name">{name}</span>
       <span className="runner-chip__dot" aria-hidden="true">·</span>
       <span className="runner-chip__pace">{pace}/km</span>
       <Pencil size={16} aria-hidden="true" />
+      <span className="sr-only"> (modifier)</span>
     </button>
   );
 }

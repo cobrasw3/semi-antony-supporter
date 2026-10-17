@@ -33,7 +33,7 @@ export function BottomSheet({
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
     document.body.classList.add("is-locked");
-    requestAnimationFrame(() => sheetRef.current?.querySelector<HTMLElement>("input, button:not(.sheet__close), [tabindex]")?.focus());
+    requestAnimationFrame(() => sheetRef.current?.querySelector<HTMLElement>('input, button:not(.sheet__close), [tabindex]:not([tabindex="-1"])')?.focus());
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.classList.remove("is-locked");
