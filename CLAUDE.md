@@ -185,3 +185,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   stepper, pastilles, puces sélectionnées en tons clairs), le bleu foncé
   réservé à l'en-tête, la carte live et les toasts. **En attente de
   validation.**
+- Preview Vercel de `feat/redesign` @ 837f50f déployée via CLI (cible
+  preview, prod non touchée) :
+  https://semi-antony-supporter-1ly48vjxr-pmachard2001-5765s-projects.vercel.app/styleguide
+  — Ready, `/styleguide` et `/` en 200 via `vercel curl` ; protégée par
+  Vercel Authentication (302 sans connexion).
