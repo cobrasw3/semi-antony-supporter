@@ -28,6 +28,7 @@ import { needsOnboarding } from "./onboardingRule";
 
 const PREFS_KEY = "semi-supporter:prefs";
 const ONBOARDED_KEY = "semi-supporter:onboarded";
+const SPOTS_KEY = "semi-supporter:spots-choisis";
 
 export function useSupporter() {
   // event.json : affiché tout de suite, rafraîchi en arrière-plan.
@@ -71,7 +72,20 @@ export function useSupporter() {
     [race, pace, config.settings.margin]
   );
   const passagesBySpot = useMemo(() => groupPassagesBySpot(passages), [passages]);
-  const plan = useMemo(() => optimalPlan(passages, race.spots, config.settings.walking), [passages, race.spots, config.settings.walking]);
+  // Spots choisis par l'utilisateur (aucun = tous) : le plan optimal se
+  // calcule sur leurs seuls passages.
+  const [chosenSpots, setChosenSpots] = useState<string[]>(() => readJson<string[]>(SPOTS_KEY) ?? []);
+  const toggleSpot = useCallback(
+    (id: string) => setChosenSpots((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
+    []
+  );
+  const resetSpots = useCallback(() => setChosenSpots([]), []);
+  useEffect(() => writeJson(SPOTS_KEY, chosenSpots), [chosenSpots]);
+  const plan = useMemo(() => {
+    const allowed = chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id));
+    const pool = allowed.length ? passages.filter((p) => allowed.includes(p.spotId)) : passages;
+    return optimalPlan(pool, race.spots, config.settings.walking);
+  }, [chosenSpots, passages, race.spots, config.settings.walking]);
   const track = useMemo(() => trackOf(race), [race]);
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const spotById = useMemo(() => Object.fromEntries(race.spots.map((s) => [s.id, s])), [race.spots]);
@@ -100,6 +114,9 @@ export function useSupporter() {
     passages,
     passagesBySpot,
     plan,
+    chosenSpots,
+    toggleSpot,
+    resetSpots,
     track,
     spotNumbers,
     spotById,

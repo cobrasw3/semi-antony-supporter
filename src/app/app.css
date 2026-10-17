@@ -591,3 +591,108 @@ a.btn {
     display: none;
   }
 }
+
+/* ------------------------------------------------------------ Plan */
+
+.plan__summary {
+  display: grid;
+  gap: var(--s-3);
+  margin: var(--s-4) var(--s-4) 0;
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.plan__summary > p {
+  margin: 0;
+}
+
+.plan__count {
+  font-size: var(--t-2xl);
+}
+
+.plan__count .num {
+  color: var(--sprint-text);
+  font-size: var(--t-hero);
+  font-weight: 800;
+}
+
+.plan__lead {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.plan__choose {
+  display: grid;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.plan__chips {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+.plan__chips .caption {
+  margin: 0;
+}
+
+.steps {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transition {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 52px;
+  padding-left: 30px;
+}
+
+.transition__line {
+  align-self: stretch;
+  width: 0;
+  margin-right: 6px;
+  border-left: 3px dotted var(--muted);
+  opacity: 0.6;
+}
+
+.transition__text {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.reminders {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.reminders .caption {
+  margin: 0;
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--sprint-text);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

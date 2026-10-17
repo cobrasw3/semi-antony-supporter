@@ -232,3 +232,12 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     pied) — reste sur l'appareil.
   - Plan / Carte / Infos provisoires (étapes suivantes). La page /qr a perdu
     ses styles (App.css plus chargé) : à reprendre à l'étape 4.
+- **Étape 3b — onglet Plan** : résumé « N fois » + distance à pied,
+  bascule « Mon plan / Tous les passages », étapes en cartes (« Étape 1 ·
+  Départ — 14:30 ») reliées par la marche (« 7 min · 490 m ») et un verdict
+  ✅ / ⚠️ / ❌ ; « Je choisis mes spots » (puces, plan recalculé en direct
+  via `optimalPlan` sur les passages des spots choisis, choix mémorisé et
+  remonté dans `useSupporter` pour que Live et rappels suivent) ; bloc
+  rappels (agenda .ics, alertes app ouverte, cas iPhone non installé).
+  Corrigé : taps rapides sur les puces (mise à jour fonctionnelle), « 0 m »
+  → « sans bouger ».
