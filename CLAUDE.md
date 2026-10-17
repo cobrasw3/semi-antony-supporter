@@ -285,3 +285,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     carte bleu Leaflet par défaut (la classe CSS n'était pas transmise) →
     couleur lue dans les tokens ; boutons du tiroir spot sur 2 lignes ;
     focus automatique du tiroir sur une carte non interactive.
+- Preview Vercel de la refonte (`feat/redesign` @ f36ed37, cible preview,
+  prod non touchée) :
+  https://semi-antony-supporter-1kc7ca4nt-pmachard2001-5765s-projects.vercel.app
+  — Ready ; `/`, `/styleguide`, `/qr`, `/sw.js` en 200 via `vercel curl` ;
+  protégée par Vercel Authentication.
