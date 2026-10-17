@@ -66,7 +66,7 @@ export function Onboarding({ s, onDone }: { s: Supporter; onDone: () => void }) 
                 autoCapitalize="words"
                 enterKeyHint="next"
                 maxLength={40}
-                placeholder="Léa"
+                placeholder="Prénom du coureur"
                 value={prefs.name}
                 onChange={(e) => updatePrefs({ name: e.target.value })}
                 onKeyDown={(e) => e.key === "Enter" && next()}

@@ -1339,3 +1339,76 @@ a.btn {
   color: var(--muted);
   font-size: var(--t-xs);
 }
+
+/* Choix des spots */
+.plan__hint {
+  margin: var(--s-3) 0 0;
+}
+
+.plan__mine {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.plan__mine .chips {
+  margin-top: 0;
+}
+
+.chip__count {
+  margin-left: 2px;
+  padding: 2px 6px;
+  border-radius: var(--r-pill);
+  background: var(--soft);
+  color: var(--on-soft);
+  font: 700 var(--t-xs) / 1 var(--font-display);
+}
+
+.chip[aria-pressed="true"] .chip__count {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.notice {
+  display: flex;
+  gap: var(--s-2);
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--soft);
+  color: var(--on-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.notice--warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.notice--list {
+  display: grid;
+  gap: 4px;
+}
+
+.notice--list ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.notice--list p {
+  margin: 0;
+}
+
+.notice__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-weight: 800;
+}

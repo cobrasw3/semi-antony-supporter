@@ -20,7 +20,7 @@ import {
   updateCurrentUrl,
   type RunnerPrefs,
 } from "../lib/format";
-import { planOptions } from "../lib/itinerary";
+import { planOptions, spotPairLimits } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
@@ -30,6 +30,7 @@ const PREFS_KEY = "semi-supporter:prefs";
 const ONBOARDED_KEY = "semi-supporter:onboarded";
 const SPOTS_KEY = "semi-supporter:spots-choisis";
 const COUNT_KEY = "semi-supporter:nb-passages";
+const SPOT_MODE_KEY = "semi-supporter:mode-spots";
 
 export function useSupporter() {
   // event.json : affiché tout de suite, rafraîchi en arrière-plan.
@@ -86,11 +87,31 @@ export function useSupporter() {
   const routes = race.walkingRoutes?.km;
   // Compromis « nombre de passages ↔ marche » : une option par niveau utile,
   // de « sans bouger » au maximum possible.
-  const planOptionsList = useMemo(() => {
-    const allowed = chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id));
-    const pool = allowed.length ? passages.filter((p) => allowed.includes(p.spotId)) : passages;
-    return planOptions(pool, race.spots, config.settings.walking, routes);
-  }, [chosenSpots, passages, race.spots, config.settings.walking, routes]);
+  // « Meilleurs spots » : l'app choisit. « Mes spots » : le plan passe par
+  // chacun des spots cochés (et seulement eux).
+  const [spotMode, setSpotMode] = useState<"auto" | "mine">(() => (readJson<string>(SPOT_MODE_KEY) === "mine" ? "mine" : "auto"));
+  useEffect(() => writeJson(SPOT_MODE_KEY, spotMode), [spotMode]);
+  const required = useMemo(
+    () => (spotMode === "mine" ? chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id)) : []),
+    [spotMode, chosenSpots, race.spots]
+  );
+  const autoOptions = useMemo(
+    () => planOptions(passages, race.spots, config.settings.walking, routes),
+    [passages, race.spots, config.settings.walking, routes]
+  );
+  const mineOptions = useMemo(
+    () => (required.length ? planOptions(passages, race.spots, config.settings.walking, routes, required) : autoOptions),
+    [required, passages, race.spots, config.settings.walking, routes, autoOptions]
+  );
+  // Spots incompatibles : on le signale, et le reste de l'app garde un plan valable.
+  const spotsConflict = required.length > 0 && mineOptions.length === 0;
+  // Paires de spots choisis qu'on ne peut pas enchaîner (trop loin à pied, ou
+  // trop rapprochées sur le parcours) : expliquées à l'utilisateur.
+  const spotLimits = useMemo(
+    () => (required.length > 1 ? spotPairLimits(passages, race.spots, config.settings.walking, required, routes) : []),
+    [required, passages, race.spots, config.settings.walking, routes]
+  );
+  const planOptionsList = spotsConflict ? autoOptions : mineOptions;
   // Nombre de passages voulu (null = le maximum). Si l'allure change et que
   // ce nombre n'est plus atteignable, on prend la meilleure option en dessous.
   const [wantedCount, setWantedCount] = useState<number | null>(() => readJson<number | null>(COUNT_KEY));
@@ -131,6 +152,11 @@ export function useSupporter() {
     plan,
     maxPlan,
     planOptions: planOptionsList,
+    spotMode,
+    setSpotMode,
+    requiredSpots: required,
+    spotsConflict,
+    spotLimits,
     wantedCount,
     setWantedCount,
     routes,

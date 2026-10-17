@@ -3,9 +3,9 @@
 // spots, les horaires complets, les rappels.
 
 import { useState } from "react";
-import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, ListChecks, X } from "lucide-react";
+import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, X } from "lucide-react";
 import { spotWhere } from "../lib/event";
-import type { Plan, Transition } from "../lib/itinerary";
+import { mostLimitingSpot, type Plan, type Transition } from "../lib/itinerary";
 import type { Passage } from "../lib/timing";
 import { Button, Chip, Segmented, SpotCard } from "../ui/components";
 import type { useReminders } from "./useReminders";
@@ -15,7 +15,7 @@ function formatWalk(km: number) {
   return km < 1 ? `${Math.round(km * 100) * 10} m` : `${km.toFixed(1).replace(".", ",")} km`;
 }
 
-const walkMinutes = (plan: Plan) => Math.round(plan.transitions.reduce((sum, t) => sum + t.walk.minutes, 0));
+const walkMinutes = (plan: Plan) => Math.ceil(plan.transitions.reduce((sum, t) => sum + t.walk.minutes, 0));
 
 function TransitionRow({ t, safety }: { t: Transition; safety: number }) {
   if (t.sameSpot)
@@ -62,19 +62,40 @@ export function PlanTab({
   reminders: ReturnType<typeof useReminders>;
   onOpenSpot: (spotId: string) => void;
 }) {
-  const { passages, race, config, spotById, spotNumbers, runnerName, plan, planOptions, setWantedCount, chosenSpots, toggleSpot, resetSpots, routes } = s;
+  const {
+    passages,
+    passagesBySpot,
+    race,
+    config,
+    spotById,
+    spotNumbers,
+    runnerName,
+    plan,
+    planOptions,
+    setWantedCount,
+    chosenSpots,
+    toggleSpot,
+    spotMode,
+    setSpotMode,
+    requiredSpots,
+    spotsConflict,
+    spotLimits,
+    routes,
+  } = s;
   const walking = config.settings.walking;
   const [view, setView] = useState<"plan" | "horaires">("plan");
-  const [choosing, setChoosing] = useState(false);
   const who = runnerName || "ton coureur";
   const Who = runnerName || "Ton coureur";
 
   if (passages.length === 0) return <p className="section muted">Indique un objectif pour voir ton plan.</p>;
 
+  /** « au stade Georges Suant » ou « 1× Stade Georges Suant · 3× Rue des Hautes Bièvres ». */
   const spotsOf = (option: Plan) => {
-    const ids = [...new Set(option.steps.map((p) => p.spotId))];
+    const counts = new Map<string, number>();
+    for (const p of option.steps) counts.set(p.spotId, (counts.get(p.spotId) ?? 0) + 1);
+    const ids = [...counts.keys()];
     if (ids.length === 1 && spotById[ids[0]]) return spotWhere(spotById[ids[0]]);
-    return ids.map((id) => spotById[id]?.shortName ?? id).join(" ↔ ");
+    return ids.map((id) => `${counts.get(id)}× ${spotById[id]?.shortName ?? id}`).join(" · ");
   };
   const inPlan = new Set(plan.steps.map((p) => `${p.spotId}@${p.km}`));
 
@@ -97,9 +118,63 @@ export function PlanTab({
         <h2 id="plan-choix" className="section__title display">
           Combien de fois veux-tu voir {who}&nbsp;?
         </h2>
-        <p className="caption" style={{ marginTop: 4 }}>
-          Plus tu acceptes de marcher, plus tu peux voir de passages. Choisis ton équilibre.
-        </p>
+        <Segmented
+          label="Choix des spots"
+          value={spotMode}
+          onChange={setSpotMode}
+          options={[
+            { value: "auto", label: "Meilleurs spots" },
+            { value: "mine", label: "Mes spots" },
+          ]}
+        />
+
+        {spotMode === "auto" ? (
+          <p className="caption plan__hint">
+            L'app choisit les spots. Plus tu acceptes de marcher, plus tu peux voir de passages.
+          </p>
+        ) : (
+          <div className="plan__mine">
+            <p className="caption plan__hint">Coche les spots où tu veux aller : ton plan passera par chacun d'eux.</p>
+            <div className="chips">
+              {race.spots.map((spot) => (
+                <Chip key={spot.id} selected={chosenSpots.includes(spot.id)} onClick={() => toggleSpot(spot.id)}>
+                  {spotNumbers[spot.id]}. {spot.shortName}
+                  <span className="chip__count">{passagesBySpot[spot.id]?.length ?? 0}×</span>
+                </Chip>
+              ))}
+            </div>
+            {requiredSpots.length === 0 && <p className="notice">Coche au moins un spot. En attendant, l'app te propose les meilleurs.</p>}
+            {(spotsConflict || spotLimits.length > 0) && (
+              <div className={spotsConflict ? "notice notice--warn notice--list" : "notice notice--list"} role="status">
+                <p className="notice__title">
+                  {spotsConflict && <AlertTriangle size={18} aria-hidden="true" />}
+                  {spotsConflict
+                    ? "Impossible de passer par tous ces spots."
+                    : race.loops > 1
+                      ? "Certains spots ne s'enchaînent pas sur la même boucle :"
+                      : "Certains spots ne s'enchaînent pas :"}
+                </p>
+                <ul>
+                  {spotLimits.slice(0, 3).map((l) => (
+                    <li key={`${l.fromSpotId}>${l.toSpotId}`}>
+                      {spotById[l.fromSpotId]?.shortName} → {spotById[l.toSpotId]?.shortName} : tu as{" "}
+                      {Math.floor(l.availableMinutes)} min, il en faut {Math.ceil(l.walkMinutes)} à pied.
+                    </li>
+                  ))}
+                </ul>
+                {spotsConflict && (
+                  <p>
+                    {mostLimitingSpot(spotLimits)
+                      ? `Essaie de décocher ${spotById[mostLimitingSpot(spotLimits)!]?.shortName}.`
+                      : "Décoche un spot."}{" "}
+                    En attendant, voici les meilleurs spots.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="options" role="radiogroup" aria-label="Nombre de passages">
           {planOptions.map((option) => {
             const selected = option === plan;
@@ -115,10 +190,10 @@ export function PlanTab({
               >
                 <span className="option__count num">{option.steps.length}×</span>
                 <span className="option__main">
-                  <span className="option__title">{still ? "Sans bouger" : `${formatWalk(option.totalWalkKm)} à pied`}</span>
-                  <span className="option__sub">
-                    {still ? spotsOf(option) : `≈ ${walkMinutes(option)} min de marche · ${spotsOf(option)}`}
+                  <span className="option__title">
+                    {still ? "Sans bouger" : `${formatWalk(option.totalWalkKm)} à pied · ≈ ${walkMinutes(option)} min`}
                   </span>
+                  <span className="option__sub">{spotsOf(option)}</span>
                 </span>
                 <span className="option__radio" aria-hidden="true">
                   {selected && <Check size={18} strokeWidth={3} />}
@@ -127,29 +202,9 @@ export function PlanTab({
             );
           })}
         </div>
-
-        <div className="plan__choose">
-          <Button variant="ghost" icon={<ListChecks size={20} />} onClick={() => setChoosing((c) => !c)} aria-expanded={choosing}>
-            {choosing ? "Terminer" : chosenSpots.length ? `Mes spots (${chosenSpots.length})` : "Je choisis mes spots"}
-          </Button>
-          {choosing && (
-            <div className="plan__chips">
-              <p className="caption">Coche les spots où tu veux aller : les options se recalculent.</p>
-              <div className="chips">
-                {race.spots.map((spot) => (
-                  <Chip key={spot.id} selected={chosenSpots.includes(spot.id)} onClick={() => toggleSpot(spot.id)}>
-                    {spotNumbers[spot.id]}. {spot.shortName}
-                  </Chip>
-                ))}
-              </div>
-              {chosenSpots.length > 0 && (
-                <Button variant="ghost" onClick={resetSpots}>
-                  Tous les spots
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        {planOptions.length === 1 && (
+          <p className="caption">Une seule option ici : c'est le meilleur compromis possible avec ces spots.</p>
+        )}
       </section>
 
       <section className="section" aria-label={view === "plan" ? "Étapes du plan" : "Horaires de passage"}>

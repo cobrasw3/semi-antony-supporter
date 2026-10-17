@@ -163,51 +163,144 @@ export function optimalPlan(passages: Passage[], spots: Spot[], walking: Walking
  * options utiles (on n'affiche pas « 5 fois en marchant 2 km » si « 6 fois en
  * marchant 2 km » existe). La première option est souvent « sans bouger ».
  *
- * Programmation dynamique sur le même graphe que optimalPlan :
- * best[j][k] = marche minimale pour une chaîne de k passages finissant en j.
+ * `requiredSpots` (optionnel) : spots choisis par l'utilisateur. Le plan ne
+ * passe alors QUE par ces spots, et par CHACUN d'eux au moins une fois.
+ * Liste vide si c'est impossible (spots incompatibles).
+ *
+ * Programmation dynamique : best[j][k][m] = marche minimale pour une chaîne
+ * de k passages finissant en j, ayant visité l'ensemble m de spots choisis
+ * (masque de bits, au plus quelques spots).
  */
-export function planOptions(passages: Passage[], spots: Spot[], walking: WalkingConfig, routes?: WalkingRoutes): Plan[] {
-  if (passages.length === 0) return [];
+export function planOptions(
+  passages: Passage[],
+  spots: Spot[],
+  walking: WalkingConfig,
+  routes?: WalkingRoutes,
+  requiredSpots: string[] = []
+): Plan[] {
+  const required = requiredSpots.filter((id) => spots.some((s) => s.id === id));
+  const pool = required.length ? passages.filter((p) => required.includes(p.spotId)) : passages;
+  if (pool.length === 0) return [];
   const byId = indexSpots(spots);
-  const sorted = [...passages].sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
+  const sorted = [...pool].sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
   const n = sorted.length;
-  const best: number[][] = Array.from({ length: n }, () => new Array<number>(n + 1).fill(Infinity));
-  const prev: number[][] = Array.from({ length: n }, () => new Array<number>(n + 1).fill(-1));
+  const bit = sorted.map((p) => (required.length ? 1 << required.indexOf(p.spotId) : 0));
+  const full = required.length ? (1 << required.length) - 1 : 0;
+  const masks = full + 1;
+  const idx = (j: number, k: number, m: number) => (j * (n + 1) + k) * masks + m;
+  const best = new Float64Array(n * (n + 1) * masks).fill(Infinity);
+  const prevJ = new Int32Array(best.length).fill(-1);
+  const prevM = new Int32Array(best.length).fill(-1);
   const edges: Array<Array<Transition | null>> = Array.from({ length: n }, () => new Array(n).fill(null));
 
   for (let j = 0; j < n; j++) {
-    best[j][1] = 0;
+    best[idx(j, 1, bit[j])] = 0;
     for (let i = 0; i < j; i++) {
       const t = evaluateTransition(sorted[i], sorted[j], byId, walking, routes);
       if (t.status !== "ok") continue;
       edges[i][j] = t;
       for (let k = 2; k <= j + 1; k++) {
-        const w = best[i][k - 1] + t.walk.walkKm;
-        if (w < best[j][k] - 1e-9) {
-          best[j][k] = w;
-          prev[j][k] = i;
+        for (let m = 0; m < masks; m++) {
+          const from = best[idx(i, k - 1, m)];
+          if (from === Infinity) continue;
+          const to = idx(j, k, m | bit[j]);
+          const w = from + t.walk.walkKm;
+          if (w < best[to] - 1e-9) {
+            best[to] = w;
+            prevJ[to] = i;
+            prevM[to] = m;
+          }
         }
       }
     }
   }
 
-  // Meilleure fin de chaîne pour chaque nombre de passages k.
+  // Meilleure fin de chaîne pour chaque nombre de passages k (tous les spots
+  // choisis visités), en ne gardant que les options non dominées.
   const options: Plan[] = [];
   let minWalkAbove = Infinity;
   for (let k = n; k >= 1; k--) {
     let end = -1;
-    for (let j = 0; j < n; j++) if (best[j][k] < (end === -1 ? Infinity : best[end][k]) - 1e-9) end = j;
-    if (end === -1 || !(best[end][k] < minWalkAbove - 1e-9)) continue;
-    minWalkAbove = best[end][k];
+    for (let j = 0; j < n; j++) if (best[idx(j, k, full)] < (end === -1 ? Infinity : best[idx(end, k, full)]) - 1e-9) end = j;
+    if (end === -1) continue;
+    const walk = best[idx(end, k, full)];
+    if (!(walk < minWalkAbove - 1e-9)) continue;
+    minWalkAbove = walk;
     const steps: Passage[] = [];
     const transitions: Transition[] = [];
-    for (let j = end, kk = k; j !== -1; kk--) {
+    for (let j = end, kk = k, m = full; j !== -1; kk--) {
       steps.unshift(sorted[j]);
-      const p = prev[j][kk];
+      const at = idx(j, kk, m);
+      const p = prevJ[at];
       if (p !== -1) transitions.unshift(edges[p][j]!);
+      m = prevM[at];
       j = p;
     }
-    options.unshift({ steps, transitions, totalWalkKm: best[end][k] });
+    options.unshift({ steps, transitions, totalWalkKm: walk });
   }
   return options;
+}
+
+/** Limite entre deux spots choisis : le coureur va plus vite que toi de A à B. */
+export interface SpotPairLimit {
+  fromSpotId: string;
+  toSpotId: string;
+  /** Temps mis par le coureur de A au passage suivant en B (le plus court constaté), en minutes. */
+  runnerMinutes: number;
+  /**
+   * Temps dont tu disposerais au mieux pour aller de A à B : du passage en A
+   * jusqu'au début de la fourchette en B, moins la marge de sécurité.
+   */
+  availableMinutes: number;
+  /** Temps de marche de A à B, en minutes. */
+  walkMinutes: number;
+}
+
+/**
+ * Pour chaque paire ordonnée de spots choisis (A puis B) : peut-on voir le
+ * coureur en A puis le rattraper à son PROCHAIN passage en B ? Si ce n'est
+ * jamais possible (spots trop loin à pied, ou trop rapprochés sur le
+ * parcours), on renvoie la limite pour l'expliquer à l'utilisateur.
+ * Triées de la plus contraignante à la moins contraignante.
+ */
+export function spotPairLimits(
+  passages: Passage[],
+  spots: Spot[],
+  walking: WalkingConfig,
+  chosen: string[],
+  routes?: WalkingRoutes
+): SpotPairLimit[] {
+  const byId = indexSpots(spots);
+  const sorted = [...passages].sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
+  const limits: SpotPairLimit[] = [];
+  for (const from of chosen) {
+    for (const to of chosen) {
+      if (from === to || !byId[from] || !byId[to]) continue;
+      let anyOk = false;
+      let shortest = Infinity;
+      let available = -Infinity;
+      let walkMinutes = 0;
+      for (const a of sorted.filter((p) => p.spotId === from)) {
+        const b = sorted.find((p) => p.spotId === to && p.estimatedMinutes > a.estimatedMinutes);
+        if (!b) continue;
+        const t = evaluateTransition(a, b, byId, walking, routes);
+        walkMinutes = t.walk.minutes;
+        shortest = Math.min(shortest, b.estimatedMinutes - a.estimatedMinutes);
+        available = Math.max(available, b.windowStartMinutes - a.estimatedMinutes - walking.safetyMarginMinutes);
+        if (t.status === "ok") anyOk = true;
+      }
+      if (!anyOk && shortest !== Infinity)
+        limits.push({ fromSpotId: from, toSpotId: to, runnerMinutes: shortest, availableMinutes: Math.max(0, available), walkMinutes });
+    }
+  }
+  return limits.sort((x, y) => x.availableMinutes - x.walkMinutes - (y.availableMinutes - y.walkMinutes));
+}
+
+/** Le spot qui bloque le plus souvent (à proposer de décocher), ou null. */
+export function mostLimitingSpot(limits: SpotPairLimit[]): string | null {
+  const counts = new Map<string, number>();
+  for (const l of limits) for (const id of [l.fromSpotId, l.toSpotId]) counts.set(id, (counts.get(id) ?? 0) + 1);
+  let best: string | null = null;
+  for (const [id, c] of counts) if (best === null || c > counts.get(best)!) best = id;
+  return best;
 }

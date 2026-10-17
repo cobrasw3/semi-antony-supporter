@@ -334,3 +334,33 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   7c9d1db, cible preview, prod non touchée) :
   https://semi-antony-supporter-byxd39xj3-pmachard2001-5765s-projects.vercel.app
   — Ready ; consigne « attention aux coureurs » bien servie dans event.json.
+
+### 2026-10-18 — Choix des spots repensé (branche `feat/spots-choisis`, depuis `feat/plan-marche`)
+
+- Retours utilisateur : le choix des spots n'était pas compris ; avec stade
+  + rue des Hautes Bièvres cochés, la rue des Hautes Bièvres n'apparaissait
+  pas (le choix ne faisait que *restreindre* les spots, et « sans bouger au
+  stade » restait meilleur) ; pourquoi jamais 1-3 passages ; plus
+  généralement, deux spots trop loin ou trop proches doivent être signalés
+  à l'utilisateur. Placeholder « Léa » de l'assistant → « Prénom du
+  coureur ».
+- **Sémantique** : bascule « Meilleurs spots » (l'app choisit) / « Mes
+  spots » (le plan passe par CHACUN des spots cochés, et seulement eux).
+  `planOptions(…, requiredSpots)` : DP avec masque des spots visités,
+  testée contre une recherche exhaustive. Stade + rue des Hautes Bièvres →
+  4× en 610 m (1× stade, 3× Hautes Bièvres).
+- **Explications** : `spotPairLimits` (lib/itinerary.ts, testée) détecte
+  pour chaque paire ordonnée de spots cochés si l'on peut rattraper le
+  coureur au passage suivant ; sinon explique « A → B : tu as X min, il en
+  faut Y à pied » (X = jusqu'au début de la fourchette, marge de 3 min
+  déduite — couvre « trop loin à pied » et « trop proches sur le
+  parcours »). Combinaison impossible : alerte + `mostLimitingSpot`
+  (« Essaie de décocher … ») et repli sur les meilleurs spots pour que le
+  reste de l'app garde un plan. Chaque option affiche le détail par spot
+  (« 1× Stade · 3× Rue des Hautes Bièvres »), les puces le nombre de
+  passages par spot.
+- 1-3 passages non proposés : au stade on en voit déjà 4 sans marcher, donc
+  moins de passages n'économise rien (réponse donnée ; piste proposée :
+  créneau de présence « j'arrive à / je pars à »).
+- Corrigé : minutes de marche arrondies différemment entre l'option et
+  l'explication (8 vs 9) → arrondi supérieur partout.

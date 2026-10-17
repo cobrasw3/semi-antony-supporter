@@ -7,6 +7,8 @@ import {
   indexSpots,
   optimalPlan,
   planOptions,
+  spotPairLimits,
+  mostLimitingSpot,
   walkBetween,
   walkBetweenSpots,
 } from "./itinerary";
@@ -215,5 +217,103 @@ describe("planOptions (compromis passages ↔ marche)", () => {
         expect(option.transitions).toHaveLength(option.steps.length - 1);
       }
     }
+  });
+});
+
+describe("planOptions avec spots choisis", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+  const routes = semi.walkingRoutes?.km;
+
+  it("stade + rue des Hautes Bièvres : chaque option passe par les deux spots, et seulement eux", () => {
+    const options = planOptions(passages, semi.spots, config.settings.walking, routes, ["stade-suant", "rue-des-hautes-bievres"]);
+    expect(options.length).toBeGreaterThan(0);
+    for (const o of options) {
+      const ids = new Set(o.steps.map((p) => p.spotId));
+      expect(ids).toEqual(new Set(["stade-suant", "rue-des-hautes-bievres"]));
+      expect(o.transitions.every((t) => t.status === "ok")).toBe(true);
+    }
+  });
+
+  it("un seul spot choisi : tous ses passages, sans bouger", () => {
+    const [only] = planOptions(passages, semi.spots, config.settings.walking, routes, ["rue-des-champs"]);
+    expect(only.steps).toHaveLength(3);
+    expect(only.totalWalkKm).toBe(0);
+  });
+
+  it("spots incompatibles : aucune option", () => {
+    const spots = [spot("a", 0), spot("b", 3)];
+    // b n'est atteignable depuis a dans aucun ordre (trop loin, trop peu de temps).
+    const tight = [passage("a", 0), passage("b", 5), passage("a", 10)];
+    expect(planOptions(tight, spots, walking, undefined, ["a", "b"])).toEqual([]);
+  });
+
+  it("égale l'optimum exhaustif avec contrainte (cas aléatoires)", () => {
+    let seed = 11;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let run = 0; run < 25; run++) {
+      const spots = ["a", "b", "c", "d"].map((id) => spot(id, rand() * 1.5));
+      const all = Array.from({ length: 9 }, () => passage(spots[Math.floor(rand() * 4)].id, Math.round(rand() * 120)));
+      const required = ["a", "c"];
+      const pool = all.filter((p) => required.includes(p.spotId));
+      const options = planOptions(all, spots, walking, undefined, required);
+      // Référence : meilleure chaîne exhaustive passant par a ET c.
+      const byId = indexSpots(spots);
+      const sorted = [...pool].sort((x, y) => x.estimatedMinutes - y.estimatedMinutes);
+      const bestFor = new Map<number, number>();
+      const go = (i: number, count: number, walked: number, seen: Set<string>) => {
+        if (required.every((r) => seen.has(r))) bestFor.set(count, Math.min(bestFor.get(count) ?? Infinity, walked));
+        for (let j = i + 1; j < sorted.length; j++) {
+          const t = evaluateTransition(sorted[i], sorted[j], byId, walking);
+          if (t.status === "ok") go(j, count + 1, walked + t.walk.walkKm, new Set([...seen, sorted[j].spotId]));
+        }
+      };
+      sorted.forEach((p, i) => go(i, 1, 0, new Set([p.spotId])));
+      for (const o of options) expect(o.totalWalkKm).toBeCloseTo(bestFor.get(o.steps.length)!, 6);
+      if (bestFor.size === 0) expect(options).toEqual([]);
+      else expect(options.at(-1)!.steps.length).toBe(Math.max(...bestFor.keys()));
+    }
+  });
+});
+
+describe("spotPairLimits", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+  const routes = semi.walkingRoutes?.km;
+
+  it("spots trop rapprochés sur le parcours : rue des Hautes Bièvres → stade (3 min pour le coureur)", () => {
+    const limits = spotPairLimits(passages, semi.spots, config.settings.walking, ["stade-suant", "rue-des-hautes-bievres"], routes);
+    expect(limits).toHaveLength(1);
+    expect(limits[0]).toMatchObject({ fromSpotId: "rue-des-hautes-bievres", toSpotId: "stade-suant" });
+    expect(limits[0].runnerMinutes).toBeLessThan(limits[0].walkMinutes);
+    expect(Math.round(limits[0].runnerMinutes)).toBe(3);
+    expect(limits[0].availableMinutes).toBeLessThan(limits[0].walkMinutes);
+  });
+
+  it("explique les cas où le coureur met plus longtemps que la marche, mais sans marge suffisante", () => {
+    const chosen = ["rue-des-champs", "rue-des-hautes-bievres"];
+    for (const l of spotPairLimits(passages, semi.spots, config.settings.walking, chosen, routes)) {
+      expect(l.availableMinutes).toBeLessThan(l.walkMinutes);
+    }
+  });
+
+  it("désigne le spot le plus bloquant", () => {
+    const chosen = ["rue-marius-hue", "rue-des-champs", "parc-heller"];
+    const limits = spotPairLimits(passages, semi.spots, config.settings.walking, chosen, routes);
+    expect(mostLimitingSpot(limits)).toBe("rue-marius-hue");
+    expect(mostLimitingSpot([])).toBeNull();
+  });
+
+  it("spots compatibles dans les deux sens : aucune limite", () => {
+    expect(spotPairLimits(passages, semi.spots, config.settings.walking, ["stade-suant", "parc-heller"], routes)).toEqual([]);
+  });
+
+  it("spots trop loin à pied : limite dans les deux sens", () => {
+    const spots = [spot("a", 0), spot("b", 3)];
+    const ps = [passage("a", 0), passage("b", 10), passage("a", 20), passage("b", 30)];
+    const limits = spotPairLimits(ps, spots, walking, ["a", "b"]);
+    expect(limits.map((l) => `${l.fromSpotId}>${l.toSpotId}`).sort()).toEqual(["a>b", "b>a"]);
   });
 });
