@@ -546,3 +546,10 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     `map` à reporter dans event.json, qui garde sa mise en forme).
   - README : section « Héberger gratuitement : Cloudflare Pages » (mise en
     place, circuit test → prod, rollback, analytics).
+- L'utilisateur crée le projet Cloudflare Pages (son compte a déjà un autre
+  site en production). Réponse donnée : projets Pages isolés (sous-domaine,
+  déploiements, variables propres) ; points d'attention : autoriser ce
+  dépôt dans l'app GitHub de Cloudflare, nom de projet distinct, ne pas
+  réutiliser le domaine de l'autre site, quota partagé de 500 builds/mois
+  et 1 build simultané ; app 100 % statique → pas de consommation du quota
+  Workers/Functions.
