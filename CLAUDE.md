@@ -643,3 +643,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   ça en production ») : `main` avancé en avance rapide sur `feat/sur-mesure`
   (55 commits, de 2b05fa8), poussé → build de production Cloudflare
   (`npx wrangler deploy`) sur https://semi-antony-supporter.p-machard-2001.workers.dev.
+- Le build de `main` (a477a404, e21f860) est parti en **preview**
+  (`main-semi-antony-supporter…workers.dev`, à jour) et non en production :
+  la branche de production configurée dans Cloudflare n'est pas `main`.
+  L'adresse principale sert toujours la version du build fd3854be (sans
+  points libres). À corriger dans Settings → Build → Branch control.
