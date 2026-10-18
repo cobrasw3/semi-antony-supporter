@@ -707,3 +707,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   réunis en un marqueur « 1·3·7 » (`groupOverlapping`, testé) ; le toucher
   zoome jusqu'à les séparer. Sélection depuis le carrousel : zoom 16 au
   moins (spots voisins séparés).
+- Accord de l'utilisateur (« oui mets en production ») : `main` avancé sur
+  `feat/sur-mesure` (ravito du virage, spots regroupés) et poussé.
