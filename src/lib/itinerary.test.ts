@@ -10,6 +10,7 @@ import {
   incompatiblePairs,
   mostLimitingSpot,
   spotsToDrop,
+  planWalkingPaths,
   walkBetween,
   walkBetweenSpots,
 } from "./itinerary";
@@ -366,5 +367,28 @@ describe("trajets depuis le stade au départ (retour utilisateur)", () => {
     for (const s of semi.spots.filter((x) => x.id !== "stade-suant")) {
       expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", s.id], routes)).toEqual([]);
     }
+  });
+});
+
+describe("planWalkingPaths", () => {
+  const config = parseEventConfig(rawEvent);
+  const semi = config.races[0];
+  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+  const plan = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).at(-1)!;
+
+  it("trace une seule fois le trajet stade ↔ parc Heller, par les rues", () => {
+    const paths = planWalkingPaths(plan, semi.spots, semi.walkingRoutes?.paths);
+    expect(paths).toHaveLength(1);
+    expect(paths[0].length).toBeGreaterThan(10); // chemin réel, pas une ligne droite
+  });
+
+  it("repli en ligne droite si le tracé est inconnu", () => {
+    const paths = planWalkingPaths(plan, semi.spots, {});
+    expect(paths).toEqual([
+      [
+        [semi.spots[0].lat, semi.spots[0].lng],
+        [semi.spots[2].lat, semi.spots[2].lng],
+      ],
+    ]);
   });
 });

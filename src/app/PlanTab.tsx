@@ -3,7 +3,7 @@
 // spots, les horaires complets, les rappels.
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, MapPin, X } from "lucide-react";
+import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, Map as MapIcon, MapPin, X } from "lucide-react";
 import { spotWhere } from "../lib/event";
 import { planOptions as planOptionsFor, spotsToDrop, type Plan, type Transition } from "../lib/itinerary";
 import type { Passage } from "../lib/timing";
@@ -18,7 +18,7 @@ function formatWalk(km: number) {
 
 const walkMinutes = (plan: Plan) => Math.ceil(plan.transitions.reduce((sum, t) => sum + t.walk.minutes, 0));
 
-function TransitionRow({ t, safety }: { t: Transition; safety: number }) {
+function TransitionRow({ t }: { t: Transition; safety?: number }) {
   if (t.sameSpot)
     return (
       <div className="transition">
@@ -36,7 +36,7 @@ function TransitionRow({ t, safety }: { t: Transition; safety: number }) {
       </Chip>
     ) : t.status === "tight" ? (
       <Chip tone="warn">
-        <AlertTriangle size={14} aria-hidden="true" /> Juste (&lt; {safety} min)
+        <AlertTriangle size={14} aria-hidden="true" /> Ça va être juste
       </Chip>
     ) : (
       <Chip tone="ko">
@@ -58,10 +58,12 @@ export function PlanTab({
   s,
   reminders,
   onOpenSpot,
+  onShowPlanOnMap,
 }: {
   s: Supporter;
   reminders: ReturnType<typeof useReminders>;
   onOpenSpot: (spotId: string) => void;
+  onShowPlanOnMap: () => void;
 }) {
   const {
     passages,
@@ -82,6 +84,7 @@ export function PlanTab({
   } = s;
   const walking = config.settings.walking;
   const [view, setView] = useState<"plan" | "horaires">("plan");
+  const [moreOptions, setMoreOptions] = useState(false);
   // Tiroir « Choisir mes spots » : brouillon modifié librement, appliqué
   // seulement s'il est faisable (un plan impossible ne peut pas être validé).
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -121,6 +124,7 @@ export function PlanTab({
     return ids.map((id) => `${counts.get(id)}× ${spotById[id]?.shortName ?? id}`).join(" · ");
   };
   const inPlan = new Set(plan.steps.map((p) => `${p.spotId}@${p.km}`));
+  const hiddenOptions = planOptions.filter((o, i) => i !== 0 && i !== planOptions.length - 1 && o !== plan).length;
 
   const card = (p: Passage, meta: string) => (
     <button type="button" className="card-btn" onClick={() => onOpenSpot(p.spotId)}>
@@ -171,8 +175,10 @@ export function PlanTab({
         )}
 
         <div className="options" role="radiogroup" aria-label="Nombre de passages">
-          {planOptions.map((option) => {
+          {planOptions.map((option, i) => {
             const selected = option === plan;
+            const essential = i === 0 || i === planOptions.length - 1 || selected;
+            if (!essential && !moreOptions) return null;
             const still = option.totalWalkKm < 0.05;
             return (
               <button
@@ -196,6 +202,33 @@ export function PlanTab({
               </button>
             );
           })}
+        </div>
+        {hiddenOptions > 0 && (
+          <button type="button" className="link plan__more" onClick={() => setMoreOptions((m) => !m)} aria-expanded={moreOptions}>
+            {moreOptions ? "Moins d'options" : `Plus d'options (${hiddenOptions})`}
+          </button>
+        )}
+
+        {/* 1) Rappels remontés juste sous le choix : on ne les rate plus. */}
+        <div className="reminder-row">
+          <Button variant="primary" block icon={<CalendarPlus size={20} />} onClick={reminders.downloadIcs}>
+            Ajouter à mon agenda
+          </Button>
+          <p className="caption">
+            Ton téléphone sonne 10 min avant chaque étape, même app fermée.{" "}
+            {reminders.support === "needs-install" ? null : reminders.enabled ? (
+              <>
+                Alertes dans l'app actives.{" "}
+                <button type="button" className="link" onClick={reminders.disable}>
+                  Désactiver
+                </button>
+              </>
+            ) : (
+              <button type="button" className="link" onClick={reminders.enable}>
+                <BellRing size={14} aria-hidden="true" /> Aussi des alertes dans l'app
+              </button>
+            )}
+          </p>
         </div>
 
         {!(spotMode === "mine" && requiredSpots.length > 0 && !spotsConflict) && (
@@ -283,6 +316,11 @@ export function PlanTab({
                 </li>
               ))}
             </ol>
+            {plan.totalWalkKm >= 0.05 && (
+              <Button variant="secondary" block icon={<MapIcon size={20} />} onClick={onShowPlanOnMap} className="plan__map-btn">
+                Voir mon trajet sur la carte
+              </Button>
+            )}
             <details className="how">
               <summary>Comment c'est calculé ?</summary>
               <ul>
@@ -306,31 +344,6 @@ export function PlanTab({
         )}
       </section>
 
-      <section className="section" aria-labelledby="rappels-titre">
-        <div className="reminders">
-          <h2 id="rappels-titre" className="section__title display">
-            Être prévenu 10 min avant
-          </h2>
-          <Button variant="primary" block icon={<CalendarPlus size={20} />} onClick={reminders.downloadIcs}>
-            Ajouter à mon agenda
-          </Button>
-          <p className="caption">Le plus fiable : ton téléphone sonne avant chaque étape de ton plan, même app fermée.</p>
-          {reminders.support === "needs-install" ? (
-            <p className="caption">Sur iPhone, les notifications marchent une fois l'app ajoutée à l'écran d'accueil.</p>
-          ) : reminders.enabled ? (
-            <p className="caption">
-              Alertes actives tant que l'app est ouverte.{" "}
-              <button type="button" className="link" onClick={reminders.disable}>
-                Désactiver
-              </button>
-            </p>
-          ) : (
-            <Button variant="secondary" block icon={<BellRing size={20} />} onClick={reminders.enable}>
-              Alertes dans l'app
-            </Button>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

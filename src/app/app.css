@@ -814,9 +814,47 @@ a.btn {
   box-shadow: var(--shadow-1);
 }
 
-.map-calib-banner,
-.map-legend {
+.map-calib-banner {
   top: var(--s-3);
+}
+
+/* Légendes empilées en haut de la carte */
+.map-legends {
+  position: absolute;
+  z-index: 1000;
+  top: var(--s-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.map-legends .map-legend {
+  position: static;
+  transform: none;
+}
+
+.map-legend--btn {
+  border: none;
+  font: inherit;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.map-legend__dash {
+  width: 22px;
+  height: 0;
+  border-top: 4px dotted var(--sprint);
+}
+
+.pin--plan:not(.pin--fort) {
+  box-shadow:
+    0 0 0 3px var(--sprint),
+    0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .map-badge {
@@ -1469,4 +1507,32 @@ a.btn {
 .stack > *,
 .card-btn {
   min-width: 0;
+}
+
+.plan__more {
+  display: block;
+  min-height: 44px;
+  margin: 4px auto 0;
+}
+
+.reminder-row {
+  display: grid;
+  gap: 6px;
+  margin-top: var(--s-4);
+}
+
+.reminder-row .caption {
+  margin: 0;
+  text-align: center;
+}
+
+.reminder-row .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+}
+
+.plan__map-btn {
+  margin-top: var(--s-4);
 }

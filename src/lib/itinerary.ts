@@ -297,3 +297,31 @@ export function spotsToDrop(
     (id) => planOptions(passages, spots, walking, routes, chosen.filter((x) => x !== id), acceptTight).length > 0
   );
 }
+
+/**
+ * Tracés à pied des étapes d'un plan (pour la carte) : pour chaque trajet
+ * entre deux spots différents, le chemin réel s'il est connu (dans un sens ou
+ * l'autre), sinon une ligne droite. Un même trajet n'est tracé qu'une fois.
+ */
+export function planWalkingPaths(
+  plan: Pick<Plan, "transitions">,
+  spots: Spot[],
+  paths?: Record<string, Array<[number, number]>>
+): Array<Array<[number, number]>> {
+  const byId = indexSpots(spots);
+  const seen = new Set<string>();
+  const result: Array<Array<[number, number]>> = [];
+  for (const t of plan.transitions) {
+    if (t.sameSpot) continue;
+    const [a, b] = [t.from.spotId, t.to.spotId];
+    const pairKey = [a, b].sort().join("|");
+    if (seen.has(pairKey)) continue;
+    seen.add(pairKey);
+    const direct = paths?.[`${a}>${b}`];
+    const reverse = paths?.[`${b}>${a}`];
+    if (direct) result.push(direct);
+    else if (reverse) result.push([...reverse].reverse());
+    else if (byId[a] && byId[b]) result.push([[byId[a].lat, byId[a].lng], [byId[b].lat, byId[b].lng]]);
+  }
+  return result;
+}

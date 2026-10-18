@@ -37,6 +37,7 @@ export function Shell({ s }: { s: Supporter }) {
   const [runnerSheet, setRunnerSheet] = useState(false);
   const [spotSheet, setSpotSheet] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ spotId: string; nonce: number } | null>(null);
+  const [planFocus, setPlanFocus] = useState(0);
   const [toast, setToast] = useState<ToastItem | null>(null);
   const [updateReady, setUpdateReady] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -97,10 +98,20 @@ export function Shell({ s }: { s: Supporter }) {
   const spot = spotSheet ? s.spotById[spotSheet] : null;
   const panels: Record<TabId, ReactNode> = {
     live: <LiveTab s={s} geo={geo} onGoPlan={() => setTab("plan")} onOpenSpot={setSpotSheet} onEditRunner={() => setRunnerSheet(true)} />,
-    plan: <PlanTab s={s} reminders={reminders} onOpenSpot={setSpotSheet} />,
+    plan: (
+      <PlanTab
+        s={s}
+        reminders={reminders}
+        onOpenSpot={setSpotSheet}
+        onShowPlanOnMap={() => {
+          setPlanFocus((n) => n + 1);
+          setTab("carte");
+        }}
+      />
+    ),
     carte: (
       <Suspense fallback={<div className="map-loading">Chargement de la carte…</div>}>
-        <MapTab s={s} focus={mapFocus} onOpenSpot={setSpotSheet} />
+        <MapTab s={s} focus={mapFocus} onOpenSpot={setSpotSheet} planFocus={planFocus} />
       </Suspense>
     ),
     infos: <InfosTab s={s} onShare={share} />,

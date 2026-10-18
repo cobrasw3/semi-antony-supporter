@@ -68,7 +68,13 @@ export interface Race {
    * Générées par scripts/compute-walking-routes.ts ; à défaut, estimation à
    * vol d'oiseau × facteur de détour.
    */
-  walkingRoutes?: { source: string; computedAt: string; km: Record<string, number> };
+  walkingRoutes?: {
+    source: string;
+    computedAt: string;
+    km: Record<string, number>;
+    /** Tracé à pied de chaque paire « idA>idB » (une seule direction), en [lat, lng]. */
+    paths?: Record<string, Array<[number, number]>>;
+  };
 }
 
 export interface EventConfig {

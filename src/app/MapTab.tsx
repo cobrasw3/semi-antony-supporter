@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { TILES } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
 import { projectPointOntoRoute } from "../lib/geo";
+import { planWalkingPaths } from "../lib/itinerary";
 import { directionArrows, kmMarks } from "../lib/mapMarkers";
 import { estimatedKm, positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
@@ -19,9 +20,9 @@ import type { Supporter } from "./useSupporter";
 const TILE_ERRORS_BEFORE_FALLBACK = 4;
 const TILE_TIMEOUT_MS = 12_000;
 
-const spotIcon = (n: number, highlight: boolean, active: boolean) =>
+const spotIcon = (n: number, highlight: boolean, active: boolean, inPlan: boolean) =>
   L.divIcon({
-    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}">${n}</div>`,
+    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}">${n}</div>`,
     className: "pin-wrap",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -65,6 +66,16 @@ function Resize() {
   return null;
 }
 
+/** Cadre la carte sur le trajet à pied du plan (à chaque nouvelle demande). */
+function FitToPlan({ paths, nonce }: { paths: Array<Array<[number, number]>>; nonce: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (nonce === 0 || paths.length === 0) return;
+    map.flyToBounds(paths.flat(), { padding: [48, 48], paddingBottomRight: [48, 220], duration: 0.6, maxZoom: 17 });
+  }, [nonce, paths, map]);
+  return null;
+}
+
 function FlyTo({ spot }: { spot: Spot | null }) {
   const map = useMap();
   useEffect(() => {
@@ -98,12 +109,15 @@ export default function MapTab({
   s,
   focus,
   onOpenSpot,
+  planFocus = 0,
 }: {
   s: Supporter;
   focus: { spotId: string; nonce: number } | null;
   onOpenSpot: (spotId: string) => void;
+  /** Demande de cadrage sur le trajet du plan (incrémentée par l'onglet Plan). */
+  planFocus?: number;
 }) {
-  const { race, track, spotNumbers, passagesBySpot, clock, config, pace, startMinutes, runnerName } = s;
+  const { race, track, spotNumbers, passagesBySpot, clock, config, pace, startMinutes, runnerName, plan } = s;
   const spots = race.spots;
   const [active, setActive] = useState(() => Math.max(0, spots.findIndex((sp) => sp.id === focus?.spotId)));
   const [flyTarget, setFlyTarget] = useState<Spot | null>(focus ? spots.find((sp) => sp.id === focus.spotId) ?? null : null);
@@ -117,6 +131,12 @@ export default function MapTab({
   const arrows = useMemo(() => directionArrows(track), [track]);
   // Couleur de marque (tokens) : Leaflet écrit la couleur en attribut SVG.
   const routeColor = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#14213d", []);
+  const planColor = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--sprint").trim() || "#f26b3a", []);
+  // Ton plan à pied : les trajets réels (par les rues) entre les spots du plan.
+  const planPaths = useMemo(() => planWalkingPaths(plan, race.spots, race.walkingRoutes?.paths), [plan, race]);
+  const planSpotIds = useMemo(() => new Set(plan.steps.map((p) => p.spotId)), [plan]);
+  const [fitPlan, setFitPlan] = useState(planFocus);
+  useEffect(() => setFitPlan(planFocus), [planFocus]);
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
   const raceDay = clock.date === config.event.date;
   const now = raceDay ? clock.minutes : null;
@@ -185,6 +205,14 @@ export default function MapTab({
             }}
           />
           <Polyline positions={track.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ color: routeColor, weight: 7, opacity: 0.9 }} />
+          {planPaths.map((path, i) => (
+            <Polyline
+              key={`plan-${i}`}
+              positions={path}
+              interactive={false}
+              pathOptions={{ color: planColor, weight: 6, opacity: 0.95, dashArray: "1 11", lineCap: "round" }}
+            />
+          ))}
           {arrows.map((a, i) => (
             <Marker key={`a${i}`} position={[a.lat, a.lng]} icon={arrowIcon(a.bearing)} interactive={false} keyboard={false} />
           ))}
@@ -195,7 +223,7 @@ export default function MapTab({
             <Marker
               key={spot.id}
               position={[spot.lat, spot.lng]}
-              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active)}
+              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id))}
               title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               zIndexOffset={i === active ? 2000 : 1000}
@@ -213,15 +241,25 @@ export default function MapTab({
           <FitToRoute points={track} />
           <Resize />
           <FlyTo spot={flyTarget} />
+          <FitToPlan paths={planPaths} nonce={fitPlan} />
           {calibrage && <Calibrage track={track} onResult={setCalib} />}
           {calibrage && calib && <Marker position={[calib.lat, calib.lng]} icon={calibrageIcon} />}
         </MapContainer>
         {!tilesLoaded && !showPlan && <div className="map-badge">Chargement du fond de carte…</div>}
-        {runnerPos && (
-          <div className="map-legend">
-            <span className="map-legend__dot" aria-hidden="true" /> {runnerName || "Coureur"} · position estimée
-          </div>
-        )}
+        <div className="map-legends">
+          {planPaths.length > 0 && (
+            <button type="button" className="map-legend map-legend--btn" onClick={() => setFitPlan((n) => n + 1)}>
+              <span className="map-legend__dash" aria-hidden="true" /> Ton trajet à pied ·{" "}
+              {plan.totalWalkKm.toFixed(1).replace(".", ",")} km
+              <span className="sr-only"> (zoomer dessus)</span>
+            </button>
+          )}
+          {runnerPos && (
+            <div className="map-legend">
+              <span className="map-legend__dot" aria-hidden="true" /> {runnerName || "Coureur"} · position estimée
+            </div>
+          )}
+        </div>
       </div>
 
       <section className={drawerOpen ? "map-drawer is-open" : "map-drawer"} aria-label="Spots">

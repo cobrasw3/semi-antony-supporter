@@ -449,3 +449,19 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   sécable) → `min-width: 0` ; ligne secondaire raccourcie.
 - Preview redéployée (`feat/live-plan` @ e8b392a, cible preview, prod non
   touchée) : https://semi-antony-supporter-k0pven9qz-pmachard2001-5765s-projects.vercel.app — Ready.
+
+### 2026-10-18 (suite) — 4 retouches de l'onglet Plan (branche `feat/plan-retouches`, depuis `feat/live-plan`)
+
+- Demandées par l'utilisateur, d'après mon avis sur la page Plan :
+  1. **Rappels remontés** : « Ajouter à mon agenda » juste sous les options
+     (+ lien « Aussi des alertes dans l'app »), ancien bloc du bas retiré.
+  2. **2 options par défaut** : « Sans bouger » et le maximum (+ l'option
+     choisie si elle est au milieu) ; les autres derrière « Plus d'options ».
+  3. **Le plan sur la carte** : `compute-walking-routes.ts` enregistre aussi
+     le tracé réel de chaque trajet (15 paires, `walkingRoutes.paths`,
+     event.json → 29 Ko) ; `planWalkingPaths` (testée) donne les trajets du
+     plan dans le bon sens (repli ligne droite). Carte : pointillés orange
+     par les rues, spots du plan cerclés d'orange, légende « Ton trajet à
+     pied · 3,0 km » cliquable (zoom sur le trajet) ; bouton « Voir mon
+     trajet sur la carte » dans le Plan (ouvre la carte cadrée dessus).
+  4. « Juste (< 3 min) » → « Ça va être juste ».
