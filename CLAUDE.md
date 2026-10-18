@@ -465,3 +465,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
      pied · 3,0 km » cliquable (zoom sur le trajet) ; bouton « Voir mon
      trajet sur la carte » dans le Plan (ouvre la carte cadrée dessus).
   4. « Juste (< 3 min) » → « Ça va être juste ».
+- Preview redéployée (`feat/plan-retouches` @ c73a3b7, cible preview, prod
+  non touchée) : https://semi-antony-supporter-ee7yxws1b-pmachard2001-5765s-projects.vercel.app — Ready.
