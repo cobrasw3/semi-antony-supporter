@@ -12,5 +12,8 @@
   },
   // Lien de test par version et par branche (*.workers.dev).
   "preview_urls": true,
+  // Requis par `npx wrangler preview` (commande des branches non-production
+  // dans Workers Builds). Peut rester vide : les assets restent au-dessus.
+  "previews": {},
   "workers_dev": true
 }

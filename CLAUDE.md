@@ -592,3 +592,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   X-Frame-Options, Cache-Control) appliqués ; Edge headless : carte
   en ligne puis hors-ligne (16 / 12 tuiles), onglet Plan OK, aucune
   violation CSP.
+- Build de branche 4ec8fe46 (0e5ea5f) en échec : la commande des branches
+  non-production est `npx wrangler preview` (fonction « Previews » en
+  bêta), qui exige un bloc `previews` dans la config → `"previews": {}`
+  ajouté à `wrangler.jsonc`. (Le check GitHub « failure » du build
+  fd3854be correspondait peut-être à cette même étape.)
