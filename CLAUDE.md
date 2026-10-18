@@ -709,3 +709,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   moins (spots voisins séparés).
 - Accord de l'utilisateur (« oui mets en production ») : `main` avancé sur
   `feat/sur-mesure` (ravito du virage, spots regroupés) et poussé.
+- Production vérifiée (build f7d4eac3, 1c3cf50) : `event.json` servi avec
+  `ravito-virage`, marqueur groupé « 1·3·7 » affiché en vue d'ensemble.
