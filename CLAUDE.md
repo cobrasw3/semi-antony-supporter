@@ -447,3 +447,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   sans répéter celle du héros) ; lien « Tout mon plan ».
 - Corrigé : cartes qui débordaient (grille élargie par une ligne non
   sécable) → `min-width: 0` ; ligne secondaire raccourcie.
+- Preview redéployée (`feat/live-plan` @ e8b392a, cible preview, prod non
+  touchée) : https://semi-antony-supporter-k0pven9qz-pmachard2001-5765s-projects.vercel.app — Ready.
