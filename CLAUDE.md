@@ -467,3 +467,9 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   4. « Juste (< 3 min) » → « Ça va être juste ».
 - Preview redéployée (`feat/plan-retouches` @ c73a3b7, cible preview, prod
   non touchée) : https://semi-antony-supporter-ee7yxws1b-pmachard2001-5765s-projects.vercel.app — Ready.
+- Branches poussées sur GitHub à la demande de l'utilisateur :
+  `feat/redesign`, `feat/plan-marche`, `feat/spots-choisis`,
+  `feat/live-plan`, `feat/plan-retouches` (+ `feat/demo-finale` déjà à
+  jour). `main` non touchée. Le dépôt n'étant pas relié à Vercel, aucun
+  déploiement automatique. La plus récente, qui contient tout le travail :
+  `feat/plan-retouches`.
