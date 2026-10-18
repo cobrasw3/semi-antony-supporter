@@ -697,3 +697,13 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   sert la nouvelle version (points libres, ravito sud). Scénario rejoué sur
   la production (Edge headless) : point km 3,1 touché → horaires, ajout au
   parcours, pointage km 1,4 à 15:32 → « 16 min de retard », rappel Live.
+- Retour utilisateur : le spot 7 n'est pas « le stade » mais un
+  ravitaillement. Renommé **Ravito du virage** (`ravito-virage`, premier
+  virage à gauche à l'entrée du stade) ; il garde les fins de boucle 1-2 et
+  l'arrivée (choix de l'utilisateur : même endroit pour un supporter) et la
+  mise en avant. Distances à pied conservées (mêmes coordonnées, clés
+  renommées). « Sans bouger » → « Reste au ravito du virage : 4 passages ».
+- Carte : les spots qui se chevauchent au zoom courant (< 36 px) sont
+  réunis en un marqueur « 1·3·7 » (`groupOverlapping`, testé) ; le toucher
+  zoome jusqu'à les séparer. Sélection depuis le carrousel : zoom 16 au
+  moins (spots voisins séparés).

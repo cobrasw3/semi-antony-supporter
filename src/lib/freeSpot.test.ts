@@ -44,7 +44,7 @@ describe("freeSpotToSpot", () => {
   it("peut entrer dans un parcours sur mesure (marche estimée)", () => {
     const race = { ...semi, spots: [...semi.spots, spot] };
     const passages = computeAllPassages(race, 5.5, config.settings.margin);
-    const options = planOptions(passages, race.spots, config.settings.walking, semi.walkingRoutes?.km, ["stade-suant", "libre-a"], true);
+    const options = planOptions(passages, race.spots, config.settings.walking, semi.walkingRoutes?.km, ["ravito-virage", "libre-a"], true);
     expect(options.length).toBeGreaterThan(0);
     const best = options.at(-1)!;
     expect(best.steps.some((p) => p.spotId === "libre-a")).toBe(true);

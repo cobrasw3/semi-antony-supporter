@@ -118,7 +118,7 @@ describe("optimalPlan", () => {
     }
   });
 
-  it("sur le semi à 5:30, fait au moins aussi bien que rester au stade (4 passages)", () => {
+  it("sur le semi à 5:30, fait au moins aussi bien que rester sur place (4 passages)", () => {
     const config = parseEventConfig(rawEvent);
     const semi = config.races[0];
     const passages = computeAllPassages(semi, 5.5, config.settings.margin);
@@ -199,22 +199,22 @@ describe("planOptions (compromis passages ↔ marche)", () => {
     expect(options.at(-1)!.steps.length).toBe(optimalPlan(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).steps.length);
   });
 
-  it("sur le semi, « sans bouger » = départ puis 3 passages au stade (140 m à pied)", () => {
+  it("sur le semi, « sans bouger » = départ puis 3 passages au ravito du virage (140 m à pied)", () => {
     const config = parseEventConfig(rawEvent);
     const semi = config.races[0];
     const passages = computeAllPassages(semi, 5.5, config.settings.margin);
     const stay = stayPutOption(planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km))!;
-    expect(stay.steps.map((p) => p.spotId)).toEqual(["depart", "stade-suant", "stade-suant", "stade-suant"]);
+    expect(stay.steps.map((p) => p.spotId)).toEqual(["depart", "ravito-virage", "ravito-virage", "ravito-virage"]);
     expect(stay.totalWalkKm).toBeLessThanOrEqual(0.2);
   });
 
-  it("meilleur parcours : 7 passages entre départ, ravito sud et stade, moins de 2 km à pied", () => {
+  it("meilleur parcours : 7 passages entre départ, ravito sud et ravito du virage, moins de 2 km à pied", () => {
     const config = parseEventConfig(rawEvent);
     const semi = config.races[0];
     const passages = computeAllPassages(semi, 5.5, config.settings.margin);
     const best = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).at(-1)!;
     expect(best.steps).toHaveLength(7);
-    expect(new Set(best.steps.map((p) => p.spotId))).toEqual(new Set(["depart", "ravito-sud", "stade-suant"]));
+    expect(new Set(best.steps.map((p) => p.spotId))).toEqual(new Set(["depart", "ravito-sud", "ravito-virage"]));
     expect(best.totalWalkKm).toBeLessThan(2);
   });
 
@@ -238,12 +238,12 @@ describe("planOptions avec spots choisis", () => {
   const passages = computeAllPassages(semi, 5.5, config.settings.margin);
   const routes = semi.walkingRoutes?.km;
 
-  it("stade + rue des Hautes Bièvres : chaque option passe par les deux spots, et seulement eux", () => {
-    const options = planOptions(passages, semi.spots, config.settings.walking, routes, ["stade-suant", "rue-des-hautes-bievres"]);
+  it("ravito du virage + rue des Hautes Bièvres : chaque option passe par les deux spots, et seulement eux", () => {
+    const options = planOptions(passages, semi.spots, config.settings.walking, routes, ["ravito-virage", "rue-des-hautes-bievres"]);
     expect(options.length).toBeGreaterThan(0);
     for (const o of options) {
       const ids = new Set(o.steps.map((p) => p.spotId));
-      expect(ids).toEqual(new Set(["stade-suant", "rue-des-hautes-bievres"]));
+      expect(ids).toEqual(new Set(["ravito-virage", "rue-des-hautes-bievres"]));
       expect(o.transitions.every((t) => t.status === "ok")).toBe(true);
     }
   });
@@ -296,14 +296,14 @@ describe("incompatiblePairs", () => {
   const routes = semi.walkingRoutes?.km;
   const w = config.settings.walking;
 
-  it("stade + rue des Sources Prolongée : compatibles (stade au départ, puis rue des Sources)", () => {
-    expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", "rue-des-sources-prolongee"], routes)).toEqual([]);
-    const options = planOptions(passages, semi.spots, w, routes, ["stade-suant", "rue-des-sources-prolongee"]);
+  it("ravito du virage + rue des Sources Prolongée : compatibles", () => {
+    expect(incompatiblePairs(passages, semi.spots, w, ["ravito-virage", "rue-des-sources-prolongee"], routes)).toEqual([]);
+    const options = planOptions(passages, semi.spots, w, routes, ["ravito-virage", "rue-des-sources-prolongee"]);
     expect(options.length).toBeGreaterThan(0);
   });
 
-  it("stade + rue des Hautes Bièvres : compatibles", () => {
-    expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", "rue-des-hautes-bievres"], routes)).toEqual([]);
+  it("ravito du virage + rue des Hautes Bièvres : compatibles", () => {
+    expect(incompatiblePairs(passages, semi.spots, w, ["ravito-virage", "rue-des-hautes-bievres"], routes)).toEqual([]);
   });
 
   it("spots trop éloignés à pied : paire incompatible, spot à décocher désigné", () => {
@@ -327,7 +327,7 @@ describe("spotsToDrop", () => {
   const w = config.settings.walking;
 
   it("sélection possible : rien à décocher", () => {
-    expect(spotsToDrop(passages, semi.spots, w, ["stade-suant", "rue-des-sources-prolongee"], routes)).toEqual([]);
+    expect(spotsToDrop(passages, semi.spots, w, ["ravito-virage", "rue-des-sources-prolongee"], routes)).toEqual([]);
   });
 
   it("sélection impossible : propose les spots dont le retrait suffit", () => {
@@ -342,7 +342,7 @@ describe("spotsToDrop", () => {
   });
 });
 
-describe("trajets depuis le stade au départ (retour utilisateur)", () => {
+describe("trajets depuis le départ (retour utilisateur)", () => {
   const config = parseEventConfig(rawEvent);
   const semi = config.races[0];
   const passages = computeAllPassages(semi, 5.5, config.settings.margin);
@@ -359,7 +359,7 @@ describe("trajets depuis le stade au départ (retour utilisateur)", () => {
         return evaluateTransition(depart, first, byId, w, routes).slackMinutes >= 0;
       })
       .map((s) => s.id);
-    expect(reachable).toEqual(["ravito-sud", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres", "stade-suant"]);
+    expect(reachable).toEqual(["ravito-sud", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres", "ravito-virage"]);
   });
 
   it("rue des Champs est « juste » : écartée des meilleurs plans, acceptée quand l'utilisateur l'impose", () => {
@@ -374,9 +374,9 @@ describe("trajets depuis le stade au départ (retour utilisateur)", () => {
     expect(tolerant.transitions[0].status).toBe("tight");
   });
 
-  it("le stade se combine avec n'importe quel autre spot (la rue Marius Hue au tour suivant)", () => {
-    for (const s of semi.spots.filter((x) => x.id !== "stade-suant")) {
-      expect(incompatiblePairs(passages, semi.spots, w, ["stade-suant", s.id], routes)).toEqual([]);
+  it("le ravito du virage se combine avec n'importe quel autre spot (la rue Marius Hue au tour suivant)", () => {
+    for (const s of semi.spots.filter((x) => x.id !== "ravito-virage")) {
+      expect(incompatiblePairs(passages, semi.spots, w, ["ravito-virage", s.id], routes)).toEqual([]);
     }
   });
 });
@@ -387,7 +387,7 @@ describe("planWalkingPaths", () => {
   const passages = computeAllPassages(semi, 5.5, config.settings.margin);
   const plan = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).at(-1)!;
 
-  it("trace une seule fois chaque trajet (départ → ravito, ravito ↔ stade), par les rues", () => {
+  it("trace une seule fois chaque trajet (départ → ravito sud, ravito sud ↔ ravito du virage), par les rues", () => {
     const paths = planWalkingPaths(plan, semi.spots, semi.walkingRoutes?.paths);
     expect(paths).toHaveLength(2);
     for (const path of paths) expect(path.length).toBeGreaterThan(5); // chemin réel, pas une ligne droite
@@ -401,7 +401,7 @@ describe("planWalkingPaths", () => {
     };
     expect(paths).toEqual([
       [at("depart"), at("ravito-sud")],
-      [at("ravito-sud"), at("stade-suant")],
+      [at("ravito-sud"), at("ravito-virage")],
     ]);
   });
 });

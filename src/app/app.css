@@ -1786,3 +1786,19 @@ a.btn {
   background: var(--signal);
   color: var(--on-signal);
 }
+
+/* Spots regroupés quand ils se chevauchent (vue d'ensemble) */
+.pin--group {
+  display: flex;
+  gap: 2px;
+  width: auto;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  font-size: 1.1rem;
+}
+
+.pin--group span + span::before {
+  content: "·";
+  margin-right: 2px;
+  opacity: 0.7;
+}

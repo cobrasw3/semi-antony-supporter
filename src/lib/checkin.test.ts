@@ -17,13 +17,13 @@ describe("observedPace / checkinDelay", () => {
     const c = { spotId: "ravito-sud", km: 2.7, minutes: start + 16.2 };
     expect(observedPace(c, start, 5.5, bounds)).toBeCloseTo(5.5 + (2.7 / 7.7) * 0.5);
     // Même écart d'allure au km 14 : confiance ≈ 74 %.
-    const late = { spotId: "stade-suant", km: 14, minutes: start + 14 * 6 };
+    const late = { spotId: "ravito-virage", km: 14, minutes: start + 14 * 6 };
     expect(observedPace(late, start, 5.5, bounds)).toBeCloseTo(5.5 + (14 / 19) * 0.5);
     expect(checkinDelay(c, start, 5.5)).toBeCloseTo(16.2 - 2.7 * 5.5);
   });
 
   it("garde l'allure prévue trop près du départ, et borne les valeurs absurdes", () => {
-    expect(observedPace({ spotId: "stade-suant", km: 0, minutes: start + 2 }, start, 5.5, bounds)).toBe(5.5);
+    expect(observedPace({ spotId: "ravito-virage", km: 0, minutes: start + 2 }, start, 5.5, bounds)).toBe(5.5);
     expect(observedPace({ spotId: "x", km: 20, minutes: start + 20 }, start, 5.5, bounds)).toBe(3);
   });
 });

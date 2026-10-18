@@ -29,3 +29,24 @@ export function directionArrows(track: LatLng[], spacingKm = 0.5): TrackMark[] {
   for (let d = spacingKm / 2; d < total; d += spacingKm) arrows.push(pointAtDistance(track, d));
   return arrows;
 }
+
+/**
+ * Regroupe les marqueurs qui se chevauchent à l'écran (distance en pixels
+ * < `radiusPx`), de proche en proche : A touche B et B touche C → un seul
+ * groupe A·B·C. L'ordre d'entrée est conservé dans chaque groupe.
+ */
+export function groupOverlapping<T extends { x: number; y: number }>(points: T[], radiusPx: number): T[][] {
+  const parent = points.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      if (Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y) < radiusPx) parent[find(j)] = find(i);
+    }
+  }
+  const groups = new Map<number, T[]>();
+  points.forEach((p, i) => {
+    const root = find(i);
+    groups.set(root, [...(groups.get(root) ?? []), p]);
+  });
+  return [...groups.values()];
+}

@@ -4,7 +4,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { AlertTriangle, Check, ChevronDown, ChevronUp, MapPinCheck, Plus, X } from "lucide-react";
 import { PMTiles } from "pmtiles";
@@ -14,7 +14,7 @@ import type { LatLng, Spot } from "../lib/event";
 import { coursePointAt, coursePointLabel, FREE_SPOT_PREFIX, type CoursePoint } from "../lib/freeSpot";
 import { haversineDistanceKm, projectPointOntoRoute } from "../lib/geo";
 import { planWalkingPaths } from "../lib/itinerary";
-import { directionArrows, kmMarks } from "../lib/mapMarkers";
+import { directionArrows, groupOverlapping, kmMarks } from "../lib/mapMarkers";
 import { positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
 import { Carousel, type ToastItem } from "../ui/overlays";
@@ -162,8 +162,10 @@ function FlyTo({ spot }: { spot: Spot | null }) {
   useEffect(() => {
     if (!spot) return;
     // Décalé vers le haut : le tiroir occupe le bas de l'écran.
-    const target = map.project([spot.lat, spot.lng], Math.max(map.getZoom(), 15)).add([0, 90]);
-    map.flyTo(map.unproject(target, Math.max(map.getZoom(), 15)), Math.max(map.getZoom(), 15), { duration: 0.5 });
+    // Zoom 16 au moins : les spots voisins (départ, ravitos) y sont séparés.
+    const z = Math.max(map.getZoom(), 16);
+    const target = map.project([spot.lat, spot.lng], z).add([0, 90]);
+    map.flyTo(map.unproject(target, z), z, { duration: 0.5 });
   }, [spot, map]);
   return null;
 }
@@ -177,6 +179,67 @@ function Calibrage({ track, onResult }: { track: LatLng[]; onResult: (r: { lat: 
     },
   });
   return null;
+}
+
+/** Marqueur de spots qui se chevauchent à ce zoom : « 1 · 3 · 7 ». */
+const groupIcon = (numbers: number[], active: boolean, inPlan: boolean) =>
+  L.divIcon({
+    html: `<div class="pin pin--group${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}">${numbers.map((n) => `<span>${n}</span>`).join("")}</div>`,
+    className: "pin-wrap",
+    iconSize: [16 + numbers.length * 22, 40],
+    iconAnchor: [(16 + numbers.length * 22) / 2, 20],
+  });
+
+/** Distance (px) sous laquelle deux marqueurs de spots se gênent. */
+const OVERLAP_PX = 36;
+
+/**
+ * Spots sur la carte : ceux qui se chevauchent au zoom courant sont réunis
+ * en un marqueur « 1 · 3 · 7 » ; le toucher zoome jusqu'à les séparer.
+ */
+function SpotMarkers({
+  spots,
+  render,
+  groupIcon: icon,
+}: {
+  spots: Spot[];
+  render: (spot: Spot, i: number) => ReactElement;
+  groupIcon: (group: Array<{ spot: Spot; i: number }>) => L.DivIcon;
+}) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(() => map.getZoom());
+  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
+  const groups = useMemo(() => {
+    const pts = spots.map((spot, i) => ({ spot, i, ...map.project([spot.lat, spot.lng], zoom) }));
+    return groupOverlapping(pts, OVERLAP_PX);
+  }, [spots, zoom, map]);
+  return (
+    <>
+      {groups.map((group) => {
+        if (group.length === 1) return render(group[0].spot, group[0].i);
+        const lat = group.reduce((t, g) => t + g.spot.lat, 0) / group.length;
+        const lng = group.reduce((t, g) => t + g.spot.lng, 0) / group.length;
+        const label = group.map((g) => g.spot.shortName).join(", ");
+        return (
+          <Marker
+            key={`groupe-${group.map((g) => g.spot.id).join("-")}`}
+            position={[lat, lng]}
+            icon={icon(group)}
+            title={`${label} : toucher pour zoomer`}
+            alt={label}
+            zIndexOffset={1500}
+            eventHandlers={{
+              click: () =>
+                map.flyToBounds(
+                  group.map((g) => [g.spot.lat, g.spot.lng] as [number, number]),
+                  { paddingTopLeft: [80, 120], paddingBottomRight: [80, 300], maxZoom: 18, duration: 0.5 }
+                ),
+            }}
+          />
+        );
+      })}
+    </>
+  );
 }
 
 /** Toucher la carte (ou appui long) : choisir un point du parcours. */
@@ -434,22 +497,32 @@ export default function MapTab({
           {kms.map((m) => (
             <Marker key={`k${m.label}`} position={[m.lat, m.lng]} icon={kmIcon(m.label ?? "")} interactive={false} keyboard={false} />
           ))}
-          {spots.map((spot, i) => (
-            <Marker
-              key={spot.id}
-              position={[spot.lat, spot.lng]}
-              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free, aidSpotIds.has(spot.id))}
-              title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
-              alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
-              zIndexOffset={i === active ? 2000 : 1000}
-              eventHandlers={{
-                click: () => {
-                  select(i, false);
-                  setDrawerOpen(true);
-                },
-              }}
-            />
-          ))}
+          <SpotMarkers
+            spots={spots}
+            render={(spot, i) => (
+              <Marker
+                key={spot.id}
+                position={[spot.lat, spot.lng]}
+                icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free, aidSpotIds.has(spot.id))}
+                title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
+                alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
+                zIndexOffset={i === active ? 2000 : 1000}
+                eventHandlers={{
+                  click: () => {
+                    select(i, false);
+                    setDrawerOpen(true);
+                  },
+                }}
+              />
+            )}
+            groupIcon={(group) =>
+              groupIcon(
+                group.map((g) => spotNumbers[g.spot.id]),
+                group.some((g) => g.i === active),
+                group.some((g) => planSpotIds.has(g.spot.id))
+              )
+            }
+          />
           {runnerPos && (
             <Marker position={[runnerPos.lat, runnerPos.lng]} icon={runnerIcon} zIndexOffset={3000} title={`${runnerName || "Coureur"} (position estimée)`} />
           )}

@@ -169,9 +169,9 @@ describe("étiquettes de passage", () => {
 describe("semi d'Antony (event.json livré)", () => {
   const config = parseEventConfig(rawEvent);
   const semi = config.races[0];
-  const stade = semi.spots.find((s) => s.id === "stade-suant")!;
+  const stade = semi.spots.find((s) => s.id === "ravito-virage")!;
 
-  it("départ sur l'avenue, puis le stade : fin boucle 1, fin boucle 2, arrivée", () => {
+  it("départ sur l'avenue, puis le ravito du virage : fin boucle 1, fin boucle 2, arrivée", () => {
     const depart = semi.spots.find((s) => s.id === "depart")!;
     expect(computeSpotPassages(depart, semi, 5.5, config.settings.margin).map((p) => p.label)).toEqual(["Départ"]);
     const passages = computeSpotPassages(stade, semi, 5.5, config.settings.margin);
