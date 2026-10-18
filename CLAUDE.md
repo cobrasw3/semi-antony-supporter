@@ -578,3 +578,17 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - L'utilisateur active « Builds for non-production branches » sur le
   Worker ; commit de journal poussé pour relancer le build de
   `feat/sur-mesure` (lien de test attendu dans le journal du build).
+- **Premier déploiement Cloudflare réussi** (build fd3854be, commit
+  63b05bb de `feat/sur-mesure`) — mais via `npx wrangler deploy` (commande
+  de *production*) : la version de la branche est servie sur l'adresse
+  principale https://semi-antony-supporter.p-machard-2001.workers.dev
+  (pas un lien de test par branche). Sans conséquence (adresse non
+  communiquée), à corriger dans Settings → Build : branche de production
+  `main`, commande des branches non-production `npx wrangler versions
+  upload`. Le check GitHub du commit affiche « failure » malgré le
+  journal « Success » (non élucidé).
+  Vérifié sur l'adresse réelle : `/`, `/qr`, `/styleguide`, `sw.js`,
+  `event.json`, manifest, fond de carte en 200 ; en-têtes (CSP, HSTS,
+  X-Frame-Options, Cache-Control) appliqués ; Edge headless : carte
+  en ligne puis hors-ligne (16 / 12 tuiles), onglet Plan OK, aucune
+  violation CSP.
