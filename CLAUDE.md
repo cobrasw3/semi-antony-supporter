@@ -575,3 +575,6 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     fusion validée → la production n'est pas publiée par accident.
   - README : section hébergement réécrite pour les Workers (variables de
     build, builds des branches non-production, lien de test, rollback).
+- L'utilisateur active « Builds for non-production branches » sur le
+  Worker ; commit de journal poussé pour relancer le build de
+  `feat/sur-mesure` (lien de test attendu dans le journal du build).
