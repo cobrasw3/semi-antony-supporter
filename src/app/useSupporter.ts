@@ -21,10 +21,11 @@ import {
   type RunnerPrefs,
 } from "../lib/format";
 import { estimatedKmAfterCheckin, observedPace, recalibratePassages, type Checkin } from "../lib/checkin";
+import { freeSpotToSpot, isFreeSpotId, type FreeSpotData } from "../lib/freeSpot";
 import { estimatedKm } from "../lib/runnerPosition";
 import { planOptions, spotsToDrop } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
-import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
+import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes, type Passage } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
 import { needsOnboarding } from "./onboardingRule";
 
@@ -33,6 +34,7 @@ const ONBOARDED_KEY = "semi-supporter:onboarded";
 const SPOTS_KEY = "semi-supporter:spots-choisis";
 const STAY_KEY = "semi-supporter:reste-sur-place";
 const CHECKIN_KEY = "semi-supporter:pointage";
+const FREE_SPOTS_KEY = "semi-supporter:points-libres";
 
 interface StoredCheckin extends Checkin {
   eventId: string;
@@ -49,7 +51,16 @@ export function useSupporter() {
   useEffect(() => applyBranding(config.branding?.colors), [config.branding?.colors]);
 
   const [raceId, setRaceId] = useState<string | null>(() => new URLSearchParams(window.location.search).get("race"));
-  const race = findRace(config, raceId);
+  const officialRace = findRace(config, raceId);
+  const track = useMemo(() => trackOf(officialRace), [officialRace]);
+  // Points libres choisis sur la carte (gardés sur l'appareil) : des spots en
+  // plus, pour cette course. `race` les inclut ; `officialRace` non.
+  const [freeSpotData, setFreeSpotData] = useState<FreeSpotData[]>(() => readJson<FreeSpotData[]>(FREE_SPOTS_KEY) ?? []);
+  useEffect(() => writeJson(FREE_SPOTS_KEY, freeSpotData), [freeSpotData]);
+  const race = useMemo(() => {
+    const free = freeSpotData.filter((f) => f.raceId === officialRace.id).map((f) => freeSpotToSpot(f, track, officialRace));
+    return free.length ? { ...officialRace, spots: [...officialRace.spots, ...free] } : officialRace;
+  }, [freeSpotData, officialRace, track]);
 
   const [prefs, setPrefs] = useState<RunnerPrefs>(() =>
     resolveInitialPrefs(window.location.search, readJson<Partial<RunnerPrefs>>(PREFS_KEY), {
@@ -106,9 +117,18 @@ export function useSupporter() {
   );
   const checkinPace = checkin && pace ? observedPace(checkin, startMinutes, pace, config.settings.pace) : null;
   const recordCheckin = useCallback(
-    (spotId: string, km: number, minutes: number) =>
-      setStoredCheckin({ spotId, km, minutes, eventId: config.event.id, raceId: race.id, date: clock.date }),
+    (spotId: string, km: number, minutes: number, label?: string) =>
+      setStoredCheckin({ spotId, km, minutes, label, eventId: config.event.id, raceId: race.id, date: clock.date }),
     [config.event.id, race.id, clock.date]
+  );
+  // Passages (recalés s'il y a un pointage) pour une liste de spots donnée.
+  const passagesWith = useCallback(
+    (spots: typeof race.spots): Passage[] => {
+      if (!pace) return [];
+      const planned = computeAllPassages({ ...race, spots }, pace, config.settings.margin);
+      return checkin ? recalibratePassages(planned, checkin, race, pace, config.settings.margin, config.settings.pace) : planned;
+    },
+    [race, pace, checkin, config.settings.margin, config.settings.pace]
   );
   const clearCheckin = useCallback(() => setStoredCheckin(null), []);
   const passagesBySpot = useMemo(() => groupPassagesBySpot(passages), [passages]);
@@ -131,7 +151,13 @@ export function useSupporter() {
     () => (spotMode === "mine" ? chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id)) : []),
     [spotMode, chosenSpots, race.spots]
   );
-  const autoOptions = useMemo(() => planOptions(passages, race.spots, walking, routes), [passages, race.spots, walking, routes]);
+  // Le meilleur parcours se calcule sur les spots officiels seulement (pas
+  // sur les points libres, dont la marche n'est qu'estimée).
+  const officialPassages = useMemo(() => passages.filter((p) => !isFreeSpotId(p.spotId)), [passages]);
+  const autoOptions = useMemo(
+    () => planOptions(officialPassages, officialRace.spots, walking, routes),
+    [officialPassages, officialRace.spots, walking, routes]
+  );
   // Spots imposés : on accepte aussi les trajets justes (⚠️) mais faisables.
   const mineOptions = useMemo(
     () => (required.length ? planOptions(passages, race.spots, walking, routes, required, true) : []),
@@ -147,23 +173,31 @@ export function useSupporter() {
     spotMode === "mine" && required.length > 0 && !spotsConflict ? "custom" : stayPut && stationaryPlan ? "stay" : "best";
   const plan = planKind === "custom" ? mineOptions.at(-1)! : planKind === "stay" ? stationaryPlan! : bestPlan;
 
-  /** Ajoute un spot au parcours sur mesure ; refuse (et dit quoi retirer) si c'est impossible. */
+  /**
+   * Ajoute un spot (ou un nouveau point libre) au parcours sur mesure ;
+   * refuse (et dit quoi retirer) si c'est impossible.
+   */
   const addSpot = useCallback(
-    (id: string): { ok: true } | { ok: false; drop: string[] } => {
+    (id: string, newFree?: FreeSpotData): { ok: true } | { ok: false; drop: string[] } => {
       const candidate = [...(planKind === "custom" ? required : []), id];
-      if (planOptions(passages, race.spots, walking, routes, candidate, true).length === 0) {
-        return { ok: false, drop: spotsToDrop(passages, race.spots, walking, candidate, routes, true).filter((x) => x !== id) };
+      const spots = newFree ? [...race.spots, freeSpotToSpot(newFree, track, officialRace)] : race.spots;
+      const pool = newFree ? passagesWith(spots) : passages;
+      if (planOptions(pool, spots, walking, routes, candidate, true).length === 0) {
+        return { ok: false, drop: spotsToDrop(pool, spots, walking, candidate, routes, true).filter((x) => x !== id) };
       }
+      if (newFree) setFreeSpotData((list) => [...list, newFree]);
       setChosenSpots(candidate);
       setSpotMode("mine");
       return { ok: true };
     },
-    [planKind, required, passages, race.spots, walking, routes]
+    [planKind, required, race.spots, track, officialRace, passagesWith, passages, walking, routes]
   );
   const removeSpot = useCallback(
     (id: string) => {
       const rest = required.filter((x) => x !== id);
       setChosenSpots(rest);
+      // Un point libre n'existe que dans le parcours : on l'oublie.
+      if (isFreeSpotId(id)) setFreeSpotData((list) => list.filter((f) => f.id !== id));
       if (rest.length === 0) setSpotMode("auto");
     },
     [required]
@@ -176,7 +210,6 @@ export function useSupporter() {
     setSpotMode("auto");
     setStayPut(true);
   }, []);
-  const track = useMemo(() => trackOf(race), [race]);
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const spotById = useMemo(() => Object.fromEntries(race.spots.map((s) => [s.id, s])), [race.spots]);
 
@@ -196,6 +229,7 @@ export function useSupporter() {
     config,
     eventData,
     race,
+    officialRace,
     setRaceId,
     prefs,
     updatePrefs,
@@ -207,6 +241,7 @@ export function useSupporter() {
     shareUrl: buildShareUrl(window.location.origin, pace, runnerName, sharedRaceId),
     shareText: buildShareText(runnerName, config.event.shortName),
     passages,
+    passagesWith,
     passagesBySpot,
     checkin,
     checkinPace,

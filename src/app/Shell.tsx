@@ -4,12 +4,13 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Info, Map as MapIcon, MapPinCheck, Megaphone, Navigation, Radio, RefreshCw, Route, WifiOff } from "lucide-react";
 import { checkinDelay, formatDelayFr } from "../lib/checkin";
+import { nearestPassageKm } from "../lib/freeSpot";
 import { track } from "../lib/analytics";
 import { spotWhere } from "../lib/event";
 import { formatPace } from "../lib/format";
 import { minutesToTimeString } from "../lib/timing";
 import { onUpdateReady, reloadKeepingState } from "../pwa/serviceWorker";
-import { AppHeader, Button, RunnerChip, SpotCard } from "../ui/components";
+import { AppHeader, Button, RunnerChip, SpotCard, Stepper } from "../ui/components";
 import { BottomSheet, StatusStrip, TabBar, ToastStack, type ToastItem } from "../ui/overlays";
 import { GoalControls } from "./GoalControls";
 import { headerInfo } from "./liveModel";
@@ -25,6 +26,17 @@ import type { Supporter } from "./useSupporter";
 const MapTab = lazy(() => import("./MapTab"));
 
 export type TabId = "live" | "plan" | "carte" | "infos";
+
+/** Lieu à pointer : un spot, ou un point touché sur la carte. */
+export interface CheckinPlace {
+  spotId: string;
+  /** « Km 3,4 », « Parc Heller » */
+  label: string;
+  /** « au km 3,4 », « au parc Heller » */
+  where: string;
+  /** Km de passage possibles à cet endroit (un par boucle). */
+  kms: number[];
+}
 const TABS: TabId[] = ["live", "plan", "carte", "infos"];
 
 function tabFromHash(): TabId {
@@ -36,6 +48,8 @@ export function Shell({ s }: { s: Supporter }) {
   const [tab, setTabState] = useState<TabId>(tabFromHash);
   const [runnerSheet, setRunnerSheet] = useState(false);
   const [spotSheet, setSpotSheet] = useState<string | null>(null);
+  const [checkinPlace, setCheckinPlace] = useState<CheckinPlace | null>(null);
+  const [checkinMinutes, setCheckinMinutes] = useState(0);
   const [mapFocus, setMapFocus] = useState<{ spotId: string; nonce: number } | null>(null);
   const [planFocus, setPlanFocus] = useState(0);
   const [buildHint, setBuildHint] = useState(0);
@@ -79,11 +93,10 @@ export function Shell({ s }: { s: Supporter }) {
     if (result === "failed") showToast({ id: "copy-failed", text: s.shareUrl }, 8000);
   };
 
-  /** Pointage « passé ici maintenant » + confirmation avec annulation. */
-  const checkinNow = (spotId: string, km: number) => {
+  /** Pointage + confirmation avec annulation. */
+  const checkinAt = (spotId: string, km: number, minutes: number, label?: string) => {
     const previous = s.checkin;
-    const minutes = Math.round(clock.minutes);
-    s.recordCheckin(spotId, km, minutes);
+    s.recordCheckin(spotId, km, minutes, label);
     const delay = checkinDelay({ spotId, km, minutes }, s.startMinutes, pace ?? 0);
     showToast(
       {
@@ -93,7 +106,7 @@ export function Shell({ s }: { s: Supporter }) {
         action: {
           label: "Annuler",
           onClick: () => {
-            if (previous) s.recordCheckin(previous.spotId, previous.km, previous.minutes);
+            if (previous) s.recordCheckin(previous.spotId, previous.km, previous.minutes, previous.label);
             else s.clearCheckin();
             setToast(null);
           },
@@ -102,7 +115,23 @@ export function Shell({ s }: { s: Supporter }) {
       6000
     );
   };
-
+  /** « … vient de passer ici » : pointage à l'heure actuelle. */
+  const checkinNow = (spotId: string, km: number) => checkinAt(spotId, km, Math.round(clock.minutes));
+  /** Pointage à une autre heure (ou en un point libre) : choix de l'heure. */
+  const openCheckin = (place: CheckinPlace) => {
+    setSpotSheet(null);
+    setCheckinMinutes(Math.max(s.startMinutes, Math.floor(clock.minutes)));
+    setCheckinPlace(place);
+  };
+  const confirmCheckin = () => {
+    if (!checkinPlace || !pace) return;
+    const km = nearestPassageKm(checkinPlace.kms, checkinMinutes, s.startMinutes, pace);
+    if (km === null) return;
+    const isSpot = !!s.spotById[checkinPlace.spotId];
+    checkinAt(checkinPlace.spotId, km, checkinMinutes, isSpot ? undefined : checkinPlace.label);
+    setCheckinPlace(null);
+  };
+  const raceDay = clock.date === config.event.date;
   const showOnMap = (spotId: string) => {
     setSpotSheet(null);
     setMapFocus((f) => ({ spotId, nonce: (f?.nonce ?? 0) + 1 }));
@@ -160,7 +189,15 @@ export function Shell({ s }: { s: Supporter }) {
     ),
     carte: (
       <Suspense fallback={<div className="map-loading">Chargement de la carte…</div>}>
-        <MapTab s={s} focus={mapFocus} onOpenSpot={setSpotSheet} planFocus={planFocus} buildHint={buildHint} onToast={showToast} />
+        <MapTab
+          s={s}
+          focus={mapFocus}
+          onOpenSpot={setSpotSheet}
+          planFocus={planFocus}
+          buildHint={buildHint}
+          onToast={showToast}
+          onCheckinAt={raceDay ? openCheckin : undefined}
+        />
       </Suspense>
     ),
     infos: <InfosTab s={s} onShare={share} />,
@@ -233,6 +270,29 @@ export function Shell({ s }: { s: Supporter }) {
         </div>
       </BottomSheet>
 
+      <BottomSheet open={checkinPlace !== null} onClose={() => setCheckinPlace(null)} title="Pointer un passage">
+        {checkinPlace && (
+          <div className="stack">
+            <p>
+              À quelle heure as-tu vu {runnerName || "ton coureur"} {checkinPlace.where} ? Les horaires suivants seront recalés.
+            </p>
+            <Stepper
+              label="Heure du passage"
+              value={checkinMinutes}
+              onChange={setCheckinMinutes}
+              min={s.startMinutes}
+              max={Math.max(s.startMinutes, Math.floor(clock.minutes))}
+              step={1}
+              format={minutesToTimeString}
+              valueText={(m) => minutesToTimeString(m).replace(":", " h ")}
+            />
+            <Button size="lg" block onClick={confirmCheckin} icon={<MapPinCheck size={20} />}>
+              Pointer à {minutesToTimeString(checkinMinutes)}
+            </Button>
+          </div>
+        )}
+      </BottomSheet>
+
       <BottomSheet open={spot !== null} onClose={() => setSpotSheet(null)} title={spot?.shortName ?? ""}>
         {spot && (
           <div className="stack">
@@ -245,22 +305,29 @@ export function Shell({ s }: { s: Supporter }) {
             <p>{spot.description}</p>
             <p className="muted">{spot.access}</p>
             {(() => {
-              if (clock.date !== config.event.date) return null;
+              if (!raceDay || clock.minutes < s.startMinutes) return null;
               const near = (s.passagesBySpot[spot.id] ?? [])
                 .filter((p) => Math.abs(p.estimatedMinutes - clock.minutes) <= 25)
                 .sort((a, b) => Math.abs(a.estimatedMinutes - clock.minutes) - Math.abs(b.estimatedMinutes - clock.minutes))[0];
-              if (!near) return null;
+              const place = { spotId: spot.id, label: spot.shortName, where: spotWhere(spot), kms: spot.km };
               return (
-                <button
-                  type="button"
-                  className="checkin-btn checkin-btn--light"
-                  onClick={() => {
-                    checkinNow(spot.id, near.km);
-                    setSpotSheet(null);
-                  }}
-                >
-                  <MapPinCheck size={20} aria-hidden="true" /> {runnerName || "Mon coureur"} vient de passer ici
-                </button>
+                <div className="stack stack--tight">
+                  {near && (
+                    <button
+                      type="button"
+                      className="checkin-btn checkin-btn--light"
+                      onClick={() => {
+                        checkinNow(spot.id, near.km);
+                        setSpotSheet(null);
+                      }}
+                    >
+                      <MapPinCheck size={20} aria-hidden="true" /> {runnerName || "Mon coureur"} vient de passer ici
+                    </button>
+                  )}
+                  <button type="button" className="link checkin-other" onClick={() => openCheckin(place)}>
+                    {near ? "C'était plus tôt ? Indiquer l'heure" : "Pointer un passage ici (heure au choix)"}
+                  </button>
+                </div>
               );
             })()}
             <h3 className="sheet__sub display">

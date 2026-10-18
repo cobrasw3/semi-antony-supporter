@@ -217,7 +217,7 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner, onCheckin 
         <p className="checkin-note" role="status">
           <MapPinCheck size={18} aria-hidden="true" />
           <span>
-            Horaires recalés sur ton pointage : {spotById[s.checkin.spotId]?.shortName} à{" "}
+            Horaires recalés sur ton pointage : {spotById[s.checkin.spotId]?.shortName ?? s.checkin.label} à{" "}
             {minutesToTimeString(s.checkin.minutes)} ({delaySentence(Name, checkinDelay(s.checkin, startMinutes, pace ?? 0))}).{" "}
             <button type="button" className="link" onClick={s.clearCheckin}>
               Effacer

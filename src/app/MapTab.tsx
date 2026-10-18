@@ -6,11 +6,12 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { AlertTriangle, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronUp, MapPinCheck, Plus, X } from "lucide-react";
 import { PMTiles } from "pmtiles";
 import { leafletLayer } from "protomaps-leaflet";
 import { TILES, USE_LOCAL_BASEMAP } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
+import { coursePointAt, coursePointLabel, FREE_SPOT_PREFIX, type CoursePoint } from "../lib/freeSpot";
 import { projectPointOntoRoute } from "../lib/geo";
 import { planWalkingPaths } from "../lib/itinerary";
 import { directionArrows, kmMarks } from "../lib/mapMarkers";
@@ -18,14 +19,15 @@ import { positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
 import { Carousel, type ToastItem } from "../ui/overlays";
 import { loadBasemap, wholeFileSource } from "../pwa/basemap";
+import type { CheckinPlace } from "./Shell";
 import type { Supporter } from "./useSupporter";
 
 const TILE_ERRORS_BEFORE_FALLBACK = 4;
 const TILE_TIMEOUT_MS = 12_000;
 
-const spotIcon = (n: number, highlight: boolean, active: boolean, inPlan: boolean) =>
+const spotIcon = (n: number, highlight: boolean, active: boolean, inPlan: boolean, free = false) =>
   L.divIcon({
-    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}">${n}</div>`,
+    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}${free ? " pin--libre" : ""}">${n}</div>`,
     className: "pin-wrap",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -47,6 +49,14 @@ const runnerIcon = L.divIcon({
   className: "pin-wrap",
   iconSize: [30, 30],
   iconAnchor: [15, 15],
+});
+
+// Point touché sur le parcours, pas encore ajouté.
+const pickIcon = L.divIcon({
+  html: '<div class="pin pin--pick" aria-hidden="true">+</div>',
+  className: "pin-wrap",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
 const calibrageIcon = L.divIcon({ html: '<div class="map-calib"></div>', className: "pin-wrap", iconSize: [16, 16], iconAnchor: [8, 8] });
@@ -156,6 +166,15 @@ function Calibrage({ track, onResult }: { track: LatLng[]; onResult: (r: { lat: 
   return null;
 }
 
+/** Toucher la carte (ou appui long) : choisir un point du parcours. */
+function PickPoint({ onPick }: { onPick: (latlng: LatLng) => void }) {
+  useMapEvents({
+    click: (e) => onPick(e.latlng),
+    contextmenu: (e) => onPick(e.latlng),
+  });
+  return null;
+}
+
 /** Prochain passage d'un spot (ou le premier, avant le jour J). */
 function nextPassageOf(passages: Passage[] | undefined, now: number | null): Passage | undefined {
   if (!passages?.length) return undefined;
@@ -170,6 +189,7 @@ export default function MapTab({
   planFocus = 0,
   buildHint = 0,
   onToast,
+  onCheckinAt,
 }: {
   s: Supporter;
   focus: { spotId: string; nonce: number } | null;
@@ -179,6 +199,8 @@ export default function MapTab({
   /** Demande « construire mon parcours » venant du Plan : ouvre le tiroir des spots. */
   buildHint?: number;
   onToast: (toast: ToastItem, ms?: number) => void;
+  /** Pointage en un lieu, heure au choix (jour de la course seulement). */
+  onCheckinAt?: (place: CheckinPlace) => void;
 }) {
   const { race, track, spotNumbers, passagesBySpot, clock, config, runnerName, plan, planKind, customSpots, addSpot, removeSpot, useBestPlan, spotById } = s;
   const spots = race.spots;
@@ -188,6 +210,9 @@ export default function MapTab({
   const [tilesLoaded, setTilesLoaded] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
   const tileErrors = useRef(0);
+  // Point du parcours touché sur la carte (avant « Ajouter » / pointage).
+  const [picked, setPicked] = useState<CoursePoint | null>(null);
+  const [selectId, setSelectId] = useState<string | null>(null);
   const calibrage = new URLSearchParams(window.location.search).get("calibrage") === "1";
   const [calib, setCalib] = useState<{ lat: number; lng: number; km: number; off: number } | null>(null);
 
@@ -232,6 +257,55 @@ export default function MapTab({
     }
   };
   useEffect(() => setFitPlan(planFocus), [planFocus]);
+
+  const pickPoint = (latlng: LatLng) => {
+    const point = coursePointAt(track, race, latlng);
+    if (!point) {
+      setPicked(null);
+      onToast({ id: "hors-parcours", text: "Touche le tracé du parcours pour y choisir un point." }, 2500);
+      return;
+    }
+    setPicked(point);
+    setDrawerOpen(true);
+  };
+  const pickedPassages = useMemo(
+    () => (picked ? s.passagesWith([{ ...spots[0], id: "point", km: picked.km }]) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [picked, s.passagesWith]
+  );
+  const addPicked = () => {
+    if (!picked) return;
+    const id = `${FREE_SPOT_PREFIX}${Date.now().toString(36)}`;
+    const label = coursePointLabel(picked.kmInLoop);
+    const result = s.addSpot(id, { id, raceId: s.officialRace.id, kmInLoop: picked.kmInLoop });
+    if (result.ok) {
+      setPicked(null);
+      setSelectId(id);
+      onToast({ id: `ajout-${id}`, text: `${label} ajouté à ton parcours.` }, 2500);
+    } else {
+      const drop = result.drop.map((d) => spotById[d]?.shortName).filter(Boolean);
+      onToast(
+        {
+          id: `refus-${id}`,
+          tone: "warn",
+          icon: <AlertTriangle size={18} />,
+          text: drop.length
+            ? `Impossible d'ajouter ce point avec tes autres spots : retire ${drop.join(" ou ")} d'abord.`
+            : `Impossible d'ajouter ce point : trop loin de tes autres spots pour l'allure de ${runnerName || "ton coureur"}.`,
+        },
+        5000
+      );
+    }
+  };
+  // Nouveau point ajouté : on le sélectionne dans le carrousel.
+  useEffect(() => {
+    if (!selectId) return;
+    const i = spots.findIndex((sp) => sp.id === selectId);
+    if (i >= 0) {
+      setActive(i);
+      setSelectId(null);
+    }
+  }, [selectId, spots]);
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
   const raceDay = clock.date === config.event.date;
   const now = raceDay ? clock.minutes : null;
@@ -336,7 +410,7 @@ export default function MapTab({
             <Marker
               key={spot.id}
               position={[spot.lat, spot.lng]}
-              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id))}
+              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free)}
               title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               zIndexOffset={i === active ? 2000 : 1000}
@@ -355,7 +429,8 @@ export default function MapTab({
           <Resize />
           <FlyTo spot={flyTarget} />
           <FitToPlan paths={planPaths} nonce={fitPlan} />
-          {calibrage && <Calibrage track={track} onResult={setCalib} />}
+          {calibrage ? <Calibrage track={track} onResult={setCalib} /> : <PickPoint onPick={pickPoint} />}
+          {picked && <Marker position={[picked.lat, picked.lng]} icon={pickIcon} zIndexOffset={4000} interactive={false} keyboard={false} />}
           {calibrage && calib && <Marker position={[calib.lat, calib.lng]} icon={calibrageIcon} />}
         </MapContainer>
         {!tilesLoaded && !showPlan && <div className="map-badge">Chargement du fond de carte…</div>}
@@ -385,18 +460,53 @@ export default function MapTab({
             {drawerOpen ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
           </span>
         </button>
-        {drawerOpen && (
+        {drawerOpen && picked && (
+          <div className="map-card map-card--pick" role="group" aria-label={`Point choisi : ${coursePointLabel(picked.kmInLoop)}`}>
+            <div className="map-card__pick-head">
+              <span className="spot-badge spot-badge--pick" aria-hidden="true">+</span>
+              <span className="map-card__main">
+                <span className="map-card__name">{coursePointLabel(picked.kmInLoop)} · point choisi</span>
+                <span className="map-card__meta">
+                  {pickedPassages.length ? `Passages vers ${pickedPassages.map((p) => p.estimatedTime).join(", ")}` : "Indique l'allure pour voir les horaires"}
+                </span>
+              </span>
+              <button type="button" className="icon-btn icon-btn--sm" aria-label="Fermer" onClick={() => setPicked(null)}>
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="map-card__pick-actions">
+              <button type="button" className="map-card__toggle" onClick={addPicked}>
+                <Plus size={18} strokeWidth={3} aria-hidden="true" /> Ajouter à mon parcours
+              </button>
+              {onCheckinAt && (
+                <button
+                  type="button"
+                  className="checkin-btn checkin-btn--light"
+                  onClick={() => {
+                    const label = coursePointLabel(picked.kmInLoop);
+                    onCheckinAt({ spotId: `point-${picked.kmInLoop}`, label, where: `au ${label.toLowerCase()}`, kms: picked.km });
+                    setPicked(null);
+                  }}
+                >
+                  <MapPinCheck size={20} aria-hidden="true" /> Pointer le passage de {runnerName || "mon coureur"} ici
+                </button>
+              )}
+            </div>
+            <p className="caption">Marche vers ce point estimée à vol d'oiseau : garde un peu de marge.</p>
+          </div>
+        )}
+        {drawerOpen && !picked && (
           <>
             <p className="map-drawer__hint">
               {planKind === "custom" ? (
                 <>
-                  Ajoute ou retire des spots : le parcours se recalcule.{" "}
+                  Ajoute ou retire des spots (ou touche le parcours) : il se recalcule.{" "}
                   <button type="button" className="link" onClick={useBestPlan}>
                     Meilleur parcours
                   </button>
                 </>
               ) : (
-                "Touche « Ajouter » sur un spot pour construire ton parcours."
+                "Touche « Ajouter » sur un spot, ou touche le parcours pour choisir ton propre point."
               )}
             </p>
             <Carousel label="Spots du parcours" activeIndex={active} onActiveChange={(i) => select(i)}>

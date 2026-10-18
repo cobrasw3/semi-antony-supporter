@@ -42,6 +42,8 @@ export interface Spot {
   highlight?: boolean;
   /** Positions (km depuis le départ) où le parcours passe par ce spot. */
   km: number[];
+  /** Point libre choisi sur la carte par l'utilisateur (marche estimée). */
+  free?: boolean;
 }
 
 export interface Race {

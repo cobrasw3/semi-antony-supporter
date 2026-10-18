@@ -1684,3 +1684,64 @@ a.btn {
   flex: none;
   margin-top: 1px;
 }
+
+/* Points libres choisis sur la carte */
+.pin--libre {
+  border-style: dashed;
+  border-color: var(--sprint);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.pin--pick {
+  background: var(--signal);
+  color: var(--on-signal);
+  font-size: 1.6rem;
+}
+
+.map-card--pick {
+  width: auto;
+  margin: var(--s-2) var(--s-4) var(--s-3);
+  gap: var(--s-3);
+}
+
+.map-card__pick-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.map-card__pick-head .map-card__main {
+  flex: 1;
+}
+
+.map-card__pick-actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.map-card--pick .checkin-btn {
+  min-height: 48px;
+  font-size: var(--t-sm);
+}
+
+.map-card--pick .caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.spot-badge--pick {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+.icon-btn--sm {
+  width: 36px;
+  height: 36px;
+}
+
+.checkin-other {
+  align-self: center;
+}

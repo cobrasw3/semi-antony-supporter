@@ -603,3 +603,39 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   dans la liste des builds). Format : `<branche>-semi-antony-supporter.p-machard-2001.workers.dev`.
   Vérifié : pages, sw.js, event.json, fond de carte en 200, en-têtes de
   sécurité appliqués, carte hors-ligne (16 / 12 tuiles).
+
+### 2026-10-18 (suite) — Points libres et pointage à l'heure choisie (branche `feat/sur-mesure`)
+
+- Précision de l'utilisateur : « choisir des spots » voulait dire toucher
+  **n'importe où** sur le parcours (pas seulement les 6 spots), et le
+  pointage doit pouvoir se faire en tout lieu et à une heure donnée. Choix
+  validé : marche vers un point libre **estimée** (vol d'oiseau × 1,3),
+  hors-ligne, aucune position envoyée.
+- `lib/freeSpot.ts` (testé, 6 tests) : `coursePointAt` (projection sur le
+  tracé, refus au-delà de 150 m, km à l'échelle officielle), `passageKms`
+  (un passage par boucle), `freeSpotToSpot` (« Km 3,4 », « au km 3,4 »,
+  `free: true`), `nearestPassageKm` (boucle dont l'heure prévue est la plus
+  proche de l'heure pointée).
+- `useSupporter` : points libres gardés sur l'appareil
+  (`semi-supporter:points-libres`) et ajoutés aux spots de la course
+  (`race` ; `officialRace` sans eux). Le meilleur parcours reste calculé
+  sur les spots officiels. `addSpot(id, nouveauPoint?)` vérifie la
+  faisabilité avec le point avant de l'enregistrer ; retirer un point libre
+  du parcours l'oublie. `passagesWith(spots)` (passages recalés).
+  Pointage : champ `label` pour un lieu qui n'est pas un spot.
+- Carte : toucher (ou appui long) le tracé → marqueur « + » et carte
+  « Km 3,1 · point choisi · Passages vers 14:47, 15:26, 16:04 » avec
+  « Ajouter à mon parcours » et, le jour J, « Pointer le passage de Léa
+  ici » ; hors du tracé → toast « Touche le tracé du parcours… ». Points
+  libres affichés en pointillés orange, numérotés à la suite.
+- Pointage à l'heure choisie : tiroir « Pointer un passage » (« À quelle
+  heure as-tu vu Léa au km 1,4 ? », stepper à la minute, de l'heure du
+  départ à maintenant) ; ouvert depuis un point de la carte ou la fiche
+  d'un spot (« C'était plus tôt ? Indiquer l'heure » / « Pointer un passage
+  ici »). Vérifié : km 1,4 pointé à 15:32 → boucle 2 (km 8,4) retenue,
+  « 16 min de retard », rappel Live « Horaires recalés sur ton pointage :
+  Km 1,4 à 15:32 ».
+- **Bug existant corrigé** : les libellés `.sr-only` du carrousel (position
+  absolue) échappaient au défilement → page élargie (1560 px au lieu de
+  390, tiroirs hors écran) dès qu'on sélectionnait un spot lointain.
+  `.carousel { position: relative }`.

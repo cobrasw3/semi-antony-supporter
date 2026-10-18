@@ -18,6 +18,8 @@ export interface Checkin {
   km: number;
   /** Heure réelle du passage, en minutes depuis minuit. */
   minutes: number;
+  /** Nom du lieu quand ce n'est pas un spot (point touché sur la carte). */
+  label?: string;
 }
 
 const KM_EPSILON = 0.05;

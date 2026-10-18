@@ -816,6 +816,9 @@ div.spot-card__head {
 /* ------------------------------------------------------------ Carrousel */
 
 .carousel {
+  /* Contient les éléments positionnés (ex. .sr-only) : sinon ils échappent
+     au défilement et élargissent la page quand on fait défiler loin. */
+  position: relative;
   display: flex;
   gap: var(--s-3);
   overflow-x: auto;
