@@ -1640,3 +1640,47 @@ a.btn {
   top: calc(var(--top-h, 120px) + var(--s-3));
   bottom: auto;
 }
+
+/* Pointage du jour J */
+.checkin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--s-4);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--signal);
+  color: var(--on-signal);
+  font: 800 var(--t-md) / 1 var(--font-body);
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease);
+}
+
+.checkin-btn:active {
+  transform: scale(0.97);
+}
+
+.checkin-btn--light {
+  background: var(--strong);
+  color: var(--on-strong);
+}
+
+.checkin-note {
+  display: flex;
+  gap: var(--s-2);
+  margin: var(--s-3) var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--soft);
+  color: var(--on-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.checkin-note svg {
+  flex: none;
+  margin-top: 1px;
+}

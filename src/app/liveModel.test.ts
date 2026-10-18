@@ -3,7 +3,7 @@ import rawEvent from "../../public/data/event.json";
 import { computeDayStatus } from "../lib/dayStatus";
 import { parseEventConfig } from "../lib/event";
 import { computeAllPassages, timeStringToMinutes } from "../lib/timing";
-import { countdown, headerInfo, planProgress, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
+import { checkinTarget, countdown, headerInfo, planProgress, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
 
 const config = parseEventConfig(rawEvent);
 const semi = config.races[0];
@@ -85,6 +85,19 @@ describe("planProgress", () => {
     const r = planProgress(steps, timeStringToMinutes("14:45"));
     expect(r.current?.spotId).toBe("parc-heller");
     expect(r.next?.kind).toBe("finish");
+  });
+
+  it("coureur en retard : l'étape reste en cours quelques minutes après sa fourchette", () => {
+    // Fourchette du parc Heller : 14:43–14:47.
+    expect(planProgress(steps, timeStringToMinutes("14:49")).current).toBeNull();
+    expect(planProgress(steps, timeStringToMinutes("14:49"), 5).current?.spotId).toBe("parc-heller");
+    // … sauf si elle a déjà été pointée.
+    expect(planProgress(steps, timeStringToMinutes("14:49"), 5, (p) => p.spotId === "parc-heller").current).toBeNull();
+  });
+
+  it("le pointage vise l'étape la plus proche de maintenant (pas la suivante)", () => {
+    expect(checkinTarget(steps, timeStringToMinutes("14:48"), () => false)?.spotId).toBe("parc-heller");
+    expect(checkinTarget(steps, timeStringToMinutes("15:30"), () => false)).toBeNull();
   });
 
   it("plan terminé : ni étape en cours ni suivante", () => {

@@ -12,7 +12,7 @@ import type { LatLng, Spot } from "../lib/event";
 import { projectPointOntoRoute } from "../lib/geo";
 import { planWalkingPaths } from "../lib/itinerary";
 import { directionArrows, kmMarks } from "../lib/mapMarkers";
-import { estimatedKm, positionOnTrack } from "../lib/runnerPosition";
+import { positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
 import { Carousel, type ToastItem } from "../ui/overlays";
 import type { Supporter } from "./useSupporter";
@@ -122,7 +122,7 @@ export default function MapTab({
   buildHint?: number;
   onToast: (toast: ToastItem, ms?: number) => void;
 }) {
-  const { race, track, spotNumbers, passagesBySpot, clock, config, pace, startMinutes, runnerName, plan, planKind, customSpots, addSpot, removeSpot, useBestPlan, spotById } = s;
+  const { race, track, spotNumbers, passagesBySpot, clock, config, runnerName, plan, planKind, customSpots, addSpot, removeSpot, useBestPlan, spotById } = s;
   const spots = race.spots;
   const [active, setActive] = useState(() => Math.max(0, spots.findIndex((sp) => sp.id === focus?.spotId)));
   const [flyTarget, setFlyTarget] = useState<Spot | null>(focus ? spots.find((sp) => sp.id === focus.spotId) ?? null : null);
@@ -175,7 +175,7 @@ export default function MapTab({
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
   const raceDay = clock.date === config.event.date;
   const now = raceDay ? clock.minutes : null;
-  const runnerKm = raceDay && pace ? estimatedKm(clock.minutes, startMinutes, pace, race.distanceKm) : null;
+  const runnerKm = s.runnerKm;
   const runnerPos = runnerKm !== null && runnerKm < race.distanceKm ? positionOnTrack(runnerKm, track, race) : null;
 
   // Recentrage demandé depuis un autre onglet.

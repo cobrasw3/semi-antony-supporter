@@ -2,17 +2,18 @@
 // prochains passages. Avant le jour J : compte à rebours + « Prépare ta journée ».
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Footprints, LocateFixed, WifiOff } from "lucide-react";
+import { ArrowRight, Check, Footprints, LocateFixed, MapPinCheck, WifiOff } from "lucide-react";
+import { checkinDelay, delaySentence } from "../lib/checkin";
 import { formatLongDate } from "../lib/clock";
 import { spotWhere } from "../lib/event";
 import { RunnerLabel } from "../lib/format";
 import { walkBetween } from "../lib/itinerary";
-import { estimatedKm, formatKmFr } from "../lib/runnerPosition";
+import { formatKmFr } from "../lib/runnerPosition";
 import { minutesToTimeString, type Passage } from "../lib/timing";
 import { readJson, writeJson } from "../lib/storage";
 import { Button, CountdownRing, SpotCard } from "../ui/components";
 import { haptic } from "../ui/haptics";
-import { countdown, planProgress, ringProgress, startProgress, upcomingPassages } from "./liveModel";
+import { checkinTarget, countdown, planProgress, ringProgress, startProgress, upcomingPassages } from "./liveModel";
 import { Timeline } from "./Timeline";
 import type { useGeolocation } from "./useGeolocation";
 import type { Supporter } from "./useSupporter";
@@ -23,13 +24,15 @@ interface LiveTabProps {
   onGoPlan: () => void;
   onOpenSpot: (spotId: string) => void;
   onEditRunner: () => void;
+  /** Pointe le passage du coureur (spot, km) maintenant ; la coque affiche la confirmation. */
+  onCheckin: (spotId: string, km: number) => void;
 }
 
-export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabProps) {
+export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner, onCheckin }: LiveTabProps) {
   const { dayStatus: status, passages, plan, race, config, clock, startMinutes, pace, spotById, spotNumbers, runnerName } = s;
   const Name = RunnerLabel(runnerName);
   const raceDay = clock.date === config.event.date;
-  const runnerKm = raceDay && pace ? estimatedKm(clock.minutes, startMinutes, pace, race.distanceKm) : null;
+  const runnerKm = s.runnerKm;
 
   if (!status) {
     return (
@@ -44,6 +47,16 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
   }
 
   const spotName = (p: Passage) => spotById[p.spotId]?.shortName ?? p.spotId;
+  // Pointage : vise l'étape du plan la plus proche de maintenant (pas forcément
+  // celle affichée en grand, ex. coureur en retard sur l'étape précédente).
+  const isCheckedIn = (p: Passage) => !!s.checkin && s.checkin.spotId === p.spotId && Math.abs(s.checkin.km - p.km) < 0.05;
+  const target = raceDay ? checkinTarget(plan.steps, clock.minutes, isCheckedIn) : null;
+  const checkinButton = target ? (
+    <CheckinButton
+      label={`${Name} vient de passer ${spotById[target.spotId] ? spotWhere(spotById[target.spotId]) : ""}`}
+      onClick={() => onCheckin(target.spotId, target.km)}
+    />
+  ) : null;
   const walkTo = (p: Passage) =>
     geo.position && spotById[p.spotId] ? walkBetween(geo.position, spotById[p.spotId], config.settings.walking) : null;
 
@@ -100,7 +113,7 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
 
     case "live": {
       // Le supporter suit SON plan : étape en cours et prochaine étape du plan.
-      const { current, next, nextIndex } = planProgress(plan.steps, clock.minutes);
+      const { current, next, nextIndex } = planProgress(plan.steps, clock.minutes, LATE_GRACE_MINUTES, isCheckedIn);
       const total = plan.steps.length;
       if (current) {
         const index = plan.steps.indexOf(current);
@@ -114,6 +127,7 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
             <p className="hero__next">
               {Name} peut passer {spotById[current.spotId] ? spotWhere(spotById[current.spotId]) : ""} en ce moment.
             </p>
+            {checkinButton}
             {next && (
               <p className="hero__then">
                 Ensuite : {spotName(next)} vers <strong className="num">{next.estimatedTime}</strong>
@@ -147,6 +161,7 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
               walk={walk ? `≈ ${Math.ceil(walk.minutes)} min à pied (${formatWalk(walk.walkKm)}, estimation)` : null}
               late={walk ? walk.minutes > minutesToNext : false}
             />
+            {checkinButton}
           </section>
         );
       } else {
@@ -197,6 +212,19 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
   return (
     <div className="live">
       {hero}
+
+      {s.checkin && raceDay && (
+        <p className="checkin-note" role="status">
+          <MapPinCheck size={18} aria-hidden="true" />
+          <span>
+            Horaires recalés sur ton pointage : {spotById[s.checkin.spotId]?.shortName} à{" "}
+            {minutesToTimeString(s.checkin.minutes)} ({delaySentence(Name, checkinDelay(s.checkin, startMinutes, pace ?? 0))}).{" "}
+            <button type="button" className="link" onClick={s.clearCheckin}>
+              Effacer
+            </button>
+          </span>
+        </p>
+      )}
 
       <Timeline race={race} runnerKm={runnerKm} planPassages={plan.steps} caption={caption} />
 
@@ -253,6 +281,18 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
     </div>
   );
 }
+
+/** Gros bouton du jour J : « Léa est passée ! » (recale les horaires suivants). */
+function CheckinButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="checkin-btn" onClick={onClick}>
+      <Check size={20} strokeWidth={3} aria-hidden="true" /> {label}
+    </button>
+  );
+}
+
+/** Une étape reste « en cours » ce temps après sa fourchette (coureur en retard). */
+const LATE_GRACE_MINUTES = 5;
 
 function formatWalk(km: number) {
   return km < 1 ? `${Math.round(km * 100) * 10} m` : `${km.toFixed(1).replace(".", ",")} km`;

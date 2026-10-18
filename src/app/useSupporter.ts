@@ -20,6 +20,8 @@ import {
   updateCurrentUrl,
   type RunnerPrefs,
 } from "../lib/format";
+import { estimatedKmAfterCheckin, observedPace, recalibratePassages, type Checkin } from "../lib/checkin";
+import { estimatedKm } from "../lib/runnerPosition";
 import { planOptions, spotsToDrop } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
@@ -30,6 +32,14 @@ const PREFS_KEY = "semi-supporter:prefs";
 const ONBOARDED_KEY = "semi-supporter:onboarded";
 const SPOTS_KEY = "semi-supporter:spots-choisis";
 const STAY_KEY = "semi-supporter:reste-sur-place";
+const CHECKIN_KEY = "semi-supporter:pointage";
+
+interface StoredCheckin extends Checkin {
+  eventId: string;
+  raceId: string;
+  /** Jour du pointage (un pointage de la veille ne compte pas). */
+  date: string;
+}
 const SPOT_MODE_KEY = "semi-supporter:mode-spots";
 
 export function useSupporter() {
@@ -69,10 +79,38 @@ export function useSupporter() {
     window.history.replaceState(window.history.state, "", updateCurrentUrl(window.location.href, pace, runnerName, sharedRaceId));
   }, [pace, runnerName, sharedRaceId, onboarding]);
 
-  const passages = useMemo(
+  const clock = useEventClock(config.event.date, config.event.timeZone);
+  const startMinutes = timeStringToMinutes(race.startTime);
+  const plannedPassages = useMemo(
     () => (pace ? computeAllPassages(race, pace, config.settings.margin) : []),
     [race, pace, config.settings.margin]
   );
+
+  // Pointage « Léa est passée ici » : valable le jour de la course (ou en
+  // démo), pour cet événement et cette course. Reste sur l'appareil.
+  const [storedCheckin, setStoredCheckin] = useState<StoredCheckin | null>(() => readJson<StoredCheckin>(CHECKIN_KEY));
+  useEffect(() => writeJson(CHECKIN_KEY, storedCheckin), [storedCheckin]);
+  const checkin =
+    storedCheckin &&
+    storedCheckin.eventId === config.event.id &&
+    storedCheckin.raceId === race.id &&
+    storedCheckin.date === clock.date
+      ? storedCheckin
+      : null;
+  const passages = useMemo(
+    () =>
+      checkin && pace
+        ? recalibratePassages(plannedPassages, checkin, race, pace, config.settings.margin, config.settings.pace)
+        : plannedPassages,
+    [checkin, pace, plannedPassages, race, config.settings.margin, config.settings.pace]
+  );
+  const checkinPace = checkin && pace ? observedPace(checkin, startMinutes, pace, config.settings.pace) : null;
+  const recordCheckin = useCallback(
+    (spotId: string, km: number, minutes: number) =>
+      setStoredCheckin({ spotId, km, minutes, eventId: config.event.id, raceId: race.id, date: clock.date }),
+    [config.event.id, race.id, clock.date]
+  );
+  const clearCheckin = useCallback(() => setStoredCheckin(null), []);
   const passagesBySpot = useMemo(() => groupPassagesBySpot(passages), [passages]);
   // Spots choisis par l'utilisateur (aucun = tous) : le plan optimal se
   // calcule sur leurs seuls passages.
@@ -142,8 +180,13 @@ export function useSupporter() {
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const spotById = useMemo(() => Object.fromEntries(race.spots.map((s) => [s.id, s])), [race.spots]);
 
-  const clock = useEventClock(config.event.date, config.event.timeZone);
-  const startMinutes = timeStringToMinutes(race.startTime);
+  // Km parcourus estimés (le jour J / en démo), recalés après un pointage.
+  const runnerKm =
+    clock.date === config.event.date && pace
+      ? checkin && checkinPace
+        ? estimatedKmAfterCheckin(clock.minutes, checkin, checkinPace, race.distanceKm)
+        : estimatedKm(clock.minutes, startMinutes, pace, race.distanceKm)
+      : null;
   const dayStatus = computeDayStatus(passages, startMinutes, clock, config.event.date);
   const online = useOnline();
   const annoncesData = useRemoteJson("/data/annonces.json", "semi-supporter:annonces", BUNDLED_ANNONCES, parseAnnonces);
@@ -165,6 +208,12 @@ export function useSupporter() {
     shareText: buildShareText(runnerName, config.event.shortName),
     passages,
     passagesBySpot,
+    checkin,
+    checkinPace,
+    runnerKm,
+    recordCheckin,
+    clearCheckin,
+    plannedPassages,
     plan,
     planKind,
     bestPlan,

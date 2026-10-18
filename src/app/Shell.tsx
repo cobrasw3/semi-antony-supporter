@@ -2,11 +2,11 @@
 // tiroirs (coureur, spot), toasts et fines barres d'état. Affichage seulement.
 
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Info, Map as MapIcon, Megaphone, Navigation, Radio, RefreshCw, Route, WifiOff } from "lucide-react";
+import { Info, Map as MapIcon, MapPinCheck, Megaphone, Navigation, Radio, RefreshCw, Route, WifiOff } from "lucide-react";
+import { checkinDelay, formatDelayFr } from "../lib/checkin";
 import { track } from "../lib/analytics";
 import { spotWhere } from "../lib/event";
 import { formatPace } from "../lib/format";
-import { estimatedKm } from "../lib/runnerPosition";
 import { minutesToTimeString } from "../lib/timing";
 import { onUpdateReady, reloadKeepingState } from "../pwa/serviceWorker";
 import { AppHeader, Button, RunnerChip, SpotCard } from "../ui/components";
@@ -79,14 +79,37 @@ export function Shell({ s }: { s: Supporter }) {
     if (result === "failed") showToast({ id: "copy-failed", text: s.shareUrl }, 8000);
   };
 
+  /** Pointage « passé ici maintenant » + confirmation avec annulation. */
+  const checkinNow = (spotId: string, km: number) => {
+    const previous = s.checkin;
+    const minutes = Math.round(clock.minutes);
+    s.recordCheckin(spotId, km, minutes);
+    const delay = checkinDelay({ spotId, km, minutes }, s.startMinutes, pace ?? 0);
+    showToast(
+      {
+        id: `pointage-${spotId}-${km}`,
+        icon: <MapPinCheck size={18} />,
+        text: `Pointé à ${minutesToTimeString(minutes)} : ${formatDelayFr(delay)}. Horaires recalés.`,
+        action: {
+          label: "Annuler",
+          onClick: () => {
+            if (previous) s.recordCheckin(previous.spotId, previous.km, previous.minutes);
+            else s.clearCheckin();
+            setToast(null);
+          },
+        },
+      },
+      6000
+    );
+  };
+
   const showOnMap = (spotId: string) => {
     setSpotSheet(null);
     setMapFocus((f) => ({ spotId, nonce: (f?.nonce ?? 0) + 1 }));
     setTab("carte");
   };
 
-  const raceDay = clock.date === config.event.date;
-  const runnerKm = raceDay && pace ? estimatedKm(clock.minutes, s.startMinutes, pace, race.distanceKm) : null;
+  const runnerKm = s.runnerKm;
   const info = headerInfo(s.dayStatus, { eventDate: config.event.date, startTime: race.startTime, runnerKm });
 
   // Toasts : mise à jour, annonces, alerte de passage, retour d'action.
@@ -110,7 +133,16 @@ export function Shell({ s }: { s: Supporter }) {
 
   const spot = spotSheet ? s.spotById[spotSheet] : null;
   const panels: Record<TabId, ReactNode> = {
-    live: <LiveTab s={s} geo={geo} onGoPlan={() => setTab("plan")} onOpenSpot={setSpotSheet} onEditRunner={() => setRunnerSheet(true)} />,
+    live: (
+      <LiveTab
+        s={s}
+        geo={geo}
+        onGoPlan={() => setTab("plan")}
+        onOpenSpot={setSpotSheet}
+        onEditRunner={() => setRunnerSheet(true)}
+        onCheckin={checkinNow}
+      />
+    ),
     plan: (
       <PlanTab
         s={s}
@@ -212,6 +244,25 @@ export function Shell({ s }: { s: Supporter }) {
             </p>
             <p>{spot.description}</p>
             <p className="muted">{spot.access}</p>
+            {(() => {
+              if (clock.date !== config.event.date) return null;
+              const near = (s.passagesBySpot[spot.id] ?? [])
+                .filter((p) => Math.abs(p.estimatedMinutes - clock.minutes) <= 25)
+                .sort((a, b) => Math.abs(a.estimatedMinutes - clock.minutes) - Math.abs(b.estimatedMinutes - clock.minutes))[0];
+              if (!near) return null;
+              return (
+                <button
+                  type="button"
+                  className="checkin-btn checkin-btn--light"
+                  onClick={() => {
+                    checkinNow(spot.id, near.km);
+                    setSpotSheet(null);
+                  }}
+                >
+                  <MapPinCheck size={20} aria-hidden="true" /> {runnerName || "Mon coureur"} vient de passer ici
+                </button>
+              );
+            })()}
             <h3 className="sheet__sub display">
               {runnerName || "Ton coureur"} passe {spotWhere(spot)}
             </h3>

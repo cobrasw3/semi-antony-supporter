@@ -497,3 +497,20 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   « Dans ton parcours » sur chaque spot du carrousel, en-tête du tiroir
   « Ton parcours · 4 passages · 1,4 km », toasts de confirmation / refus
   (affichés sous l'en-tête sur la carte pour ne pas masquer le tiroir).
+- **Étape 2 — pointage « Léa vient de passer »** (local à l'appareil) :
+  `lib/checkin.ts` (testé) : `recalibratePassages` (passages d'avant
+  inchangés, passage pointé = heure réelle, suivants projetés depuis le
+  pointage, fourchettes repartant de zéro) avec une allure mêlant prévue et
+  observée (`observedPace`, confiance = km / (km + 5) : un écart au km 2,7
+  reflète souvent la cohue du départ) ; position du coureur recalée.
+  `useSupporter` : pointage stocké (`semi-supporter:pointage`, valable pour
+  l'événement, la course et le jour) ; tout l'app (plan, Live, carte,
+  en-tête) utilise les passages recalés. Live : bouton jaune « Léa vient de
+  passer au parc Heller » qui vise l'étape du plan la plus proche de
+  maintenant (± 15 min, `checkinTarget`) — corrige un piège trouvé en test
+  (coureur en retard → le héros affichait déjà l'étape suivante, le
+  pointage aurait visé le stade : « 20 min d'avance ») ; une étape reste
+  « Ouvre l'œil » 5 min après sa fourchette tant qu'elle n'est pas pointée.
+  Toast « Pointé à 14:48 : 3 min de retard. Horaires recalés » + Annuler ;
+  rappel « Horaires recalés sur ton pointage … Effacer ». Fiche spot :
+  « Léa vient de passer ici » (passage le plus proche de maintenant, ± 25 min).

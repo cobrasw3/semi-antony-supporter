@@ -82,9 +82,36 @@ export function upcomingPassages(passages: Passage[], nowMinutes: number | null,
   return passages.filter((p) => p.windowEndMinutes >= nowMinutes).slice(0, count);
 }
 
-/** Où en est-on dans le plan : étape en cours (dans sa fourchette) et prochaine étape. */
-export function planProgress(steps: Passage[], nowMinutes: number): { current: Passage | null; next: Passage | null; nextIndex: number } {
-  const current = steps.find((p) => p.windowStartMinutes <= nowMinutes && nowMinutes <= p.windowEndMinutes) ?? null;
+/**
+ * Où en est-on dans le plan : étape en cours et prochaine étape. Une étape
+ * reste « en cours » `graceMinutes` après sa fourchette (coureur en retard),
+ * sauf si elle a déjà été pointée (`isDone`).
+ */
+export function planProgress(
+  steps: Passage[],
+  nowMinutes: number,
+  graceMinutes = 0,
+  isDone: (p: Passage) => boolean = () => false
+): { current: Passage | null; next: Passage | null; nextIndex: number } {
+  const current =
+    steps.find((p) => !isDone(p) && p.windowStartMinutes <= nowMinutes && nowMinutes <= p.windowEndMinutes + graceMinutes) ?? null;
   const nextIndex = steps.findIndex((p) => p.windowStartMinutes > nowMinutes && p !== current);
   return { current, next: nextIndex >= 0 ? steps[nextIndex] : null, nextIndex };
+}
+
+/**
+ * Étape à pointer quand on touche « Il vient de passer » : celle du plan la
+ * plus proche de l'heure actuelle (± `windowMinutes`), pas encore pointée.
+ */
+export function checkinTarget(
+  steps: Passage[],
+  nowMinutes: number,
+  isDone: (p: Passage) => boolean,
+  windowMinutes = 15
+): Passage | null {
+  return (
+    steps
+      .filter((p) => !isDone(p) && Math.abs(p.estimatedMinutes - nowMinutes) <= windowMinutes)
+      .sort((a, b) => Math.abs(a.estimatedMinutes - nowMinutes) - Math.abs(b.estimatedMinutes - nowMinutes))[0] ?? null
+  );
 }
