@@ -22,12 +22,12 @@ describe("countdown", () => {
 
 describe("ringProgress", () => {
   it("se remplit entre le passage précédent et le suivant", () => {
-    const heller = passages.find((p) => p.spotId === "parc-heller")!;
+    const ravito = passages.find((p) => p.spotId === "ravito-sud")!;
     const marius = passages.find((p) => p.spotId === "rue-marius-hue")!;
-    expect(ringProgress(passages, heller, marius.estimatedMinutes, start)).toBeCloseTo(0);
-    expect(ringProgress(passages, heller, heller.estimatedMinutes, start)).toBeCloseTo(1);
-    const mid = (marius.estimatedMinutes + heller.estimatedMinutes) / 2;
-    expect(ringProgress(passages, heller, mid, start)).toBeCloseTo(0.5);
+    expect(ringProgress(passages, ravito, marius.estimatedMinutes, start)).toBeCloseTo(0);
+    expect(ringProgress(passages, ravito, ravito.estimatedMinutes, start)).toBeCloseTo(1);
+    const mid = (marius.estimatedMinutes + ravito.estimatedMinutes) / 2;
+    expect(ringProgress(passages, ravito, mid, start)).toBeCloseTo(0.5);
   });
 
   it("vers le départ : rempli à l'heure du départ", () => {
@@ -60,8 +60,8 @@ describe("headerInfo", () => {
 
 describe("upcomingPassages", () => {
   it("donne les prochains passages, ou les premiers avant le jour J", () => {
-    expect(upcomingPassages(passages, null).map((p) => p.spotId)).toEqual(["stade-suant", "rue-marius-hue", "parc-heller"]);
-    expect(upcomingPassages(passages, timeStringToMinutes("14:40"))[0].spotId).toBe("parc-heller");
+    expect(upcomingPassages(passages, null).map((p) => p.spotId)).toEqual(["depart", "rue-marius-hue", "ravito-sud"]);
+    expect(upcomingPassages(passages, timeStringToMinutes("14:40"))[0].spotId).toBe("ravito-sud");
   });
 });
 
@@ -72,31 +72,31 @@ describe("shortDate", () => {
 });
 
 describe("planProgress", () => {
-  const steps = [passages[0], passages.find((p) => p.spotId === "parc-heller")!, passages.find((p) => p.kind === "finish")!];
+  const steps = [passages[0], passages.find((p) => p.spotId === "ravito-sud")!, passages.find((p) => p.kind === "finish")!];
 
   it("donne la prochaine étape du plan (pas le prochain passage tous spots confondus)", () => {
     const r = planProgress(steps, timeStringToMinutes("14:35"));
     expect(r.current).toBeNull();
-    expect(r.next?.spotId).toBe("parc-heller");
+    expect(r.next?.spotId).toBe("ravito-sud");
     expect(r.nextIndex).toBe(1);
   });
 
   it("étape en cours pendant sa fourchette", () => {
-    const r = planProgress(steps, timeStringToMinutes("14:45"));
-    expect(r.current?.spotId).toBe("parc-heller");
+    const r = planProgress(steps, timeStringToMinutes("14:43"));
+    expect(r.current?.spotId).toBe("ravito-sud");
     expect(r.next?.kind).toBe("finish");
   });
 
   it("coureur en retard : l'étape reste en cours quelques minutes après sa fourchette", () => {
-    // Fourchette du parc Heller : 14:43–14:47.
+    // Fourchette du ravito sud (km 2,37) : ≈ 14:41–14:45 ; à 14:49, 4 min après.
     expect(planProgress(steps, timeStringToMinutes("14:49")).current).toBeNull();
-    expect(planProgress(steps, timeStringToMinutes("14:49"), 5).current?.spotId).toBe("parc-heller");
+    expect(planProgress(steps, timeStringToMinutes("14:49"), 5).current?.spotId).toBe("ravito-sud");
     // … sauf si elle a déjà été pointée.
-    expect(planProgress(steps, timeStringToMinutes("14:49"), 5, (p) => p.spotId === "parc-heller").current).toBeNull();
+    expect(planProgress(steps, timeStringToMinutes("14:49"), 5, (p) => p.spotId === "ravito-sud").current).toBeNull();
   });
 
   it("le pointage vise l'étape la plus proche de maintenant (pas la suivante)", () => {
-    expect(checkinTarget(steps, timeStringToMinutes("14:48"), () => false)?.spotId).toBe("parc-heller");
+    expect(checkinTarget(steps, timeStringToMinutes("14:46"), () => false)?.spotId).toBe("ravito-sud");
     expect(checkinTarget(steps, timeStringToMinutes("15:30"), () => false)).toBeNull();
   });
 

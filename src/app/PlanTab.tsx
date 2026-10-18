@@ -91,13 +91,20 @@ export function PlanTab({
 
   if (passages.length === 0) return <p className="section muted">Indique un objectif pour voir ton plan.</p>;
 
-  /** « au stade Georges Suant » ou « 4× Stade Georges Suant · 3× Parc Heller ». */
+  /** « au stade Georges Suant » ou « 4× Stade Georges Suant · 3× Ravito sud du stade ». */
   const spotsOf = (option: Plan) => {
     const counts = new Map<string, number>();
     for (const p of option.steps) counts.set(p.spotId, (counts.get(p.spotId) ?? 0) + 1);
     const ids = [...counts.keys()];
     if (ids.length === 1 && spotById[ids[0]]) return spotWhere(spotById[ids[0]]);
     return ids.map((id) => `${counts.get(id)}× ${spotById[id]?.shortName ?? id}`).join(" · ");
+  };
+  /** Lieu principal d'une option (le spot le plus vu) : « au stade Georges Suant ». */
+  const mainWhere = (option: Plan) => {
+    const counts = new Map<string, number>();
+    for (const p of option.steps) counts.set(p.spotId, (counts.get(p.spotId) ?? 0) + 1);
+    const id = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    return id && spotById[id] ? spotWhere(spotById[id]) : "";
   };
   const inPlan = new Set(plan.steps.map((p) => `${p.spotId}@${p.km}`));
   const still = plan.totalWalkKm < 0.05;
@@ -145,7 +152,7 @@ export function PlanTab({
         {/* Une seule alternative en un tap, selon le cas. */}
         {planKind === "best" && stationaryPlan && stationaryPlan !== bestPlan && (
           <button type="button" className="alt-line" onClick={useStayPut}>
-            Tu préfères ne pas bouger ? <strong>Reste {spotsOf(stationaryPlan)} : {stationaryPlan.steps.length} passages</strong>
+            Tu préfères ne pas bouger ? <strong>Reste {mainWhere(stationaryPlan)} : {stationaryPlan.steps.length} passages</strong>
           </button>
         )}
         {planKind !== "best" && (

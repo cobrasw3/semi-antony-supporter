@@ -12,7 +12,7 @@ import { leafletLayer } from "protomaps-leaflet";
 import { TILES, USE_LOCAL_BASEMAP } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
 import { coursePointAt, coursePointLabel, FREE_SPOT_PREFIX, type CoursePoint } from "../lib/freeSpot";
-import { projectPointOntoRoute } from "../lib/geo";
+import { haversineDistanceKm, projectPointOntoRoute } from "../lib/geo";
 import { planWalkingPaths } from "../lib/itinerary";
 import { directionArrows, kmMarks } from "../lib/mapMarkers";
 import { positionOnTrack } from "../lib/runnerPosition";
@@ -25,9 +25,14 @@ import type { Supporter } from "./useSupporter";
 const TILE_ERRORS_BEFORE_FALLBACK = 4;
 const TILE_TIMEOUT_MS = 12_000;
 
-const spotIcon = (n: number, highlight: boolean, active: boolean, inPlan: boolean, free = false) =>
+const CUP_SVG =
+  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l-1.5 16a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2z"/><path d="M5.5 9h13"/></svg>';
+
+const spotIcon = (n: number, highlight: boolean, active: boolean, inPlan: boolean, free = false, aid = false) =>
   L.divIcon({
-    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}${free ? " pin--libre" : ""}">${n}</div>`,
+    html: `<div class="pin${highlight ? " pin--fort" : ""}${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}${free ? " pin--libre" : ""}">${n}${
+      aid ? `<span class="pin__aid" aria-hidden="true">${CUP_SVG}</span>` : ""
+    }</div>`,
     className: "pin-wrap",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -49,6 +54,14 @@ const runnerIcon = L.divIcon({
   className: "pin-wrap",
   iconSize: [30, 30],
   iconAnchor: [15, 15],
+});
+
+// Ravitaillement : petit pictogramme gobelet, non interactif.
+const aidIcon = L.divIcon({
+  html: `<div class="map-aid" aria-hidden="true">${CUP_SVG}</div>`,
+  className: "pin-wrap",
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
 });
 
 // Point touché sur le parcours, pas encore ajouté.
@@ -307,6 +320,18 @@ export default function MapTab({
     }
   }, [selectId, spots]);
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
+  // Ravitaillements : en badge sur le spot s'il y en a un à moins de 50 m,
+  // sinon en marqueur à part.
+  const aidStations = useMemo(
+    () =>
+      (race.aidStations ?? []).map((a) => {
+        const pos = positionOnTrack(a.kmInLoop, track, race);
+        const spot = race.spots.find((sp) => !sp.free && haversineDistanceKm(sp, pos) < 0.05);
+        return { ...a, ...pos, spotId: spot?.id ?? null };
+      }),
+    [race, track]
+  );
+  const aidSpotIds = useMemo(() => new Set(aidStations.map((a) => a.spotId).filter(Boolean)), [aidStations]);
   const raceDay = clock.date === config.event.date;
   const now = raceDay ? clock.minutes : null;
   const runnerKm = s.runnerKm;
@@ -403,6 +428,9 @@ export default function MapTab({
           {arrows.map((a, i) => (
             <Marker key={`a${i}`} position={[a.lat, a.lng]} icon={arrowIcon(a.bearing)} interactive={false} keyboard={false} />
           ))}
+          {aidStations.filter((a) => !a.spotId).map((a) => (
+            <Marker key={`ravito-${a.kmInLoop}`} position={[a.lat, a.lng]} icon={aidIcon} title={a.name} alt={a.name} zIndexOffset={500} keyboard={false} />
+          ))}
           {kms.map((m) => (
             <Marker key={`k${m.label}`} position={[m.lat, m.lng]} icon={kmIcon(m.label ?? "")} interactive={false} keyboard={false} />
           ))}
@@ -410,7 +438,7 @@ export default function MapTab({
             <Marker
               key={spot.id}
               position={[spot.lat, spot.lng]}
-              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free)}
+              icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free, aidSpotIds.has(spot.id))}
               title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
               zIndexOffset={i === active ? 2000 : 1000}
@@ -434,13 +462,25 @@ export default function MapTab({
           {calibrage && calib && <Marker position={[calib.lat, calib.lng]} icon={calibrageIcon} />}
         </MapContainer>
         {!tilesLoaded && !showPlan && <div className="map-badge">Chargement du fond de carte…</div>}
-        <div className="map-legends">
+        {/* En mode calibrage, la bannière de position prend la place des légendes. */}
+        <div className="map-legends" hidden={calibrage}>
           {planPaths.length > 0 && (
             <button type="button" className="map-legend map-legend--btn" onClick={() => setFitPlan((n) => n + 1)}>
               <span className="map-legend__dash" aria-hidden="true" /> Ton trajet à pied ·{" "}
               {plan.totalWalkKm.toFixed(1).replace(".", ",")} km
               <span className="sr-only"> (zoomer dessus)</span>
             </button>
+          )}
+          {aidStations.length > 0 && (
+            <div className="map-legend map-legend--aid">
+              <span className="map-aid map-aid--legend" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 4h14l-1.5 16a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2z" />
+                  <path d="M5.5 9h13" />
+                </svg>
+              </span>{" "}
+              Ravitaillement
+            </div>
           )}
           {runnerPos && (
             <div className="map-legend">

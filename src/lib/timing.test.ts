@@ -171,9 +171,11 @@ describe("semi d'Antony (event.json livré)", () => {
   const semi = config.races[0];
   const stade = semi.spots.find((s) => s.id === "stade-suant")!;
 
-  it("le stade a 4 passages : départ, fin boucle 1, fin boucle 2, arrivée", () => {
+  it("départ sur l'avenue, puis le stade : fin boucle 1, fin boucle 2, arrivée", () => {
+    const depart = semi.spots.find((s) => s.id === "depart")!;
+    expect(computeSpotPassages(depart, semi, 5.5, config.settings.margin).map((p) => p.label)).toEqual(["Départ"]);
     const passages = computeSpotPassages(stade, semi, 5.5, config.settings.margin);
-    expect(passages.map((p) => p.label)).toEqual(["Départ", "Fin boucle 1", "Fin boucle 2", "Arrivée 🏁"]);
+    expect(passages.map((p) => p.label)).toEqual(["Fin boucle 1", "Fin boucle 2", "Arrivée 🏁"]);
   });
 
   it("à 5:30 min/km, l'arrivée est estimée vers 16:26", () => {

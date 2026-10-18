@@ -23,7 +23,7 @@ import {
 import { estimatedKmAfterCheckin, observedPace, recalibratePassages, type Checkin } from "../lib/checkin";
 import { freeSpotToSpot, isFreeSpotId, type FreeSpotData } from "../lib/freeSpot";
 import { estimatedKm } from "../lib/runnerPosition";
-import { planOptions, spotsToDrop } from "../lib/itinerary";
+import { planOptions, spotsToDrop, stayPutOption } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes, type Passage } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
@@ -165,8 +165,8 @@ export function useSupporter() {
   );
   const emptyPlan = { steps: [], transitions: [], totalWalkKm: 0 };
   const bestPlan = autoOptions.at(-1) ?? emptyPlan;
-  // « Reste au stade » : l'option sans marcher, s'il y en a une.
-  const stationaryPlan = autoOptions[0] && autoOptions[0].totalWalkKm < 0.05 ? autoOptions[0] : null;
+  // « Reste au stade » : le plus de passages sans (presque) marcher.
+  const stationaryPlan = stayPutOption(autoOptions);
   // Si l'allure change et rend les spots choisis incompatibles : repli sur le meilleur parcours.
   const spotsConflict = required.length > 0 && mineOptions.length === 0;
   const planKind: "best" | "stay" | "custom" =

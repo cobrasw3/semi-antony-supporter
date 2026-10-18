@@ -8,7 +8,7 @@ import { computeAllPassages, timeStringToMinutes } from "./timing";
 const config = parseEventConfig(rawEvent);
 const semi = config.races[0];
 const track = trackOf(semi);
-const heller = semi.spots.find((s) => s.id === "parc-heller")!;
+const champs = semi.spots.find((s) => s.id === "rue-des-champs")!;
 
 describe("passageKms", () => {
   it("un passage par boucle, jamais au-delà de l'arrivée", () => {
@@ -19,16 +19,16 @@ describe("passageKms", () => {
 
 describe("coursePointAt", () => {
   it("retrouve le km d'un spot connu en touchant à côté", () => {
-    const p = coursePointAt(track, semi, { lat: heller.lat + 0.0002, lng: heller.lng })!;
+    const p = coursePointAt(track, semi, { lat: champs.lat + 0.0002, lng: champs.lng })!;
     expect(p).not.toBeNull();
-    expect(p.kmInLoop).toBeGreaterThan(2.4);
-    expect(p.kmInLoop).toBeLessThan(3.0);
+    expect(p.kmInLoop).toBeGreaterThan(3.8);
+    expect(p.kmInLoop).toBeLessThan(4.2);
     expect(p.km).toHaveLength(3);
     expect(p.km[1] - p.km[0]).toBeCloseTo(7);
   });
 
   it("refuse un point trop loin du parcours", () => {
-    expect(coursePointAt(track, semi, { lat: heller.lat + 0.01, lng: heller.lng + 0.01 })).toBeNull();
+    expect(coursePointAt(track, semi, { lat: champs.lat + 0.01, lng: champs.lng + 0.01 })).toBeNull();
   });
 });
 
@@ -38,7 +38,7 @@ describe("freeSpotToSpot", () => {
   it("devient un spot comme les autres, nommé par son km", () => {
     expect(spot).toMatchObject({ id: "libre-a", shortName: "Km 3,4", where: "au km 3,4", free: true, km: [3.4, 10.4, 17.4] });
     expect(isFreeSpotId(spot.id)).toBe(true);
-    expect(isFreeSpotId("parc-heller")).toBe(false);
+    expect(isFreeSpotId("ravito-sud")).toBe(false);
   });
 
   it("peut entrer dans un parcours sur mesure (marche estimée)", () => {

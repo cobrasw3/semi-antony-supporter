@@ -24,19 +24,19 @@ describe("computeDayStatus", () => {
   });
 
   it("pendant : prochain passage et délai", () => {
-    // 14:40 : rue Marius Hue (km 1, ≈ 14:35) est passée ; prochain = parc Heller (km 2,7 ≈ 14:45).
+    // 14:40 : rue Marius Hue (km 1, ≈ 14:35) est passée ; prochain = ravito sud (km 2,37 ≈ 14:43).
     const status = computeDayStatus(passages, start, at("14:40"), day);
     if (status?.kind !== "live") throw new Error("live attendu");
     expect(status.current).toBeNull();
-    expect(status.next?.spotId).toBe("parc-heller");
-    expect(Math.round(status.minutesToNext!)).toBe(5);
+    expect(status.next?.spotId).toBe("ravito-sud");
+    expect(Math.round(status.minutesToNext!)).toBe(3);
   });
 
   it("pendant : signale le passage en cours dans sa fourchette", () => {
-    const status = computeDayStatus(passages, start, at("14:45"), day);
+    const status = computeDayStatus(passages, start, at("14:43"), day);
     if (status?.kind !== "live") throw new Error("live attendu");
-    expect(status.current?.spotId).toBe("parc-heller");
-    expect(status.next?.spotId).not.toBe("parc-heller");
+    expect(status.current?.spotId).toBe("ravito-sud");
+    expect(status.next?.spotId).not.toBe("ravito-sud");
   });
 
   it("après l'arrivée : course terminée", () => {

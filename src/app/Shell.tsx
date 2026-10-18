@@ -30,9 +30,9 @@ export type TabId = "live" | "plan" | "carte" | "infos";
 /** Lieu à pointer : un spot, ou un point touché sur la carte. */
 export interface CheckinPlace {
   spotId: string;
-  /** « Km 3,4 », « Parc Heller » */
+  /** « Km 3,4 », « Rue des Champs » */
   label: string;
-  /** « au km 3,4 », « au parc Heller » */
+  /** « au km 3,4 », « rue des Champs » */
   where: string;
   /** Km de passage possibles à cet endroit (un par boucle). */
   kms: number[];

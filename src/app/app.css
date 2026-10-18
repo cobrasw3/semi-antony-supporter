@@ -823,10 +823,11 @@ a.btn {
   position: absolute;
   z-index: 1000;
   top: var(--s-3);
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  justify-items: center;
+  left: var(--s-3);
+  right: var(--s-3);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   pointer-events: none;
 }
@@ -1744,4 +1745,44 @@ a.btn {
 
 .checkin-other {
   align-self: center;
+}
+
+/* Ravitaillements */
+.map-aid {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--on-signal);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.map-aid--legend {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  border-width: 1px;
+  vertical-align: middle;
+  box-shadow: none;
+}
+
+.pin {
+  position: relative;
+}
+
+.pin__aid {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--on-signal);
 }

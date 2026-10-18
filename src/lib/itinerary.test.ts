@@ -10,6 +10,7 @@ import {
   incompatiblePairs,
   mostLimitingSpot,
   spotsToDrop,
+  stayPutOption,
   planWalkingPaths,
   walkBetween,
   walkBetweenSpots,
@@ -198,14 +199,23 @@ describe("planOptions (compromis passages ↔ marche)", () => {
     expect(options.at(-1)!.steps.length).toBe(optimalPlan(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).steps.length);
   });
 
-  it("sur le semi, sans bouger = 4 passages au stade", () => {
+  it("sur le semi, « sans bouger » = départ puis 3 passages au stade (140 m à pied)", () => {
     const config = parseEventConfig(rawEvent);
     const semi = config.races[0];
     const passages = computeAllPassages(semi, 5.5, config.settings.margin);
-    const [first] = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km);
-    expect(first.totalWalkKm).toBe(0);
-    expect(first.steps).toHaveLength(4);
-    expect(new Set(first.steps.map((p) => p.spotId))).toEqual(new Set(["stade-suant"]));
+    const stay = stayPutOption(planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km))!;
+    expect(stay.steps.map((p) => p.spotId)).toEqual(["depart", "stade-suant", "stade-suant", "stade-suant"]);
+    expect(stay.totalWalkKm).toBeLessThanOrEqual(0.2);
+  });
+
+  it("meilleur parcours : 7 passages entre départ, ravito sud et stade, moins de 2 km à pied", () => {
+    const config = parseEventConfig(rawEvent);
+    const semi = config.races[0];
+    const passages = computeAllPassages(semi, 5.5, config.settings.margin);
+    const best = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).at(-1)!;
+    expect(best.steps).toHaveLength(7);
+    expect(new Set(best.steps.map((p) => p.spotId))).toEqual(new Set(["depart", "ravito-sud", "stade-suant"]));
+    expect(best.totalWalkKm).toBeLessThan(2);
   });
 
   it("donne la marche minimale exacte pour chaque nombre de passages (cas aléatoires)", () => {
@@ -321,7 +331,8 @@ describe("spotsToDrop", () => {
   });
 
   it("sélection impossible : propose les spots dont le retrait suffit", () => {
-    const chosen = ["rue-marius-hue", "parc-heller", "rue-des-champs", "rue-des-sources-prolongee"];
+    // Marius Hue (km 1) puis le ravito sud (km 2,37) : 1,4 km de marche pour 1,4 km de course.
+    const chosen = ["rue-marius-hue", "ravito-sud", "rue-des-champs", "rue-des-sources-prolongee"];
     expect(planOptions(passages, semi.spots, w, routes, chosen)).toEqual([]);
     const drop = spotsToDrop(passages, semi.spots, w, chosen, routes);
     expect(drop.length).toBeGreaterThan(0);
@@ -338,21 +349,21 @@ describe("trajets depuis le stade au départ (retour utilisateur)", () => {
   const routes = semi.walkingRoutes?.km;
   const w = config.settings.walking;
   const byId = indexSpots(semi.spots);
-  const depart = passages.find((p) => p.spotId === "stade-suant" && p.kind === "start")!;
+  const depart = passages.find((p) => p.spotId === "depart" && p.kind === "start")!;
 
   it("depuis le départ, on arrive avant la fourchette du 1er passage de chaque spot, sauf la rue Marius Hue", () => {
     const reachable = semi.spots
-      .filter((s) => s.id !== "stade-suant")
+      .filter((s) => s.id !== "depart")
       .filter((s) => {
         const first = passages.find((p) => p.spotId === s.id)!;
         return evaluateTransition(depart, first, byId, w, routes).slackMinutes >= 0;
       })
       .map((s) => s.id);
-    expect(reachable).toEqual(["parc-heller", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres"]);
+    expect(reachable).toEqual(["ravito-sud", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres", "stade-suant"]);
   });
 
   it("rue des Champs est « juste » : écartée des meilleurs plans, acceptée quand l'utilisateur l'impose", () => {
-    const chosen = ["stade-suant", "rue-des-champs"];
+    const chosen = ["depart", "rue-des-champs"];
     const champs = passages.find((p) => p.spotId === "rue-des-champs")!;
     expect(evaluateTransition(depart, champs, byId, w, routes).status).toBe("tight");
     const strict = planOptions(passages, semi.spots, w, routes, chosen).at(-1)!;
@@ -376,19 +387,21 @@ describe("planWalkingPaths", () => {
   const passages = computeAllPassages(semi, 5.5, config.settings.margin);
   const plan = planOptions(passages, semi.spots, config.settings.walking, semi.walkingRoutes?.km).at(-1)!;
 
-  it("trace une seule fois le trajet stade ↔ parc Heller, par les rues", () => {
+  it("trace une seule fois chaque trajet (départ → ravito, ravito ↔ stade), par les rues", () => {
     const paths = planWalkingPaths(plan, semi.spots, semi.walkingRoutes?.paths);
-    expect(paths).toHaveLength(1);
-    expect(paths[0].length).toBeGreaterThan(10); // chemin réel, pas une ligne droite
+    expect(paths).toHaveLength(2);
+    for (const path of paths) expect(path.length).toBeGreaterThan(5); // chemin réel, pas une ligne droite
   });
 
   it("repli en ligne droite si le tracé est inconnu", () => {
     const paths = planWalkingPaths(plan, semi.spots, {});
+    const at = (id: string) => {
+      const sp = semi.spots.find((x) => x.id === id)!;
+      return [sp.lat, sp.lng];
+    };
     expect(paths).toEqual([
-      [
-        [semi.spots[0].lat, semi.spots[0].lng],
-        [semi.spots[2].lat, semi.spots[2].lng],
-      ],
+      [at("depart"), at("ravito-sud")],
+      [at("ravito-sud"), at("stade-suant")],
     ]);
   });
 });

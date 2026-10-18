@@ -27,9 +27,9 @@ export interface WalkingConfig {
 export interface Spot {
   id: string;
   name: string;
-  /** Nom court pour les phrases (« Léa passe au Parc Heller vers… »). */
+  /** Nom court pour les phrases (« Léa passe au ravito sud du stade vers… »). */
   shortName: string;
-  /** Complément de lieu pour les phrases : « au parc Heller », « rue des Champs ». */
+  /** Complément de lieu pour les phrases : « au ravito sud du stade », « rue des Champs ». */
   where?: string;
   address: string;
   lat: number;
@@ -65,6 +65,8 @@ export interface Race {
   /** Tracé d'UNE boucle, en paires [lat, lng]. */
   track: Array<[number, number]>;
   spots: Spot[];
+  /** Ravitaillements (affichés sur la carte), placés par leur km dans la boucle. */
+  aidStations?: Array<{ name: string; kmInLoop: number }>;
   /**
    * Distances À PIED réelles entre spots (km), clé « idDépart>idArrivée ».
    * Générées par scripts/compute-walking-routes.ts ; à défaut, estimation à
@@ -165,7 +167,7 @@ export function findRace(config: EventConfig, raceId: string | null | undefined)
   return config.races.find((r) => r.id === raceId) ?? config.races[0];
 }
 
-/** « au parc Heller », « rue des Champs »… (repli : « à <nom court> »). */
+/** « au ravito sud du stade », « rue des Champs »… (repli : « à <nom court> »). */
 export function spotWhere(spot: Pick<Spot, "where" | "shortName">): string {
   return spot.where ?? `à ${spot.shortName}`;
 }

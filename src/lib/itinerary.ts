@@ -325,3 +325,14 @@ export function planWalkingPaths(
   }
   return result;
 }
+
+/** Marche jugée négligeable (« sans bouger ») : ex. du départ à l'entrée du stade. */
+export const STAY_PUT_MAX_KM = 0.2;
+
+/**
+ * Option « sans (presque) bouger » : le plus de passages possible sans
+ * dépasser STAY_PUT_MAX_KM de marche au total.
+ */
+export function stayPutOption(options: Plan[]): Plan | null {
+  return options.filter((o) => o.totalWalkKm <= STAY_PUT_MAX_KM + 1e-9).at(-1) ?? null;
+}

@@ -648,3 +648,37 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   la branche de production configurée dans Cloudflare n'est pas `main`.
   L'adresse principale sert toujours la version du build fd3854be (sans
   points libres). À corriger dans Settings → Build → Branch control.
+
+### 2026-10-18 (suite) — Spots revus d'après le terrain (branche `feat/sur-mesure`)
+
+- Origine des spots (question de l'utilisateur) : créés au prototype des
+  30-31/07 (commits 0404940 → 4972da4), calés sur le GPX et des adresses,
+  jamais vérifiés sur le terrain.
+- Retours de l'utilisateur (capture `docs/`, point rouge posé en mode
+  calibrage) : le départ (avenue) et l'arrivée (dans le stade) sont deux
+  endroits ; le « parc Heller » n'est pas un vrai spot (le parcours traverse
+  le parc sur plusieurs centaines de mètres) ; on voit bien les coureurs au
+  point rouge, accessible depuis le départ en remontant la rue du parcours,
+  avec un **ravitaillement** ; un autre ravitaillement au premier virage à
+  gauche.
+- Mesures : point rouge = km 2,37 (15 m du tracé, 163 m du départ à vol
+  d'oiseau) ; premier virage à gauche = km 0,13, à l'entrée du stade, là où
+  se termine chaque boucle (fin du GPX, 129 m du départ).
+- `event.json` : spots dans l'ordre du parcours — 1 Départ (km 0, avenue
+  François-Molé), 2 Rue Marius Hue, 3 **Ravito sud du stade** (km 2,37 /
+  9,37 / 16,37, remplace le parc Heller), 4 Rue des Champs, 5 Rue des
+  Sources Prolongée, 6 Rue des Hautes Bièvres, 7 **Stade Georges Suant**
+  (entrée du stade : km 7 / 14 / 21,1). `aidStations` (km 0,13 et 2,37).
+  Hypothèse à confirmer : les fins de boucle 1 et 2 passent à l'entrée du
+  stade (et pas sur la ligne de départ).
+- Distances à pied recalculées (OSRM) : départ → ravito 180 m, départ →
+  stade 140 m, stade ↔ ravito 320 m. Meilleur parcours à 5:30 : **7
+  passages, 1,8 km à pied** (avant : 3,0 km) — départ, puis ravito ↔ stade.
+  « Sans bouger » (`stayPutOption`, ≤ 200 m de marche) : départ + 3× stade
+  (sinon l'app proposait 3× rue Marius Hue à 0 m).
+- Carte : ravitaillements en badge gobelet sur le spot concerné (marqueur à
+  part s'il n'y a pas de spot à moins de 50 m), légende « Ravitaillement » ;
+  légendes sur une ligne ; en mode calibrage, les légendes sont masquées
+  (elles cachaient la bannière de position, visible sur la capture).
+- Plan statique de secours régénéré ; tests réalignés sur les nouveaux spots
+  (228 ✅).

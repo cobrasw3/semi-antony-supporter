@@ -33,9 +33,9 @@ describe("positionOnTrack", () => {
     expect(haversineDistanceKm(a, b)).toBeLessThan(0.001);
   });
 
-  it("km 2,7 tombe près du parc Heller", () => {
-    const heller = semi.spots.find((s) => s.id === "parc-heller")!;
-    expect(haversineDistanceKm(positionOnTrack(2.7, track, semi), heller)).toBeLessThan(0.15);
+  it("km 2,37 tombe au ravito sud du stade", () => {
+    const ravito = semi.spots.find((s) => s.id === "ravito-sud")!;
+    expect(haversineDistanceKm(positionOnTrack(2.37, track, semi), ravito)).toBeLessThan(0.05);
   });
 });
 

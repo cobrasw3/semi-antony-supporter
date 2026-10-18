@@ -47,7 +47,7 @@ const icsText = (s: string) => s.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1
 
 export interface IcsItem {
   passage: Passage;
-  /** Titre de l'événement agenda (« Léa passe au parc Heller »). */
+  /** Titre de l'événement agenda (« Léa passe rue des Champs »). */
   title: string;
   location: string;
 }

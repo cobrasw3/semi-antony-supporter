@@ -88,7 +88,7 @@ export function Styleguide() {
       <Section title="Typographie">
         <p className="display" style={{ fontSize: "var(--t-3xl)" }}>14:45</p>
         <p className="display" style={{ fontSize: "var(--t-xl)" }}>Prochain passage</p>
-        <p style={{ fontSize: "var(--t-md)", fontWeight: 700 }}>Manrope 700 — Léa passe au parc Heller.</p>
+        <p style={{ fontSize: "var(--t-md)", fontWeight: 700 }}>Manrope 700 — Léa passe rue des Champs.</p>
         <p style={{ fontSize: "var(--t-md)" }}>Manrope 400 — Coin ombragé en bordure du parc, bonne visibilité.</p>
         <p className="muted sg-small">Barlow Condensed (titres, horaires, chiffres tabulaires) · Manrope (texte). Auto-hébergées, hors-ligne.</p>
       </Section>
@@ -204,7 +204,7 @@ export function Styleguide() {
       <Section title="Prochain passage (live)">
         <div className="sg-live">
           <p className="sg-live__kicker">Prochain passage</p>
-          <h3 className="display sg-live__spot">Parc Heller</h3>
+          <h3 className="display sg-live__spot">Rue des Champs</h3>
           <CountdownRing progress={0.62} value="5" unit="min" caption="14:43 – 14:47" />
           <p className="sg-live__walk">
             <Footprints size={18} aria-hidden="true" /> 6 min à pied
@@ -236,7 +236,7 @@ export function Styleguide() {
           </SpotCard>
           <SpotCard
             number={3}
-            name="Parc Heller"
+            name="Rue des Champs"
             time="14:45"
             window="14:43–14:47" meta="Boucle 1"
             status={<Chip tone="ok">✓ 4 min d'avance</Chip>}

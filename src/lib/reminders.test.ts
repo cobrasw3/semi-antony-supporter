@@ -10,14 +10,14 @@ const passages = computeAllPassages(semi, 5.5, config.settings.margin);
 
 describe("dueReminders", () => {
   it("annonce les passages prévus dans les 10 prochaines minutes, une seule fois", () => {
-    // 14:40 : parc Heller (≈ 14:44:51) et rue des Champs (≈ 14:52) ; ce dernier est à plus de 10 min.
+    // 14:40 : ravito sud (≈ 14:43) et rue des Champs (≈ 14:52) ; ce dernier est à plus de 10 min.
     const due = dueReminders(passages, timeStringToMinutes("14:40"), new Set());
-    expect(due.map((p) => p.spotId)).toEqual(["parc-heller"]);
+    expect(due.map((p) => p.spotId)).toEqual(["ravito-sud"]);
     expect(dueReminders(passages, timeStringToMinutes("14:40"), new Set([passageKey(due[0])]))).toEqual([]);
   });
 
   it("n'annonce pas un passage déjà passé", () => {
-    expect(dueReminders(passages, timeStringToMinutes("14:46"), new Set()).map((p) => p.spotId)).not.toContain("parc-heller");
+    expect(dueReminders(passages, timeStringToMinutes("14:46"), new Set()).map((p) => p.spotId)).not.toContain("ravito-sud");
   });
 });
 
