@@ -682,3 +682,6 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (elles cachaient la bannière de position, visible sur la capture).
 - Plan statique de secours régénéré ; tests réalignés sur les nouveaux spots
   (228 ✅).
+- Accord de l'utilisateur (« c'est bon pour main, mets en production ») ;
+  branche de production Cloudflare réglée sur `main` par l'utilisateur.
+  `main` avancé sur `feat/sur-mesure` et poussé.
