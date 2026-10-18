@@ -690,3 +690,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   l'adresse principale sert toujours l'ancienne version (bundle
   index-BoF7cNKT, sans points libres) → l'utilisateur ne pouvait pas
   toucher la carte pour ajouter un point. Réglage Cloudflare à revoir.
+- Réglage Cloudflare corrigé par l'utilisateur ; commit poussé sur `main`
+  pour relancer le build de production.
