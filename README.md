@@ -40,7 +40,8 @@ src/app/                       Écrans : assistant (Onboarding), coque à onglet
                                  useSupporter (assemble l'état, sans calcul), page /qr
 src/ui/                        Design system : tokens.css (couleurs, typo, formes), composants,
                                  marque par événement (branding.ts), page /styleguide
-vercel.json                    En-têtes de sécurité (CSP, HSTS…) et de cache, réécriture /qr
+public/_headers, _redirects    Cloudflare Pages : en-têtes de sécurité (CSP, HSTS…) et de cache, routes /qr
+public/carte/                  Fond de carte de la zone (PMTiles), cf. scripts/build-basemap.ts
 ```
 
 ## Configurer un événement (`public/data/event.json`)
@@ -80,33 +81,34 @@ Ajouter une 2e entrée dans `races` (ex. `"id": "5k"`, `"startTime": "13:15"`,
 `"loops": 1`, son tracé et ses spots). Le sélecteur de course s'affiche alors
 automatiquement.
 
-## Variables d'environnement (Vercel → Settings → Environment Variables)
+## Variables d'environnement (Cloudflare → Pages → Settings → Variables)
 
 | Variable | Valeurs |
 | --- | --- |
-| `VITE_TILE_PROVIDER` | `osm` (défaut), `maptiler`, `stadia` |
+| `VITE_TILE_PROVIDER` | `local` (défaut : fond hébergé avec l'app), `osm`, `maptiler`, `stadia` |
 | `VITE_TILE_API_KEY` | clé MapTiler / Stadia |
+| `VITE_CF_ANALYTICS_TOKEN` | token Cloudflare Web Analytics (Production seulement) |
 
-Un nouveau fournisseur de tuiles doit aussi être ajouté à la CSP
-(`vercel.json`) et à la règle de cache du service worker (`vite.config.ts`).
+Un nouveau domaine externe (tuiles…) doit aussi être ajouté à la CSP
+(`public/_headers`) et à la règle de cache du service worker (`vite.config.ts`).
 
 ## Mises à jour et hors-ligne
 
 - Le service worker (vite-plugin-pwa / Workbox) précache l'app, event.json
   (embarqué), les icônes et le plan statique ; les tuiles vues sont mises en
-  cache (400 max, 14 jours).
+  cache (400 max, 14 jours) ; le fond de carte hébergé est mis en cache en
+  entier au premier lancement (carte complète hors-ligne).
 - Nouvelle version : vérifiée au retour au premier plan, au retour du réseau
   et toutes les 15 min ; l'app se recharge seule (état conservé) ou affiche
   « Nouvelle version disponible » si l'utilisateur est en train de saisir.
 
 ## Mesure d'audience
 
-Vercel Web Analytics (sans cookie) : à activer dans le tableau de bord
-Vercel (projet → Analytics). URL envoyée sans paramètres (aucun prénom ni
-allure). Événements : `partage`, `installation`, `ouverture_app_installee`,
-`notifications_activees`, `agenda_telecharge`, `itineraire_ouvert`,
-`plan_optimal`. ⚠️ Les événements personnalisés nécessitent un plan Vercel
-Pro ; sur le plan Hobby, seules les pages vues sont comptées.
+Cloudflare Web Analytics (gratuit, sans cookie de suivi), chargé seulement
+si `VITE_CF_ANALYTICS_TOKEN` est défini, jamais en mode démo. Cloudflare
+n'enregistre pas les paramètres d'URL (prénom, allure). Seules les pages
+vues sont comptées : les appels `track(...)` du code (partage, installation,
+agenda…) sont gardés pour un futur compteur mais sans effet aujourd'hui.
 
 ## Rappels « il arrive dans 10 min » : limite connue
 
@@ -119,7 +121,7 @@ Triggers a été abandonnée). L'app propose donc :
    sur iPhone, uniquement une fois l'app installée (iOS 16.4+).
 
 Un vrai push app fermée demanderait un petit backend (clés VAPID + envoi
-planifié, ex. fonction Vercel + cron), ce qui implique de stocker un
+planifié, ex. Cloudflare Worker + Cron Trigger), ce qui implique de stocker un
 abonnement push par appareil.
 
 ## Intégrer le vrai tracé (GPX/KML)
@@ -157,7 +159,7 @@ premier plan, au retour du réseau et toutes les 15 min).
    - `start` / `end` : début et fin d'affichage, avec le fuseau (`+01:00` en
      mars, heure d'hiver ; `+02:00` en heure d'été).
    - `demoOnly: true` : visible seulement en mode démo (`?demo=1`).
-3. Valider le commit sur `main` → Vercel redéploie en ~1 min → l'annonce
+3. Valider le commit sur `main` → Cloudflare Pages redéploie en ~1 min → l'annonce
    apparaît chez les utilisateurs à leur prochain retour dans l'app.
 
 Pour retirer une annonce : supprimer l'entrée (ou avancer sa date `end`).
@@ -181,38 +183,49 @@ Lancer les tests (toute la logique de calcul) :
 npm run test
 ```
 
-## Déployer gratuitement (obtenir un lien partageable)
+## Héberger gratuitement : Cloudflare Pages
 
-### Option Vercel (recommandée, la plus simple)
+Site statique : gratuit, bande passante illimitée, réseau mondial (des
+milliers d'utilisateurs simultanés ne posent aucun problème). Le fond de
+carte est hébergé avec l'app : aucun service tiers ni quota le jour J.
 
-1. Pousser ce dossier sur un dépôt GitHub (public ou privé).
-2. Aller sur [vercel.com](https://vercel.com), se connecter avec GitHub.
-3. "Add New… → Project", sélectionner ce dépôt.
-4. Vercel détecte Vite automatiquement (build command `vite build`, output
-   `dist`) — laisser les réglages par défaut et cliquer "Deploy".
-5. Après ~1 minute, Vercel donne une URL du type
-   `https://semi-antony-supporter.vercel.app` — c'est le lien à partager
-   (et à transformer en QR code).
+### Mise en place (une fois, ~5 min)
 
-Chaque nouveau `git push` redéploie automatiquement **si le dépôt est relié
-à Vercel** (Settings → Git → Connect Git Repository) : `main` en
-production, les autres branches en preview. ⚠️ Au 17/10/2026, ce projet
-n'est pas relié : il se déploie avec la CLI (`npx vercel` pour une
-preview, `npx vercel --prod` pour la production).
+1. Tableau de bord Cloudflare → **Workers & Pages → Create → Pages →
+   Connect to Git** → autoriser GitHub et choisir ce dépôt. (Un nouveau
+   projet Pages est indépendant des autres sites du compte.)
+2. Réglages de build : framework **None** (ou Vite), build command
+   `npm run build`, output directory `dist`, branche de production **main**.
+3. Settings → Builds → **Preview branches** : toutes les branches sauf
+   `main` (ou « None » pour ne rien publier en preview).
+4. Option mesure d'audience : **Web Analytics → Add a site** (sans domaine
+   propre : choisir le site `*.pages.dev`), copier le *token* et le mettre
+   dans Pages → Settings → **Variables**, environnement **Production**
+   uniquement : `VITE_CF_ANALYTICS_TOKEN` = le token. Redéployer.
 
-### Option Netlify (équivalente)
+### Circuit lien de test → production
 
-1. Pousser le dossier sur GitHub.
-2. Sur [netlify.com](https://netlify.com), "Add new site → Import an
-   existing project", choisir le dépôt.
-3. Build command : `npm run build` — Publish directory : `dist`.
-4. Déployer : Netlify fournit une URL `https://<nom>.netlify.app`.
+- Pousser une branche (`git push origin feat/xxx`) → Cloudflare construit
+  un **lien de test** `https://feat-xxx.<projet>.pages.dev` (et un lien par
+  commit). Les téléphones de test l'ouvrent normalement.
+- Une fois validé : fusionner la branche dans `main` (PR GitHub) →
+  **production** `https://<projet>.pages.dev` en ~1 min.
+- Retour arrière : Pages → Deployments → choisir l'ancien → *Rollback*.
+- Les téléphones prennent la nouvelle version seuls (service worker :
+  vérification au retour dans l'app et toutes les 15 min, rechargement
+  automatique ou bandeau « Nouvelle version disponible »).
 
-### Sans compte GitHub
+`public/_headers` (sécurité, cache) et `public/_redirects` (routes `/qr`,
+`/styleguide`) sont lus par Cloudflare Pages.
 
-`npx vercel` (ou `npx netlify-cli deploy`) depuis ce dossier permet de
-déployer directement depuis la machine locale, sans dépôt Git — pratique
-pour un test rapide avant de mettre en place un dépôt propre.
+### Fond de carte
+
+`public/carte/*.pmtiles` : extrait de la zone du parcours (≈ 3,5 Mo, données
+OpenStreetMap via Protomaps), affiché par `protomaps-leaflet`. Téléchargé en
+arrière-plan au premier lancement puis servi depuis le cache : carte
+complète hors-ligne. Pour le régénérer (autre événement, carte plus
+récente) : `node scripts/build-basemap.ts` (outil `pmtiles` requis), puis
+reporter le bloc affiché dans `event.json` → `map`.
 
 ## Hors périmètre
 

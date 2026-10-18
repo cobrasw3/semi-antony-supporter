@@ -1,10 +1,10 @@
 // Fournisseur de tuiles, choisi au build via variables d'environnement
-// (Vercel → Settings → Environment Variables) :
-//   VITE_TILE_PROVIDER = osm (défaut) | maptiler | stadia
+// (Cloudflare → Pages → Settings → Variables) :
+//   VITE_TILE_PROVIDER = local (défaut : fond hébergé avec l'app) | osm | maptiler | stadia
 //   VITE_TILE_API_KEY  = clé du fournisseur (MapTiler, Stadia)
 // OSM convient pour une démo ; pour un usage public le jour J (trafic
 // important), préférer MapTiler ou Stadia (politique d'usage OSM).
-// ⚠️ Tout nouveau domaine de tuiles doit être ajouté à la CSP (vercel.json).
+// ⚠️ Tout nouveau domaine de tuiles doit être ajouté à la CSP (public/_headers).
 
 export interface TileConfig {
   url: string;
@@ -35,3 +35,10 @@ export function tileConfig(provider: string | undefined, apiKey: string | undefi
 }
 
 export const TILES = tileConfig(import.meta.env.VITE_TILE_PROVIDER, import.meta.env.VITE_TILE_API_KEY);
+
+/**
+ * Par défaut, la carte utilise le fond hébergé avec l'app (event.json →
+ * map.basemap). VITE_TILE_PROVIDER=osm|maptiler|stadia force un service de
+ * tuiles en ligne.
+ */
+export const USE_LOCAL_BASEMAP = !import.meta.env.VITE_TILE_PROVIDER || import.meta.env.VITE_TILE_PROVIDER === "local";

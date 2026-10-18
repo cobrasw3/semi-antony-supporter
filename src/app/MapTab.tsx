@@ -7,7 +7,8 @@ import L from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
-import { TILES } from "../config/tiles";
+import { leafletLayer } from "protomaps-leaflet";
+import { TILES, USE_LOCAL_BASEMAP } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
 import { projectPointOntoRoute } from "../lib/geo";
 import { planWalkingPaths } from "../lib/itinerary";
@@ -48,10 +49,49 @@ const runnerIcon = L.divIcon({
 
 const calibrageIcon = L.divIcon({ html: '<div class="map-calib"></div>', className: "pin-wrap", iconSize: [16, 16], iconAnchor: [8, 8] });
 
+/** Fond de carte vectoriel hébergé (PMTiles), rendu par protomaps-leaflet. */
+function LocalBasemap({ url, attribution, onLoad }: { url: string; attribution: string; onLoad: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const dark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    const layer = leafletLayer({
+      url,
+      flavor: dark ? "dark" : "light",
+      lang: "fr",
+      maxDataZoom: 15,
+      attribution,
+    }) as unknown as L.GridLayer;
+    layer.on("load", onLoad);
+    layer.addTo(map);
+    return () => {
+      layer.off("load", onLoad);
+      map.removeLayer(layer);
+    };
+    // onLoad stable côté appelant (setter d'état) : seule l'URL compte.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, map]);
+  return null;
+}
+
 function FitToRoute({ points }: { points: LatLng[] }) {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(points.map((p) => [p.lat, p.lng]) as [number, number][], { padding: [28, 28], paddingBottomRight: [28, 190] });
+    // Le conteneur prend sa taille définitive juste après le montage : on
+    // cadre une fois la taille connue (sinon le cadrage est faux).
+    const fit = () => {
+      map.invalidateSize();
+      map.fitBounds(points.map((p) => [p.lat, p.lng]) as [number, number][], {
+        // Haut : légendes ; bas : tiroir des spots (~260 px) + marqueurs.
+        paddingTopLeft: [16, 80],
+        paddingBottomRight: [16, 300],
+      });
+    };
+    const frame = requestAnimationFrame(fit);
+    const timer = window.setTimeout(fit, 300);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
   }, [points, map]);
   return null;
 }
@@ -71,7 +111,7 @@ function FitToPlan({ paths, nonce }: { paths: Array<Array<[number, number]>>; no
   const map = useMap();
   useEffect(() => {
     if (nonce === 0 || paths.length === 0) return;
-    map.flyToBounds(paths.flat(), { padding: [48, 48], paddingBottomRight: [48, 220], duration: 0.6, maxZoom: 17 });
+    map.flyToBounds(paths.flat(), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 250], duration: 0.6, maxZoom: 17 });
   }, [nonce, paths, map]);
   return null;
 }
@@ -134,6 +174,8 @@ export default function MapTab({
   const [calib, setCalib] = useState<{ lat: number; lng: number; km: number; off: number } | null>(null);
 
   const arrows = useMemo(() => directionArrows(track), [track]);
+  // Fond de carte hébergé avec l'app (par défaut), sinon service de tuiles.
+  const localBasemap = USE_LOCAL_BASEMAP ? config.map?.basemap : undefined;
   // Couleur de marque (tokens) : Leaflet écrit la couleur en attribut SVG.
   const routeColor = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#14213d", []);
   const planColor = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--sprint").trim() || "#f26b3a", []);
@@ -224,7 +266,23 @@ export default function MapTab({
             </button>
           </div>
         )}
-        <MapContainer center={[track[0].lat, track[0].lng]} zoom={15} zoomControl={false} style={{ height: "100%", width: "100%" }}>
+        <MapContainer
+          center={[track[0].lat, track[0].lng]}
+          zoom={15}
+          minZoom={localBasemap ? 13 : undefined}
+          maxZoom={18}
+          zoomSnap={0.25}
+          zoomControl={false}
+          style={{ height: "100%", width: "100%" }}
+        >
+          {localBasemap ? (
+            <LocalBasemap
+              key={showPlan ? "plan" : "fond"}
+              url={localBasemap}
+              attribution={config.map?.attribution ?? "© OpenStreetMap"}
+              onLoad={() => setTilesLoaded(true)}
+            />
+          ) : (
           <TileLayer
             key={showPlan ? "plan" : "tiles"}
             attribution={TILES.attribution}
@@ -239,6 +297,7 @@ export default function MapTab({
               },
             }}
           />
+          )}
           <Polyline positions={track.map((p) => [p.lat, p.lng] as [number, number])} pathOptions={{ color: routeColor, weight: 7, opacity: 0.9 }} />
           {planPaths.map((path, i) => (
             <Polyline

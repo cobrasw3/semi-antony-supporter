@@ -100,6 +100,12 @@ export interface EventConfig {
     official?: boolean;
     colors?: { ink?: string; sprint?: string; signal?: string };
   };
+  /**
+   * Fond de carte hébergé avec l'app (fichier PMTiles de la zone, généré par
+   * scripts/build-basemap.ts) : aucune dépendance à un service de tuiles le
+   * jour J, et carte entièrement disponible hors-ligne.
+   */
+  map?: { basemap?: string; bounds?: [[number, number], [number, number]]; attribution?: string };
   /** Infos pratiques affichées dans l'onglet Infos (optionnelles). */
   infos?: Array<{ title: string; text: string; toConfirm?: boolean }>;
   settings: {

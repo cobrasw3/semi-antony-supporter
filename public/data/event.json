@@ -21,6 +21,11 @@
       "signal": "#d7f205"
     }
   },
+  "map": {
+    "basemap": "/carte/antony-20261017.pmtiles",
+    "bounds": [[48.733, 2.266], [48.762, 2.304]],
+    "attribution": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> · <a href=\"https://protomaps.com\">Protomaps</a>"
+  },
   "infos": [
     {
       "title": "Départ et arrivée",

@@ -9,12 +9,12 @@
 
 PWA prototype (React 19 + Vite 8 + TypeScript, Leaflet, Vitest) pour les
 supporters du semi-marathon d'Antony : où se placer et à quelle heure le
-coureur passe, à partir de son allure ou d'un temps visé. Déployée sur
-Vercel (projet `semi-antony-supporter`, cf. `.vercel/project.json`).
-⚠️ Constaté le 2026-10-17 : **le dépôt GitHub n'est PAS relié à Vercel**
-(aucun déploiement/statut sur aucun commit) ; les déploiements se font via
-la CLI (`npx vercel`). Si l'intégration Git est activée, `main` partira en
-production automatiquement : travailler sur des branches.
+coureur passe, à partir de son allure ou d'un temps visé.
+Hébergement cible (choix du 2026-10-18) : **Cloudflare Pages**, projet
+relié au dépôt GitHub — branche = lien de test `*.pages.dev`, `main` =
+production. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
+Historique : previews faites jusqu'ici avec la CLI Vercel (projet
+`semi-antony-supporter`, dépôt non relié à Vercel).
 Public visé par la démo : club Antony Athlétisme 92 et Direction des Sports
 de la mairie.
 
@@ -31,7 +31,10 @@ de la mairie.
 - La fonction `urlPattern` de `vite.config.ts` est sérialisée dans `sw.js` :
   elle ne doit référencer aucune variable extérieure.
 - Nouveau fournisseur de tuiles = mettre à jour `src/config/tiles.ts`, la
-  CSP de `vercel.json` (img-src ET connect-src) et la règle de cache SW.
+  CSP de `public/_headers` (img-src ET connect-src) et la règle de cache SW.
+- Fond de carte : `public/carte/<id>-<date>.pmtiles` (nom daté, immuable),
+  référencé par `event.json` → `map.basemap` ; régénérer avec
+  `scripts/build-basemap.ts`.
 
 - Design system (branche `feat/redesign`) : tokens dans `src/ui/tokens.css`
   (aucune couleur en dur dans les composants), composants dans
@@ -514,3 +517,32 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   Toast « Pointé à 14:48 : 3 min de retard. Horaires recalés » + Annuler ;
   rappel « Horaires recalés sur ton pointage … Effacer ». Fiche spot :
   « Léa vient de passer ici » (passage le plus proche de maintenant, ± 25 min).
+- **Étape 3 — passage à Cloudflare Pages** (choix utilisateur : gratuit,
+  1000-2000 utilisateurs, lien de test → validation → production) :
+  - `vercel.json` → `public/_headers` (mêmes en-têtes ; CSP + Cloudflare
+    Web Analytics, `worker-src blob:`) et `public/_redirects` (/qr,
+    /styleguide). `.node-version` = 22 pour le build Cloudflare.
+  - `@vercel/analytics` retiré → beacon Cloudflare Web Analytics injecté
+    seulement si `VITE_CF_ANALYTICS_TOKEN` (Production) et hors démo ;
+    Cloudflare ne logge pas les query strings (FAQ). `track()` devient
+    sans effet (pas d'événements personnalisés chez Cloudflare).
+  - **Fond de carte hébergé** : extrait Protomaps du 2026-10-17 sur la zone
+    du parcours (`pmtiles extract`, bbox 2.266,48.733 → 2.304,48.762,
+    zoom ≤ 15, 3,5 Mo) dans `public/carte/`, affiché par
+    `protomaps-leaflet` (thème clair/sombre, libellés en français).
+    `event.json` → `map` (basemap, bounds, attribution). Plus aucune
+    dépendance aux tuiles OSM (politique d'usage) ni à un quota. Les
+    services de tuiles restent possibles via `VITE_TILE_PROVIDER`.
+  - Hors-ligne : `src/pwa/basemap.ts` met le fichier entier en cache
+    (« fond-de-carte », anciennes versions supprimées) 3 s après le
+    lancement ; route Workbox CacheFirst + `rangeRequests` pour servir
+    les lectures partielles depuis ce cache. **Testé** (build, serveur
+    local avec en-têtes `_headers` et requêtes Range, Edge headless) :
+    réseau coupé → 16 tuiles dessinées en vue d'ensemble, 12 au zoom sur
+    le trajet, pas de plan de secours, aucune violation CSP.
+  - Carte : zoom par quarts de palier, cadrage refait une fois la taille
+    du conteneur connue (le parcours entier tient au-dessus du tiroir).
+  - `scripts/build-basemap.ts` pour régénérer le fond (affiche le bloc
+    `map` à reporter dans event.json, qui garde sa mise en forme).
+  - README : section « Héberger gratuitement : Cloudflare Pages » (mise en
+    place, circuit test → prod, rollback, analytics).

@@ -11,6 +11,7 @@ import { QrPage } from "./app/QrPage";
 import { initAnalytics, track } from "./lib/analytics";
 import { parseDemoParams } from "./lib/clock";
 import { isStandalone } from "./pwa/platform";
+import { warmBasemap } from "./pwa/basemap";
 import { registerServiceWorker, restoreScrollAfterUpdate } from "./pwa/serviceWorker";
 
 // Pages hors app (non liées) : chargées à part.
@@ -35,6 +36,8 @@ createRoot(document.getElementById("root")!).render(
 
 restoreScrollAfterUpdate();
 registerServiceWorker();
+// Fond de carte téléchargé en arrière-plan pour être disponible hors-ligne le jour J.
+window.setTimeout(() => warmBasemap(BUNDLED_EVENT.map?.basemap), 3000);
 
 initAnalytics({ demo: parseDemoParams(window.location.search).demo });
 if (isStandalone()) track("ouverture_app_installee");

@@ -1,11 +1,12 @@
-// Mesure d'audience respectueuse de la vie privée : Vercel Web Analytics
-// (sans cookie, pas de bandeau de consentement nécessaire). À activer dans
-// le tableau de bord Vercel : projet → Analytics → Enable.
+// Mesure d'audience respectueuse de la vie privée : Cloudflare Web Analytics
+// (sans cookie de suivi, pas de bandeau de consentement nécessaire ; les
+// paramètres d'URL — prénom, allure — ne sont pas enregistrés par Cloudflare).
+// Activée seulement si VITE_CF_ANALYTICS_TOKEN est défini au build
+// (Cloudflare → Pages → projet → Settings → Variables, environnement
+// Production uniquement : les liens de test ne sont pas comptés).
 //
-// Aucune donnée personnelle : l'URL est envoyée SANS ses paramètres (pas
-// de prénom ni d'allure), et les événements ne portent que des catégories.
-
-import { inject, track as vercelTrack } from "@vercel/analytics";
+// Cloudflare ne compte que les pages vues : les événements ci-dessous sont
+// conservés dans le code (track) pour un futur compteur, sans effet pour l'instant.
 
 export type AnalyticsEvent =
   | "partage"
@@ -22,25 +23,25 @@ export function stripUrl(url: string): string {
   return `${u.origin}${u.pathname}`;
 }
 
-let enabled = false;
+export const BEACON_SRC = "https://static.cloudflareinsights.com/beacon.min.js";
 
 export function initAnalytics(options: { demo: boolean }) {
-  // Pas de mesure en mode démo (présentations) ni en développement.
-  if (options.demo || import.meta.env.DEV) return;
-  enabled = true;
-  inject({
-    mode: "production",
-    // Les changements d'URL (replaceState à chaque saisie) ne sont pas des pages vues.
-    disableAutoTrack: true,
-    beforeSend: (event) => ({ ...event, url: stripUrl(event.url) }),
-  });
-}
-
-export function track(event: AnalyticsEvent, properties?: Record<string, string>) {
-  if (!enabled) return;
+  const token = import.meta.env.VITE_CF_ANALYTICS_TOKEN;
+  // Pas de mesure en mode démo (présentations), en développement ni sans token.
+  if (options.demo || import.meta.env.DEV || !token) return;
   try {
-    vercelTrack(event, properties);
+    const script = document.createElement("script");
+    script.defer = true;
+    script.src = BEACON_SRC;
+    // spa:false : les replaceState (saisie du prénom…) ne sont pas des pages vues.
+    script.dataset.cfBeacon = JSON.stringify({ token, spa: false });
+    document.head.appendChild(script);
   } catch {
     // la mesure d'audience ne doit jamais casser l'app
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function track(_event: AnalyticsEvent, _properties?: Record<string, string>) {
+  // Cloudflare Web Analytics ne gère pas d'événements personnalisés.
 }
