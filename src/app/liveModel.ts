@@ -81,3 +81,10 @@ export function upcomingPassages(passages: Passage[], nowMinutes: number | null,
   if (nowMinutes === null) return passages.slice(0, count);
   return passages.filter((p) => p.windowEndMinutes >= nowMinutes).slice(0, count);
 }
+
+/** Où en est-on dans le plan : étape en cours (dans sa fourchette) et prochaine étape. */
+export function planProgress(steps: Passage[], nowMinutes: number): { current: Passage | null; next: Passage | null; nextIndex: number } {
+  const current = steps.find((p) => p.windowStartMinutes <= nowMinutes && nowMinutes <= p.windowEndMinutes) ?? null;
+  const nextIndex = steps.findIndex((p) => p.windowStartMinutes > nowMinutes && p !== current);
+  return { current, next: nextIndex >= 0 ? steps[nextIndex] : null, nextIndex };
+}

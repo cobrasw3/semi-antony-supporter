@@ -12,7 +12,7 @@ import { minutesToTimeString, type Passage } from "../lib/timing";
 import { readJson, writeJson } from "../lib/storage";
 import { Button, CountdownRing, SpotCard } from "../ui/components";
 import { haptic } from "../ui/haptics";
-import { countdown, ringProgress, startProgress, upcomingPassages } from "./liveModel";
+import { countdown, planProgress, ringProgress, startProgress, upcomingPassages } from "./liveModel";
 import { Timeline } from "./Timeline";
 import type { useGeolocation } from "./useGeolocation";
 import type { Supporter } from "./useSupporter";
@@ -99,11 +99,16 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
     }
 
     case "live": {
-      const { current, next } = status;
+      // Le supporter suit SON plan : étape en cours et prochaine étape du plan.
+      const { current, next, nextIndex } = planProgress(plan.steps, clock.minutes);
+      const total = plan.steps.length;
       if (current) {
+        const index = plan.steps.indexOf(current);
         hero = (
           <section className="hero hero--now">
-            <p className="hero__kicker">Ouvre l'œil</p>
+            <p className="hero__kicker">
+              Étape {index + 1}/{total} · Ouvre l'œil
+            </p>
             <h2 className="hero__spot display">{spotName(current)}</h2>
             <CountdownRing progress={1} value="Là !" unit="maintenant" caption={`jusqu'à ${current.windowEnd}`} />
             <p className="hero__next">
@@ -116,15 +121,18 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
             )}
           </section>
         );
-      } else if (next && status.minutesToNext !== null) {
-        const c = countdown(status.minutesToNext);
+      } else if (next) {
+        const minutesToNext = next.estimatedMinutes - clock.minutes;
+        const c = countdown(minutesToNext);
         const walk = walkTo(next);
         hero = (
           <section className="hero">
-            <p className="hero__kicker">Prochain passage</p>
+            <p className="hero__kicker">
+              Étape {nextIndex + 1}/{total} · Prochain passage
+            </p>
             <h2 className="hero__spot display">{spotName(next)}</h2>
             <CountdownRing
-              progress={ringProgress(passages, next, clock.minutes, startMinutes)}
+              progress={ringProgress(plan.steps, next, clock.minutes, startMinutes)}
               value={c.value}
               unit={c.unit}
               caption={`${next.windowStart} – ${next.windowEnd}`}
@@ -137,15 +145,21 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
               // Depuis ta position, pas d'itinéraire réel (il faudrait envoyer la
               // position à un service externe) : estimation, annoncée comme telle.
               walk={walk ? `≈ ${Math.ceil(walk.minutes)} min à pied (${formatWalk(walk.walkKm)}, estimation)` : null}
-              late={walk ? walk.minutes > status.minutesToNext : false}
+              late={walk ? walk.minutes > minutesToNext : false}
             />
           </section>
         );
       } else {
+        const finish = passages.reduce((x, y) => (y.km >= x.km ? y : x));
+        const finishSpot = spotById[finish.spotId];
         hero = (
           <section className="hero">
-            <p className="hero__kicker">Dernière ligne droite</p>
+            <p className="hero__kicker">Ton plan est terminé</p>
             <p className="hero__title display">Direction l'arrivée</p>
+            <p className="hero__sub">
+              Arrivée de {runnerName || "ton coureur"} vers <strong className="num">{finish.estimatedTime}</strong>
+              {finishSpot ? ` ${spotWhere(finishSpot)}` : ""}.
+            </p>
           </section>
         );
       }
@@ -165,7 +179,14 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
   }
 
   const now = raceDay ? clock.minutes : null;
-  const upcoming = upcomingPassages(passages, now, 3);
+  // Les étapes de TON plan (pas tous les passages) : les prochaines le jour J,
+  // les premières avant.
+  const heroStep =
+    now !== null ? (planProgress(plan.steps, now).current ?? planProgress(plan.steps, now).next) : null;
+  const upcoming =
+    now !== null
+      ? plan.steps.slice(heroStep ? plan.steps.indexOf(heroStep) + 1 : plan.steps.length).slice(0, 3)
+      : upcomingPassages(plan.steps, null, 3);
   const caption =
     runnerKm !== null
       ? runnerKm >= race.distanceKm
@@ -183,25 +204,42 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner }: LiveTabP
         <section className="section" aria-labelledby="live-next">
           <div className="section__head">
             <h2 id="live-next" className="section__title display">
-              {raceDay ? "Ensuite" : "Le jour J"}
+              {raceDay ? "Ensuite" : "Ton programme"}
             </h2>
             <button type="button" className="section__link" onClick={onGoPlan}>
-              Mon plan <ArrowRight size={16} aria-hidden="true" />
+              Tout mon plan <ArrowRight size={16} aria-hidden="true" />
             </button>
           </div>
+          {!raceDay && (
+            <p className="caption section__lead">
+              Les premières étapes de ton plan ({plan.steps.length} passages
+              {plan.totalWalkKm < 0.05 ? ", sans bouger" : `, ${formatWalk(plan.totalWalkKm)} à pied`}).
+            </p>
+          )}
           <div className="stack">
-            {upcoming.map((p) => (
-              <button key={`${p.spotId}-${p.km}`} type="button" className="card-btn" onClick={() => onOpenSpot(p.spotId)}>
-                <SpotCard
-                  number={spotNumbers[p.spotId]}
-                  name={spotName(p)}
-                  meta={p.label}
-                  time={p.estimatedTime}
-                  window={`${p.windowStart}–${p.windowEnd}`}
-                  highlight={spotById[p.spotId]?.highlight}
-                />
-              </button>
-            ))}
+            {upcoming.map((p) => {
+              const index = plan.steps.indexOf(p);
+              const walkBefore = index > 0 ? plan.transitions[index - 1] : null;
+              // Court : ce qui compte pour le supporter, c'est le trajet à faire.
+              const how = !walkBefore
+                ? p.label
+                : walkBefore.sameSpot
+                  ? "sur place"
+                  : `${Math.ceil(walkBefore.walk.minutes)} min à pied`;
+              const meta = `Étape ${index + 1} · ${how}`;
+              return (
+                <button key={`${p.spotId}-${p.km}`} type="button" className="card-btn" onClick={() => onOpenSpot(p.spotId)}>
+                  <SpotCard
+                    number={spotNumbers[p.spotId]}
+                    name={spotName(p)}
+                    meta={meta}
+                    time={p.estimatedTime}
+                    window={`${p.windowStart}–${p.windowEnd}`}
+                    highlight={spotById[p.spotId]?.highlight}
+                  />
+                </button>
+              );
+            })}
           </div>
         </section>
       )}

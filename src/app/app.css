@@ -1460,3 +1460,13 @@ a.btn {
 .draft-result svg {
   flex: none;
 }
+
+.section__lead {
+  margin: -4px 0 var(--s-3);
+}
+
+/* Une ligne secondaire longue ne doit jamais élargir la grille (ellipse). */
+.stack > *,
+.card-btn {
+  min-width: 0;
+}

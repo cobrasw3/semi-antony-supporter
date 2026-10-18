@@ -428,3 +428,22 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   pas encore validé) ; tests sur vrais iPhone/Android ; points à confirmer
   avec l'organisateur (date 2027, dénivelé, spots, 5 km, consigne) ;
   `npm audit fix` sur les dépendances de dev à valider.
+
+### 2026-10-18 (suite) — Live centré sur le plan (branche `feat/live-plan`, depuis `feat/spots-choisis`)
+
+- Retour utilisateur : Infos et Carte validées (il fournira le GPX officiel
+  du tracé), Plan convient pour l'instant (avis demandé), Live : la partie
+  « Le jour J » n'est pas comprise. Objectif : une version défendable
+  devant le service des sports.
+- Cause : sous « Le jour J », le Live listait les 3 premiers passages de la
+  course tous spots confondus (dont rue Marius Hue, absente du plan), et le
+  héros « Prochain passage » suivait tous les passages, pas le plan.
+- **Live centré sur le plan** : `planProgress` (liveModel.ts, testée) donne
+  l'étape en cours / la prochaine étape du plan choisi ; héros « Étape 2/7 ·
+  Prochain passage », anneau calculé entre étapes du plan, état « Ton plan
+  est terminé · Direction l'arrivée » quand la dernière étape est passée.
+  Avant le jour J : section « Ton programme » (premières étapes du plan,
+  « Étape 2 · 7 min à pied ») ; pendant : « Ensuite » (étapes suivantes,
+  sans répéter celle du héros) ; lien « Tout mon plan ».
+- Corrigé : cartes qui débordaient (grille élargie par une ligne non
+  sécable) → `min-width: 0` ; ligne secondaire raccourcie.

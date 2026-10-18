@@ -3,7 +3,7 @@ import rawEvent from "../../public/data/event.json";
 import { computeDayStatus } from "../lib/dayStatus";
 import { parseEventConfig } from "../lib/event";
 import { computeAllPassages, timeStringToMinutes } from "../lib/timing";
-import { countdown, headerInfo, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
+import { countdown, headerInfo, planProgress, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
 
 const config = parseEventConfig(rawEvent);
 const semi = config.races[0];
@@ -68,5 +68,27 @@ describe("upcomingPassages", () => {
 describe("shortDate", () => {
   it("formate en français court", () => {
     expect(shortDate("2027-03-21")).toBe("dim. 21 mars");
+  });
+});
+
+describe("planProgress", () => {
+  const steps = [passages[0], passages.find((p) => p.spotId === "parc-heller")!, passages.find((p) => p.kind === "finish")!];
+
+  it("donne la prochaine étape du plan (pas le prochain passage tous spots confondus)", () => {
+    const r = planProgress(steps, timeStringToMinutes("14:35"));
+    expect(r.current).toBeNull();
+    expect(r.next?.spotId).toBe("parc-heller");
+    expect(r.nextIndex).toBe(1);
+  });
+
+  it("étape en cours pendant sa fourchette", () => {
+    const r = planProgress(steps, timeStringToMinutes("14:45"));
+    expect(r.current?.spotId).toBe("parc-heller");
+    expect(r.next?.kind).toBe("finish");
+  });
+
+  it("plan terminé : ni étape en cours ni suivante", () => {
+    const r = planProgress(steps.slice(0, 2), timeStringToMinutes("15:30"));
+    expect(r).toEqual({ current: null, next: null, nextIndex: -1 });
   });
 });
