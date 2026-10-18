@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { TILES } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
 import { projectPointOntoRoute } from "../lib/geo";
@@ -14,7 +14,7 @@ import { planWalkingPaths } from "../lib/itinerary";
 import { directionArrows, kmMarks } from "../lib/mapMarkers";
 import { estimatedKm, positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
-import { Carousel } from "../ui/overlays";
+import { Carousel, type ToastItem } from "../ui/overlays";
 import type { Supporter } from "./useSupporter";
 
 const TILE_ERRORS_BEFORE_FALLBACK = 4;
@@ -110,14 +110,19 @@ export default function MapTab({
   focus,
   onOpenSpot,
   planFocus = 0,
+  buildHint = 0,
+  onToast,
 }: {
   s: Supporter;
   focus: { spotId: string; nonce: number } | null;
   onOpenSpot: (spotId: string) => void;
   /** Demande de cadrage sur le trajet du plan (incrémentée par l'onglet Plan). */
   planFocus?: number;
+  /** Demande « construire mon parcours » venant du Plan : ouvre le tiroir des spots. */
+  buildHint?: number;
+  onToast: (toast: ToastItem, ms?: number) => void;
 }) {
-  const { race, track, spotNumbers, passagesBySpot, clock, config, pace, startMinutes, runnerName, plan } = s;
+  const { race, track, spotNumbers, passagesBySpot, clock, config, pace, startMinutes, runnerName, plan, planKind, customSpots, addSpot, removeSpot, useBestPlan, spotById } = s;
   const spots = race.spots;
   const [active, setActive] = useState(() => Math.max(0, spots.findIndex((sp) => sp.id === focus?.spotId)));
   const [flyTarget, setFlyTarget] = useState<Spot | null>(focus ? spots.find((sp) => sp.id === focus.spotId) ?? null : null);
@@ -136,6 +141,36 @@ export default function MapTab({
   const planPaths = useMemo(() => planWalkingPaths(plan, race.spots, race.walkingRoutes?.paths), [plan, race]);
   const planSpotIds = useMemo(() => new Set(plan.steps.map((p) => p.spotId)), [plan]);
   const [fitPlan, setFitPlan] = useState(planFocus);
+  useEffect(() => {
+    if (buildHint > 0) setDrawerOpen(true);
+  }, [buildHint]);
+
+  /** Ajoute / retire un spot du parcours sur mesure, avec un retour clair. */
+  const toggleInParcours = (id: string) => {
+    const name = spotById[id]?.shortName ?? id;
+    if (planKind === "custom" && customSpots.includes(id)) {
+      removeSpot(id);
+      onToast({ id: `retire-${id}`, text: `${name} retiré de ton parcours.` }, 2500);
+      return;
+    }
+    const result = addSpot(id);
+    if (result.ok) {
+      onToast({ id: `ajout-${id}`, text: `${name} ajouté à ton parcours.` }, 2500);
+    } else {
+      const drop = result.drop.map((d) => spotById[d]?.shortName).filter(Boolean);
+      onToast(
+        {
+          id: `refus-${id}`,
+          tone: "warn",
+          icon: <AlertTriangle size={18} />,
+          text: drop.length
+            ? `Impossible d'ajouter ${name} avec tes autres spots : retire ${drop.join(" ou ")} d'abord.`
+            : `Impossible d'ajouter ${name} : trop loin de tes autres spots pour l'allure de ${runnerName || "ton coureur"}.`,
+        },
+        5000
+      );
+    }
+  };
   useEffect(() => setFitPlan(planFocus), [planFocus]);
   const kms = useMemo(() => kmMarks(track, race), [track, race]);
   const raceDay = clock.date === config.event.date;
@@ -266,29 +301,58 @@ export default function MapTab({
         <button type="button" className="map-drawer__handle" onClick={() => setDrawerOpen((o) => !o)} aria-expanded={drawerOpen}>
           <span className="sheet__handle" aria-hidden="true" />
           <span className="map-drawer__label">
-            {spots.length} spots {drawerOpen ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
+            {planKind === "custom" ? "Ton parcours" : planKind === "stay" ? "Sans bouger" : "Meilleur parcours"} ·{" "}
+            {plan.steps.length} passages
+            {plan.totalWalkKm >= 0.05 ? ` · ${plan.totalWalkKm.toFixed(1).replace(".", ",")} km` : ""}{" "}
+            {drawerOpen ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
           </span>
         </button>
         {drawerOpen && (
-          <Carousel label="Spots du parcours" activeIndex={active} onActiveChange={(i) => select(i)}>
-            {spots.map((spot) => {
-              const p = nextPassageOf(passagesBySpot[spot.id], now);
-              return (
-                <button key={spot.id} type="button" className="map-card" onClick={() => onOpenSpot(spot.id)}>
-                  <span className={spot.highlight ? "spot-badge spot-badge--fort" : "spot-badge"} aria-hidden="true">
-                    {spotNumbers[spot.id]}
-                  </span>
-                  <span className="map-card__main">
-                    <span className="map-card__name">{spot.shortName}</span>
-                    <span className="map-card__meta">
-                      {p ? p.label : "Aucun passage"}
-                    </span>
-                  </span>
-                  {p && <span className="map-card__time">{p.estimatedTime}</span>}
-                </button>
-              );
-            })}
-          </Carousel>
+          <>
+            <p className="map-drawer__hint">
+              {planKind === "custom" ? (
+                <>
+                  Ajoute ou retire des spots : le parcours se recalcule.{" "}
+                  <button type="button" className="link" onClick={useBestPlan}>
+                    Meilleur parcours
+                  </button>
+                </>
+              ) : (
+                "Touche « Ajouter » sur un spot pour construire ton parcours."
+              )}
+            </p>
+            <Carousel label="Spots du parcours" activeIndex={active} onActiveChange={(i) => select(i)}>
+              {spots.map((spot) => {
+                const p = nextPassageOf(passagesBySpot[spot.id], now);
+                const mine = planKind === "custom" && customSpots.includes(spot.id);
+                return (
+                  <div key={spot.id} className={mine ? "map-card is-mine" : "map-card"}>
+                    <button type="button" className="map-card__open" onClick={() => onOpenSpot(spot.id)}>
+                      <span className={spot.highlight ? "spot-badge spot-badge--fort" : "spot-badge"} aria-hidden="true">
+                        {spotNumbers[spot.id]}
+                      </span>
+                      <span className="map-card__main">
+                        <span className="map-card__name">{spot.shortName}</span>
+                        <span className="map-card__meta">
+                          {p ? `${p.estimatedTime} · ${p.label}` : "Aucun passage"}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={mine ? "map-card__toggle is-on" : "map-card__toggle"}
+                      aria-pressed={mine}
+                      onClick={() => toggleInParcours(spot.id)}
+                    >
+                      {mine ? <Check size={18} strokeWidth={3} aria-hidden="true" /> : <Plus size={18} strokeWidth={3} aria-hidden="true" />}
+                      {mine ? "Dans ton parcours" : "Ajouter"}
+                      <span className="sr-only"> : {spot.shortName}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </Carousel>
+          </>
         )}
       </section>
     </div>

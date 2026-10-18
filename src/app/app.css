@@ -938,20 +938,122 @@ a.btn {
 }
 
 .map-card {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
+  display: grid;
+  gap: 6px;
   width: 100%;
-  min-height: 84px;
-  padding: var(--s-3) var(--s-4);
-  border: none;
+  padding: var(--s-3);
+  border: 2px solid transparent;
   border-radius: var(--r-lg);
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow-1);
+}
+
+.map-card.is-mine {
+  border-color: var(--sprint);
+}
+
+.map-card__open {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.map-card__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text);
+  font: 800 var(--t-sm) / 1 var(--font-body);
+  cursor: pointer;
+}
+
+.map-card__toggle.is-on {
+  border-color: var(--sprint);
+  background: var(--sprint);
+  color: var(--on-sprint);
+}
+
+.map-drawer__hint {
+  margin: 0 var(--s-5);
+  color: var(--muted);
+  font-size: var(--t-xs);
+  text-align: center;
+}
+
+.current-plan {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  padding: var(--s-4);
+  border: 2px solid var(--sprint);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.current-plan__count {
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: 0.9;
+  color: var(--sprint-text);
+}
+
+.current-plan__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.current-plan__kicker {
+  color: var(--sprint-text);
+  font: 800 var(--t-sm) / 1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.current-plan__title {
+  font-weight: 800;
+  font-size: var(--t-md);
+}
+
+.current-plan__sub {
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+
+.alt-line {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--soft);
+  color: var(--on-soft);
+  font: inherit;
+  font-size: var(--t-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.alt-line strong {
+  color: var(--text);
 }
 
 .map-card__main {
@@ -978,11 +1080,7 @@ a.btn {
   white-space: nowrap;
 }
 
-.map-card__time {
-  flex: none;
-  font: 800 2rem / 1 var(--font-display);
-  font-variant-numeric: tabular-nums;
-}
+
 
 @media (prefers-reduced-motion: reduce) {
   .map-runner::before {
@@ -1535,4 +1633,10 @@ a.btn {
 
 .plan__map-btn {
   margin-top: var(--s-4);
+}
+
+/* Sur la carte, les toasts s'affichent sous l'en-tête (le bas est occupé par le tiroir des spots). */
+.shell--carte .toast-stack {
+  top: calc(var(--top-h, 120px) + var(--s-3));
+  bottom: auto;
 }

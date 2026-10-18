@@ -1,7 +1,7 @@
 // Coque de l'app : en-tête compact, onglets (Live, Plan, Carte, Infos),
 // tiroirs (coureur, spot), toasts et fines barres d'état. Affichage seulement.
 
-import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Info, Map as MapIcon, Megaphone, Navigation, Radio, RefreshCw, Route, WifiOff } from "lucide-react";
 import { track } from "../lib/analytics";
 import { spotWhere } from "../lib/event";
@@ -38,6 +38,7 @@ export function Shell({ s }: { s: Supporter }) {
   const [spotSheet, setSpotSheet] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ spotId: string; nonce: number } | null>(null);
   const [planFocus, setPlanFocus] = useState(0);
+  const [buildHint, setBuildHint] = useState(0);
   const [toast, setToast] = useState<ToastItem | null>(null);
   const [updateReady, setUpdateReady] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -53,6 +54,18 @@ export function Shell({ s }: { s: Supporter }) {
   }, []);
 
   useEffect(() => onUpdateReady(setUpdateReady), []);
+
+  // Hauteur réelle de l'en-tête (varie avec les barres démo / hors-ligne) :
+  // sert à placer les toasts sous l'en-tête sur l'onglet Carte.
+  const topRef = useRef<HTMLDivElement>(null);
+  const [topHeight, setTopHeight] = useState(0);
+  useEffect(() => {
+    const el = topRef.current;
+    if (!el) return;
+    const o = new ResizeObserver(() => setTopHeight(el.offsetHeight));
+    o.observe(el);
+    return () => o.disconnect();
+  }, []);
 
   const showToast = useCallback((t: ToastItem, ms = 3500) => {
     setToast(t);
@@ -107,19 +120,23 @@ export function Shell({ s }: { s: Supporter }) {
           setPlanFocus((n) => n + 1);
           setTab("carte");
         }}
+        onBuildOnMap={() => {
+          setBuildHint((n) => n + 1);
+          setTab("carte");
+        }}
       />
     ),
     carte: (
       <Suspense fallback={<div className="map-loading">Chargement de la carte…</div>}>
-        <MapTab s={s} focus={mapFocus} onOpenSpot={setSpotSheet} planFocus={planFocus} />
+        <MapTab s={s} focus={mapFocus} onOpenSpot={setSpotSheet} planFocus={planFocus} buildHint={buildHint} onToast={showToast} />
       </Suspense>
     ),
     infos: <InfosTab s={s} onShare={share} />,
   };
 
   return (
-    <div className={`ui shell shell--${tab}`}>
-      <div className="shell__top">
+    <div className={`ui shell shell--${tab}`} style={{ "--top-h": `${topHeight}px` } as React.CSSProperties}>
+      <div className="shell__top" ref={topRef}>
         {s.isDemo && (
           <StatusStrip tone="demo">Mode démo · {minutesToTimeString(clock.minutes)}, jour de la course</StatusStrip>
         )}

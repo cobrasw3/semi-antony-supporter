@@ -473,3 +473,27 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   jour). `main` non touchée. Le dépôt n'étant pas relié à Vercel, aucun
   déploiement automatique. La plus récente, qui contient tout le travail :
   `feat/plan-retouches`.
+
+### 2026-10-18 (suite) — Parcours sur mesure, pointage, Cloudflare (branche `feat/sur-mesure`, depuis `feat/plan-retouches`)
+
+- Demandes utilisateur : pointage « mon athlète est passé ici à telle
+  heure » pour recaler les horaires (local pour l'instant) ; choisir ses
+  spots directement sur la carte ; une seule option par défaut (le meilleur
+  parcours) + parcours sur mesure, en gardant une ligne « reste au stade » ;
+  hébergement gratuit pour 1000-2000 utilisateurs sur **Cloudflare Pages**
+  (l'utilisateur a déjà un compte avec un site en production : nouveau
+  projet Pages indépendant) avec circuit lien de test → production et mise
+  à jour automatique des téléphones.
+- Précision donnée : le meilleur parcours stade ↔ parc Heller n'a pas
+  toujours 7 passages (6 à 4:30/km) → calculé selon l'allure, jamais « 7 »
+  en dur.
+- **Étape 1 — parcours sur mesure** : état simplifié dans `useSupporter`
+  (`planKind` = best / stay / custom, `addSpot` qui refuse une combinaison
+  impossible en disant quoi retirer, `removeSpot`, `useBestPlan`,
+  `useStayPut`) ; options 5×/6× et tiroir de cases supprimés. Onglet Plan :
+  carte « Le meilleur parcours · 7× · 3,0 km », une ligne alternative
+  (« Reste au stade : 4 passages » ou « Revenir au meilleur parcours »),
+  « Choisir mes spots sur la carte ». Onglet Carte : bouton « Ajouter » /
+  « Dans ton parcours » sur chaque spot du carrousel, en-tête du tiroir
+  « Ton parcours · 4 passages · 1,4 km », toasts de confirmation / refus
+  (affichés sous l'en-tête sur la carte pour ne pas masquer le tiroir).

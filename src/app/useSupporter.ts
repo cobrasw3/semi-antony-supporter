@@ -20,7 +20,7 @@ import {
   updateCurrentUrl,
   type RunnerPrefs,
 } from "../lib/format";
-import { planOptions } from "../lib/itinerary";
+import { planOptions, spotsToDrop } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
@@ -29,7 +29,7 @@ import { needsOnboarding } from "./onboardingRule";
 const PREFS_KEY = "semi-supporter:prefs";
 const ONBOARDED_KEY = "semi-supporter:onboarded";
 const SPOTS_KEY = "semi-supporter:spots-choisis";
-const COUNT_KEY = "semi-supporter:nb-passages";
+const STAY_KEY = "semi-supporter:reste-sur-place";
 const SPOT_MODE_KEY = "semi-supporter:mode-spots";
 
 export function useSupporter() {
@@ -77,46 +77,67 @@ export function useSupporter() {
   // Spots choisis par l'utilisateur (aucun = tous) : le plan optimal se
   // calcule sur leurs seuls passages.
   const [chosenSpots, setChosenSpots] = useState<string[]>(() => readJson<string[]>(SPOTS_KEY) ?? []);
-  const toggleSpot = useCallback(
-    (id: string) => setChosenSpots((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
-    []
-  );
-  const resetSpots = useCallback(() => setChosenSpots([]), []);
   useEffect(() => writeJson(SPOTS_KEY, chosenSpots), [chosenSpots]);
   // Distances à pied réelles (itinéraires piétons pré-calculés), sinon estimation.
   const routes = race.walkingRoutes?.km;
-  // Compromis « nombre de passages ↔ marche » : une option par niveau utile,
-  // de « sans bouger » au maximum possible.
-  // « Meilleurs spots » : l'app choisit. « Mes spots » : le plan passe par
-  // chacun des spots cochés (et seulement eux).
+  // Trois façons de suivre le coureur :
+  //  - « meilleur parcours » (par défaut) : le plus de passages possible ;
+  //  - « reste au stade » : sans marcher (le meilleur spot sans bouger) ;
+  //  - « sur mesure » : le parcours passe par chacun des spots choisis sur la carte.
   const [spotMode, setSpotMode] = useState<"auto" | "mine">(() => (readJson<string>(SPOT_MODE_KEY) === "mine" ? "mine" : "auto"));
   useEffect(() => writeJson(SPOT_MODE_KEY, spotMode), [spotMode]);
+  const [stayPut, setStayPut] = useState(() => readJson<boolean>(STAY_KEY) === true);
+  useEffect(() => writeJson(STAY_KEY, stayPut), [stayPut]);
+  const walking = config.settings.walking;
   const required = useMemo(
     () => (spotMode === "mine" ? chosenSpots.filter((id) => race.spots.some((sp) => sp.id === id)) : []),
     [spotMode, chosenSpots, race.spots]
   );
-  const autoOptions = useMemo(
-    () => planOptions(passages, race.spots, config.settings.walking, routes),
-    [passages, race.spots, config.settings.walking, routes]
-  );
+  const autoOptions = useMemo(() => planOptions(passages, race.spots, walking, routes), [passages, race.spots, walking, routes]);
+  // Spots imposés : on accepte aussi les trajets justes (⚠️) mais faisables.
   const mineOptions = useMemo(
-    // Spots imposés : on accepte aussi les trajets justes (⚠️) mais faisables.
-    () => (required.length ? planOptions(passages, race.spots, config.settings.walking, routes, required, true) : autoOptions),
-    [required, passages, race.spots, config.settings.walking, routes, autoOptions]
+    () => (required.length ? planOptions(passages, race.spots, walking, routes, required, true) : []),
+    [required, passages, race.spots, walking, routes]
   );
-  // Spots incompatibles : on le signale, et le reste de l'app garde un plan valable.
-  const spotsConflict = required.length > 0 && mineOptions.length === 0;
-  const planOptionsList = spotsConflict ? autoOptions : mineOptions;
-  // Nombre de passages voulu (null = le maximum). Si l'allure change et que
-  // ce nombre n'est plus atteignable, on prend la meilleure option en dessous.
-  const [wantedCount, setWantedCount] = useState<number | null>(() => readJson<number | null>(COUNT_KEY));
-  useEffect(() => writeJson(COUNT_KEY, wantedCount), [wantedCount]);
   const emptyPlan = { steps: [], transitions: [], totalWalkKm: 0 };
-  const plan =
-    (wantedCount === null
-      ? planOptionsList.at(-1)
-      : (planOptionsList.filter((o) => o.steps.length <= wantedCount).at(-1) ?? planOptionsList[0])) ?? emptyPlan;
-  const maxPlan = planOptionsList.at(-1) ?? emptyPlan;
+  const bestPlan = autoOptions.at(-1) ?? emptyPlan;
+  // « Reste au stade » : l'option sans marcher, s'il y en a une.
+  const stationaryPlan = autoOptions[0] && autoOptions[0].totalWalkKm < 0.05 ? autoOptions[0] : null;
+  // Si l'allure change et rend les spots choisis incompatibles : repli sur le meilleur parcours.
+  const spotsConflict = required.length > 0 && mineOptions.length === 0;
+  const planKind: "best" | "stay" | "custom" =
+    spotMode === "mine" && required.length > 0 && !spotsConflict ? "custom" : stayPut && stationaryPlan ? "stay" : "best";
+  const plan = planKind === "custom" ? mineOptions.at(-1)! : planKind === "stay" ? stationaryPlan! : bestPlan;
+
+  /** Ajoute un spot au parcours sur mesure ; refuse (et dit quoi retirer) si c'est impossible. */
+  const addSpot = useCallback(
+    (id: string): { ok: true } | { ok: false; drop: string[] } => {
+      const candidate = [...(planKind === "custom" ? required : []), id];
+      if (planOptions(passages, race.spots, walking, routes, candidate, true).length === 0) {
+        return { ok: false, drop: spotsToDrop(passages, race.spots, walking, candidate, routes, true).filter((x) => x !== id) };
+      }
+      setChosenSpots(candidate);
+      setSpotMode("mine");
+      return { ok: true };
+    },
+    [planKind, required, passages, race.spots, walking, routes]
+  );
+  const removeSpot = useCallback(
+    (id: string) => {
+      const rest = required.filter((x) => x !== id);
+      setChosenSpots(rest);
+      if (rest.length === 0) setSpotMode("auto");
+    },
+    [required]
+  );
+  const useBestPlan = useCallback(() => {
+    setSpotMode("auto");
+    setStayPut(false);
+  }, []);
+  const useStayPut = useCallback(() => {
+    setSpotMode("auto");
+    setStayPut(true);
+  }, []);
   const track = useMemo(() => trackOf(race), [race]);
   const spotNumbers = useMemo(() => Object.fromEntries(race.spots.map((s, i) => [s.id, i + 1])), [race.spots]);
   const spotById = useMemo(() => Object.fromEntries(race.spots.map((s) => [s.id, s])), [race.spots]);
@@ -145,19 +166,18 @@ export function useSupporter() {
     passages,
     passagesBySpot,
     plan,
-    maxPlan,
-    planOptions: planOptionsList,
-    spotMode,
-    setSpotMode,
-    requiredSpots: required,
+    planKind,
+    bestPlan,
+    stationaryPlan,
+    maxPlan: bestPlan,
+    planOptions: autoOptions,
     spotsConflict,
-    wantedCount,
-    setWantedCount,
+    customSpots: required,
+    addSpot,
+    removeSpot,
+    useBestPlan,
+    useStayPut,
     routes,
-    chosenSpots,
-    setChosenSpots,
-    toggleSpot,
-    resetSpots,
     track,
     spotNumbers,
     spotById,

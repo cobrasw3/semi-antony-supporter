@@ -2,13 +2,12 @@
 // marche), les étapes du plan choisi (✅/⚠️/❌ entre chaque), le choix des
 // spots, les horaires complets, les rappels.
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, BellRing, CalendarPlus, Check, Footprints, Map as MapIcon, MapPin, X } from "lucide-react";
 import { spotWhere } from "../lib/event";
-import { planOptions as planOptionsFor, spotsToDrop, type Plan, type Transition } from "../lib/itinerary";
+import type { Plan, Transition } from "../lib/itinerary";
 import type { Passage } from "../lib/timing";
 import { Button, Chip, Segmented, SpotCard } from "../ui/components";
-import { BottomSheet } from "../ui/overlays";
 import type { useReminders } from "./useReminders";
 import type { Supporter } from "./useSupporter";
 
@@ -59,11 +58,14 @@ export function PlanTab({
   reminders,
   onOpenSpot,
   onShowPlanOnMap,
+  onBuildOnMap,
 }: {
   s: Supporter;
   reminders: ReturnType<typeof useReminders>;
   onOpenSpot: (spotId: string) => void;
   onShowPlanOnMap: () => void;
+  /** Ouvre la carte pour construire son parcours spot par spot. */
+  onBuildOnMap: () => void;
 }) {
   const {
     passages,
@@ -73,49 +75,23 @@ export function PlanTab({
     spotNumbers,
     runnerName,
     plan,
-    planOptions,
-    setWantedCount,
-    setChosenSpots,
-    spotMode,
-    setSpotMode,
-    requiredSpots,
+    planKind,
+    bestPlan,
+    stationaryPlan,
+    customSpots,
     spotsConflict,
+    useBestPlan,
+    useStayPut,
     routes,
   } = s;
   const walking = config.settings.walking;
   const [view, setView] = useState<"plan" | "horaires">("plan");
-  const [moreOptions, setMoreOptions] = useState(false);
-  // Tiroir « Choisir mes spots » : brouillon modifié librement, appliqué
-  // seulement s'il est faisable (un plan impossible ne peut pas être validé).
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [draft, setDraft] = useState<string[]>([]);
-  const draftOptions = useMemo(
-    () => (draft.length ? planOptionsFor(passages, race.spots, walking, routes, draft, true) : []),
-    [draft, passages, race.spots, walking, routes]
-  );
-  const draftBest = draftOptions.at(-1);
-  const draftPossible = draftOptions.length > 0;
-  const draftDrop = useMemo(
-    () => (draft.length && !draftPossible ? spotsToDrop(passages, race.spots, walking, draft, routes, true) : []),
-    [draft, draftPossible, passages, race.spots, walking, routes]
-  );
   const who = runnerName || "ton coureur";
   const Who = runnerName || "Ton coureur";
 
-  const openSheet = () => {
-    setDraft(spotMode === "mine" ? requiredSpots : []);
-    setSheetOpen(true);
-  };
-  const applyDraft = () => {
-    setChosenSpots(draft);
-    setSpotMode("mine");
-    setWantedCount(null);
-    setSheetOpen(false);
-  };
-
   if (passages.length === 0) return <p className="section muted">Indique un objectif pour voir ton plan.</p>;
 
-  /** « au stade Georges Suant » ou « 1× Stade Georges Suant · 3× Rue des Hautes Bièvres ». */
+  /** « au stade Georges Suant » ou « 4× Stade Georges Suant · 3× Parc Heller ». */
   const spotsOf = (option: Plan) => {
     const counts = new Map<string, number>();
     for (const p of option.steps) counts.set(p.spotId, (counts.get(p.spotId) ?? 0) + 1);
@@ -124,7 +100,8 @@ export function PlanTab({
     return ids.map((id) => `${counts.get(id)}× ${spotById[id]?.shortName ?? id}`).join(" · ");
   };
   const inPlan = new Set(plan.steps.map((p) => `${p.spotId}@${p.km}`));
-  const hiddenOptions = planOptions.filter((o, i) => i !== 0 && i !== planOptions.length - 1 && o !== plan).length;
+  const still = plan.totalWalkKm < 0.05;
+  const title = planKind === "custom" ? "Ton parcours sur mesure" : planKind === "stay" ? "Sans bouger" : "Le meilleur parcours";
 
   const card = (p: Passage, meta: string) => (
     <button type="button" className="card-btn" onClick={() => onOpenSpot(p.spotId)}>
@@ -141,75 +118,50 @@ export function PlanTab({
 
   return (
     <div className="plan">
-      <section className="section" aria-labelledby="plan-choix">
-        <h2 id="plan-choix" className="section__title display">
-          Combien de fois veux-tu voir {who}&nbsp;?
+      <section className="section" aria-labelledby="plan-titre">
+        <h2 id="plan-titre" className="section__title display">
+          Où voir {who}&nbsp;?
         </h2>
-        {spotMode === "mine" && requiredSpots.length > 0 && !spotsConflict ? (
-          <div className="my-spots">
-            <p className="my-spots__label">
-              <MapPin size={16} aria-hidden="true" /> Tes spots :{" "}
-              <strong>{requiredSpots.map((id) => spotById[id]?.shortName).join(", ")}</strong>
-            </p>
-            <div className="my-spots__actions">
-              <button type="button" className="link" onClick={openSheet}>
-                Modifier
-              </button>
-              <button type="button" className="link" onClick={() => setSpotMode("auto")}>
-                Revenir aux meilleurs spots
-              </button>
-            </div>
-          </div>
-        ) : spotMode === "mine" && spotsConflict ? (
+
+        {spotsConflict && (
           <p className="notice notice--warn">
             <AlertTriangle size={18} aria-hidden="true" />
-            <span>
-              Avec cette allure, tes spots ne passent plus tous : voici les meilleurs.{" "}
-              <button type="button" className="link" onClick={openSheet}>
-                Modifier mes spots
-              </button>
-            </span>
+            <span>Avec cette allure, tes spots ne s'enchaînent plus : voici le meilleur parcours.</span>
           </p>
-        ) : (
-          <p className="caption plan__hint">Plus tu acceptes de marcher, plus tu peux voir de passages.</p>
         )}
 
-        <div className="options" role="radiogroup" aria-label="Nombre de passages">
-          {planOptions.map((option, i) => {
-            const selected = option === plan;
-            const essential = i === 0 || i === planOptions.length - 1 || selected;
-            if (!essential && !moreOptions) return null;
-            const still = option.totalWalkKm < 0.05;
-            return (
-              <button
-                key={option.steps.length}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                className="option"
-                onClick={() => setWantedCount(option === planOptions.at(-1) ? null : option.steps.length)}
-              >
-                <span className="option__count num">{option.steps.length}×</span>
-                <span className="option__main">
-                  <span className="option__title">
-                    {still ? "Sans bouger" : `${formatWalk(option.totalWalkKm)} à pied · ≈ ${walkMinutes(option)} min`}
-                  </span>
-                  <span className="option__sub">{spotsOf(option)}</span>
-                </span>
-                <span className="option__radio" aria-hidden="true">
-                  {selected && <Check size={18} strokeWidth={3} />}
-                </span>
-              </button>
-            );
-          })}
+        {/* Le parcours en cours, résumé en une carte. */}
+        <div className="current-plan">
+          <span className="current-plan__count num">{plan.steps.length}×</span>
+          <span className="current-plan__main">
+            <span className="current-plan__kicker">{title}</span>
+            <span className="current-plan__title">
+              {still ? "Sans marcher" : `${formatWalk(plan.totalWalkKm)} à pied · ≈ ${walkMinutes(plan)} min`}
+            </span>
+            <span className="current-plan__sub">{spotsOf(plan)}</span>
+          </span>
         </div>
-        {hiddenOptions > 0 && (
-          <button type="button" className="link plan__more" onClick={() => setMoreOptions((m) => !m)} aria-expanded={moreOptions}>
-            {moreOptions ? "Moins d'options" : `Plus d'options (${hiddenOptions})`}
+
+        {/* Une seule alternative en un tap, selon le cas. */}
+        {planKind === "best" && stationaryPlan && stationaryPlan !== bestPlan && (
+          <button type="button" className="alt-line" onClick={useStayPut}>
+            Tu préfères ne pas bouger ? <strong>Reste {spotsOf(stationaryPlan)} : {stationaryPlan.steps.length} passages</strong>
+          </button>
+        )}
+        {planKind !== "best" && (
+          <button type="button" className="alt-line" onClick={useBestPlan}>
+            Revenir au meilleur parcours : <strong>{bestPlan.steps.length} passages</strong>
           </button>
         )}
 
-        {/* 1) Rappels remontés juste sous le choix : on ne les rate plus. */}
+        <Button variant="secondary" block icon={<MapPin size={20} />} onClick={onBuildOnMap} className="plan__choose-btn">
+          {planKind === "custom" ? "Modifier mes spots sur la carte" : "Choisir mes spots sur la carte"}
+        </Button>
+        {planKind === "custom" && (
+          <p className="caption plan__hint">Tes spots : {customSpots.map((id) => spotById[id]?.shortName).join(", ")}.</p>
+        )}
+
+        {/* Rappels juste sous le parcours : on ne les rate pas. */}
         <div className="reminder-row">
           <Button variant="primary" block icon={<CalendarPlus size={20} />} onClick={reminders.downloadIcs}>
             Ajouter à mon agenda
@@ -230,69 +182,6 @@ export function PlanTab({
             )}
           </p>
         </div>
-
-        {!(spotMode === "mine" && requiredSpots.length > 0 && !spotsConflict) && (
-          <Button variant="secondary" block icon={<MapPin size={20} />} onClick={openSheet} className="plan__choose-btn">
-            Choisir mes spots
-          </Button>
-        )}
-
-        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Où veux-tu aller ?">
-          <div className="stack">
-            <p className="caption" style={{ margin: 0 }}>
-              Coche les spots qui te tentent : l'app les case tous dans ton plan.
-            </p>
-            <div className="chips">
-              {race.spots.map((spot) => (
-                <Chip
-                  key={spot.id}
-                  selected={draft.includes(spot.id)}
-                  onClick={() => setDraft((d) => (d.includes(spot.id) ? d.filter((x) => x !== spot.id) : [...d, spot.id]))}
-                >
-                  {spotNumbers[spot.id]}. {spot.shortName}
-                </Chip>
-              ))}
-            </div>
-            <div className={draftPossible || draft.length === 0 ? "draft-result" : "draft-result draft-result--ko"} aria-live="polite">
-              {draft.length === 0 ? (
-                "Coche au moins un spot."
-              ) : draftPossible && draftBest ? (
-                <span>
-                  Tu verras {who} <strong>{draftBest.steps.length} fois</strong>
-                  {draftBest.totalWalkKm < 0.05 ? " sans bouger" : ` · ${formatWalk(draftBest.totalWalkKm)} à pied`}
-                </span>
-              ) : (
-                <>
-                  <AlertTriangle size={18} aria-hidden="true" />
-                  <span>
-                    Impossible de caser tous ces spots
-                    {draftDrop.length > 0
-                      ? ` : décoche ${draftDrop
-                          .slice(0, 3)
-                          .map((id) => spotById[id]?.shortName)
-                          .join(" ou ")}.`
-                      : `, ils sont trop éloignés pour l'allure de ${who}. Décoche-en un.`}
-                  </span>
-                </>
-              )}
-            </div>
-            <Button size="lg" block disabled={!draftPossible} onClick={applyDraft}>
-              Voir ce plan
-            </Button>
-            {spotMode === "mine" && (
-              <Button
-                variant="ghost"
-                block
-                onClick={() => {
-                  setSpotMode("auto");
-                  setSheetOpen(false);
-                }}
-              >
-                Revenir aux meilleurs spots
-              </Button>
-            )}
-          </div>
-        </BottomSheet>
       </section>
 
       <section className="section" aria-label={view === "plan" ? "Étapes du plan" : "Horaires de passage"}>
@@ -311,7 +200,7 @@ export function PlanTab({
             <ol className="steps" style={{ marginTop: "var(--s-4)" }}>
               {plan.steps.map((p, i) => (
                 <li key={`${p.spotId}-${p.km}`}>
-                  {i > 0 && <TransitionRow t={plan.transitions[i - 1]} safety={walking.safetyMarginMinutes} />}
+                  {i > 0 && <TransitionRow t={plan.transitions[i - 1]} />}
                   {card(p, `Étape ${i + 1} · ${p.label}`)}
                 </li>
               ))}
@@ -326,15 +215,15 @@ export function PlanTab({
               <ul>
                 <li>Horaires : départ {race.startTime}, allure constante, fourchette qui s'élargit avec la distance.</li>
                 <li>
-                  Tu repars juste après le passage de {who} et tu dois arriver au spot suivant au moins{" "}
-                  {walking.safetyMarginMinutes} min avant le début de sa fourchette.
+                  Tu repars juste après le passage de {who} et tu dois arriver au spot suivant avant le début de sa
+                  fourchette ({walking.safetyMarginMinutes} min de marge pour le meilleur parcours).
                 </li>
                 <li>
                   {routes
                     ? `Distances à pied réelles par les rues (itinéraires OpenStreetMap), à ${String(walking.speedKmh).replace(".", ",")} km/h.`
                     : `Distances estimées à vol d'oiseau × ${String(walking.detourFactor).replace(".", ",")}, à ${String(walking.speedKmh).replace(".", ",")} km/h.`}
                 </li>
-                <li>Pour chaque nombre de passages, l'app cherche le trajet qui demande le moins de marche.</li>
+                <li>L'app cherche le trajet qui permet de voir le plus de passages en marchant le moins.</li>
                 <li>On peut traverser le parcours pour passer d'un spot à l'autre : fais juste attention aux coureurs.</li>
               </ul>
             </details>
@@ -343,7 +232,6 @@ export function PlanTab({
           <Horaires passages={passages} inPlan={inPlan} spotById={spotById} spotNumbers={spotNumbers} who={Who} onOpenSpot={onOpenSpot} />
         )}
       </section>
-
     </div>
   );
 }
