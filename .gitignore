@@ -27,3 +27,6 @@ dist-ssr
 
 # Sortie brute du script d'import GPX/KML, a relire avant integration dans public/data/event.json
 track.imported.json
+
+# Cloudflare wrangler (état local de wrangler dev)
+.wrangler/
