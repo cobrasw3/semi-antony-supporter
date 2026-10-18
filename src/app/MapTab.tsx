@@ -7,6 +7,7 @@ import L from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { PMTiles } from "pmtiles";
 import { leafletLayer } from "protomaps-leaflet";
 import { TILES, USE_LOCAL_BASEMAP } from "../config/tiles";
 import type { LatLng, Spot } from "../lib/event";
@@ -16,6 +17,7 @@ import { directionArrows, kmMarks } from "../lib/mapMarkers";
 import { positionOnTrack } from "../lib/runnerPosition";
 import type { Passage } from "../lib/timing";
 import { Carousel, type ToastItem } from "../ui/overlays";
+import { loadBasemap, wholeFileSource } from "../pwa/basemap";
 import type { Supporter } from "./useSupporter";
 
 const TILE_ERRORS_BEFORE_FALLBACK = 4;
@@ -50,12 +52,27 @@ const runnerIcon = L.divIcon({
 const calibrageIcon = L.divIcon({ html: '<div class="map-calib"></div>', className: "pin-wrap", iconSize: [16, 16], iconAnchor: [8, 8] });
 
 /** Fond de carte vectoriel hébergé (PMTiles), rendu par protomaps-leaflet. */
-function LocalBasemap({ url, attribution, onLoad }: { url: string; attribution: string; onLoad: () => void }) {
+function LocalBasemap({
+  url,
+  attribution,
+  onLoad,
+  onError,
+}: {
+  url: string;
+  attribution: string;
+  onLoad: () => void;
+  onError: () => void;
+}) {
   const map = useMap();
   useEffect(() => {
+    // Fichier introuvable (hors-ligne sans cache) : plan statique de secours.
+    let cancelled = false;
+    loadBasemap(url).catch(() => {
+      if (!cancelled) onError();
+    });
     const dark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
     const layer = leafletLayer({
-      url,
+      url: new PMTiles(wholeFileSource(url)),
       flavor: dark ? "dark" : "light",
       lang: "fr",
       maxDataZoom: 15,
@@ -64,6 +81,7 @@ function LocalBasemap({ url, attribution, onLoad }: { url: string; attribution: 
     layer.on("load", onLoad);
     layer.addTo(map);
     return () => {
+      cancelled = true;
       layer.off("load", onLoad);
       map.removeLayer(layer);
     };
@@ -281,6 +299,7 @@ export default function MapTab({
               url={localBasemap}
               attribution={config.map?.attribution ?? "© OpenStreetMap"}
               onLoad={() => setTilesLoaded(true)}
+              onError={() => setShowPlan(true)}
             />
           ) : (
           <TileLayer

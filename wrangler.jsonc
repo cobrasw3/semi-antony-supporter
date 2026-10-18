@@ -1,0 +1,16 @@
+// Hébergement Cloudflare (Worker « fichiers statiques » uniquement : aucun
+// code côté serveur, requêtes gratuites et illimitées).
+// Build : npm run build → dist/ ; en-têtes : public/_headers ; routes : _redirects.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "semi-antony-supporter",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // /qr, /styleguide… : toute page inconnue renvoie l'app.
+    "not_found_handling": "single-page-application"
+  },
+  // Lien de test par version et par branche (*.workers.dev).
+  "preview_urls": true,
+  "workers_dev": true
+}

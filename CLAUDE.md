@@ -10,9 +10,9 @@
 PWA prototype (React 19 + Vite 8 + TypeScript, Leaflet, Vitest) pour les
 supporters du semi-marathon d'Antony : où se placer et à quelle heure le
 coureur passe, à partir de son allure ou d'un temps visé.
-Hébergement cible (choix du 2026-10-18) : **Cloudflare Pages**, projet
-relié au dépôt GitHub — branche = lien de test `*.pages.dev`, `main` =
-production. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
+Hébergement (choix du 2026-10-18) : **Cloudflare, Worker « fichiers
+statiques »** (`wrangler.jsonc`) relié au dépôt GitHub — branche = lien de
+test `*.workers.dev`, `main` = production. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
 Historique : previews faites jusqu'ici avec la CLI Vercel (projet
 `semi-antony-supporter`, dépôt non relié à Vercel).
 Public visé par la démo : club Antony Athlétisme 92 et Direction des Sports
@@ -32,6 +32,8 @@ de la mairie.
   elle ne doit référencer aucune variable extérieure.
 - Nouveau fournisseur de tuiles = mettre à jour `src/config/tiles.ts`, la
   CSP de `public/_headers` (img-src ET connect-src) et la règle de cache SW.
+- Pas de `_redirects` : avec les Workers il redirige `/qr` vers `/` ; les
+  routes de l'app passent par `not_found_handling: single-page-application`.
 - Fond de carte : `public/carte/<id>-<date>.pmtiles` (nom daté, immuable),
   référencé par `event.json` → `map.basemap` ; régénérer avec
   `scripts/build-basemap.ts`.
@@ -553,3 +555,23 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   réutiliser le domaine de l'autre site, quota partagé de 500 builds/mois
   et 1 build simultané ; app 100 % statique → pas de consommation du quota
   Workers/Functions.
+- **Premier build Cloudflare (journal collé par l'utilisateur)** : projet
+  créé comme **Worker** (Workers Builds, `npx wrangler deploy`), pas Pages.
+  Build de `main` réussi (ancienne version) mais déploiement en échec :
+  sans config, wrangler tente une auto-configuration (installation de
+  `@cloudflare/vite-plugin`) qui plante (`npm error Cannot read properties
+  of null (reading 'edgesOut')`). Décision : garder le Worker (voie
+  recommandée par Cloudflare, mêmes avantages).
+  - `wrangler.jsonc` : assets seuls (`./dist`), SPA, `preview_urls`.
+  - Testé avec `wrangler dev` 4.151.1 : en-têtes de `_headers` appliqués ;
+    **les requêtes Range sont ignorées (200 au lieu de 206)** → le fond de
+    carte est désormais chargé en entier puis découpé en mémoire
+    (`wholeFileSource`, dépendance directe `pmtiles` 3.2.1), route Workbox
+    Range supprimée, plan statique de secours si le fichier est
+    inaccessible. `_redirects` supprimé (`/qr` → 307 vers `/`).
+    Vérifié : `/qr` affiche la page QR, carte en ligne et hors-ligne (16 et
+    12 tuiles), aucune violation CSP.
+  - `main` reste sans `wrangler.jsonc` : son build échouera jusqu'à la
+    fusion validée → la production n'est pas publiée par accident.
+  - README : section hébergement réécrite pour les Workers (variables de
+    build, builds des branches non-production, lien de test, rollback).

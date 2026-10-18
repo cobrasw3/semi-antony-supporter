@@ -1,3 +1,0 @@
-# Routes de l'app servies par index.html (réécriture, pas de redirection).
-/qr          /index.html  200
-/styleguide  /index.html  200

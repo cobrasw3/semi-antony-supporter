@@ -40,7 +40,7 @@ src/app/                       Écrans : assistant (Onboarding), coque à onglet
                                  useSupporter (assemble l'état, sans calcul), page /qr
 src/ui/                        Design system : tokens.css (couleurs, typo, formes), composants,
                                  marque par événement (branding.ts), page /styleguide
-public/_headers, _redirects    Cloudflare Pages : en-têtes de sécurité (CSP, HSTS…) et de cache, routes /qr
+wrangler.jsonc, public/_headers  Hébergement Cloudflare (fichiers statiques), en-têtes de sécurité et de cache
 public/carte/                  Fond de carte de la zone (PMTiles), cf. scripts/build-basemap.ts
 ```
 
@@ -81,7 +81,7 @@ Ajouter une 2e entrée dans `races` (ex. `"id": "5k"`, `"startTime": "13:15"`,
 `"loops": 1`, son tracé et ses spots). Le sélecteur de course s'affiche alors
 automatiquement.
 
-## Variables d'environnement (Cloudflare → Pages → Settings → Variables)
+## Variables de build (Cloudflare → Worker → Settings → Build → Variables)
 
 | Variable | Valeurs |
 | --- | --- |
@@ -159,7 +159,7 @@ premier plan, au retour du réseau et toutes les 15 min).
    - `start` / `end` : début et fin d'affichage, avec le fuseau (`+01:00` en
      mars, heure d'hiver ; `+02:00` en heure d'été).
    - `demoOnly: true` : visible seulement en mode démo (`?demo=1`).
-3. Valider le commit sur `main` → Cloudflare Pages redéploie en ~1 min → l'annonce
+3. Valider le commit sur `main` → Cloudflare redéploie en ~1 min → l'annonce
    apparaît chez les utilisateurs à leur prochain retour dans l'app.
 
 Pour retirer une annonce : supprimer l'entrée (ou avancer sa date `end`).
@@ -183,47 +183,56 @@ Lancer les tests (toute la logique de calcul) :
 npm run test
 ```
 
-## Héberger gratuitement : Cloudflare Pages
+## Héberger gratuitement : Cloudflare (Worker « fichiers statiques »)
 
-Site statique : gratuit, bande passante illimitée, réseau mondial (des
+Site 100 % statique servi par un Worker Cloudflare sans code serveur
+(`wrangler.jsonc`) : gratuit, requêtes illimitées, réseau mondial (des
 milliers d'utilisateurs simultanés ne posent aucun problème). Le fond de
 carte est hébergé avec l'app : aucun service tiers ni quota le jour J.
+Un projet est indépendant des autres sites du même compte Cloudflare
+(quota partagé : 500 builds/mois, un build à la fois).
 
-### Mise en place (une fois, ~5 min)
+### Mise en place (une fois)
 
-1. Tableau de bord Cloudflare → **Workers & Pages → Create → Pages →
-   Connect to Git** → autoriser GitHub et choisir ce dépôt. (Un nouveau
-   projet Pages est indépendant des autres sites du compte.)
-2. Réglages de build : framework **None** (ou Vite), build command
-   `npm run build`, output directory `dist`, branche de production **main**.
-3. Settings → Builds → **Preview branches** : toutes les branches sauf
-   `main` (ou « None » pour ne rien publier en preview).
-4. Option mesure d'audience : **Web Analytics → Add a site** (sans domaine
-   propre : choisir le site `*.pages.dev`), copier le *token* et le mettre
-   dans Pages → Settings → **Variables**, environnement **Production**
-   uniquement : `VITE_CF_ANALYTICS_TOKEN` = le token. Redéployer.
+1. Tableau de bord Cloudflare → **Workers & Pages → Create → Import a
+   repository** → choisir ce dépôt (autoriser le dépôt dans l'app GitHub
+   de Cloudflare si besoin).
+2. Build command `npm run build`, deploy command `npx wrangler deploy`
+   (défaut), branche de production **main**.
+3. Worker → Settings → Build → **Builds for non-production branches** :
+   activé (commande `npx wrangler versions upload`, défaut).
+4. Option mesure d'audience : **Web Analytics → Add a site**, copier le
+   *token* dans Worker → Settings → Build → **Variables and secrets** (ce
+   sont des variables *de build*) : `VITE_CF_ANALYTICS_TOKEN`.
 
 ### Circuit lien de test → production
 
 - Pousser une branche (`git push origin feat/xxx`) → Cloudflare construit
-  un **lien de test** `https://feat-xxx.<projet>.pages.dev` (et un lien par
-  commit). Les téléphones de test l'ouvrent normalement.
+  une version et donne un **lien de test**
+  `https://<branche>-semi-antony-supporter.<compte>.workers.dev`
+  (affiché dans le journal du build et dans Deployments).
 - Une fois validé : fusionner la branche dans `main` (PR GitHub) →
-  **production** `https://<projet>.pages.dev` en ~1 min.
-- Retour arrière : Pages → Deployments → choisir l'ancien → *Rollback*.
+  **production** `https://semi-antony-supporter.<compte>.workers.dev` en
+  ~1 min. Tant que `main` n'a pas `wrangler.jsonc`, son build échoue : rien
+  n'est publié en production (voulu jusqu'à validation).
+- Retour arrière : Worker → Deployments → version précédente → *Rollback*.
 - Les téléphones prennent la nouvelle version seuls (service worker :
   vérification au retour dans l'app et toutes les 15 min, rechargement
   automatique ou bandeau « Nouvelle version disponible »).
 
-`public/_headers` (sécurité, cache) et `public/_redirects` (routes `/qr`,
-`/styleguide`) sont lus par Cloudflare Pages.
+`public/_headers` (sécurité, cache) est appliqué par Cloudflare. Les routes
+`/qr` et `/styleguide` sont servies par le mode « single-page-application »
+de `wrangler.jsonc` (pas de `_redirects` : il provoquait une redirection
+`/qr` → `/`).
 
 ### Fond de carte
 
 `public/carte/*.pmtiles` : extrait de la zone du parcours (≈ 3,5 Mo, données
-OpenStreetMap via Protomaps), affiché par `protomaps-leaflet`. Téléchargé en
-arrière-plan au premier lancement puis servi depuis le cache : carte
-complète hors-ligne. Pour le régénérer (autre événement, carte plus
+OpenStreetMap via Protomaps), affiché par `protomaps-leaflet`. Le fichier
+est téléchargé EN ENTIER (au premier lancement, en arrière-plan), gardé
+dans le cache du navigateur et découpé en mémoire (`src/pwa/basemap.ts`) :
+ne dépend pas des requêtes partielles du serveur (Cloudflare Workers les
+ignore) et la carte est complète hors-ligne. Pour le régénérer (autre événement, carte plus
 récente) : `node scripts/build-basemap.ts` (outil `pmtiles` requis), puis
 reporter le bloc affiché dans `event.json` → `map`.
 

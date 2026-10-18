@@ -55,18 +55,6 @@ export default defineConfig({
             },
           },
           {
-            // Fond de carte hébergé (PMTiles) : lu par morceaux (Range). Le
-            // fichier entier est mis en cache par l'app (src/pwa/basemap.ts),
-            // puis découpé ici depuis le cache, y compris hors-ligne.
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith(".pmtiles"),
-            handler: "CacheFirst",
-            options: {
-              cacheName: "fond-de-carte",
-              rangeRequests: true,
-              cacheableResponse: { statuses: [200] },
-            },
-          },
-          {
             // Tuiles de carte : cache d'abord, limité en nombre et en durée.
             // Domaines cohérents avec src/config/tiles.ts et la CSP de
             // vercel.json. ⚠️ Fonction sérialisée telle quelle dans sw.js :
