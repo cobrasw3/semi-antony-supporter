@@ -685,3 +685,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - Accord de l'utilisateur (« c'est bon pour main, mets en production ») ;
   branche de production Cloudflare réglée sur `main` par l'utilisateur.
   `main` avancé sur `feat/sur-mesure` et poussé.
+- Build de `main` 542770de (0337024) **encore parti en preview**
+  (alias `main-…workers.dev`, à jour : points libres + ravito sud) :
+  l'adresse principale sert toujours l'ancienne version (bundle
+  index-BoF7cNKT, sans points libres) → l'utilisateur ne pouvait pas
+  toucher la carte pour ajouter un point. Réglage Cloudflare à revoir.
