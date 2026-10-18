@@ -639,3 +639,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   absolue) échappaient au défilement → page élargie (1560 px au lieu de
   390, tiroirs hors écran) dès qu'on sélectionnait un spot lointain.
   `.carousel { position: relative }`.
+- **Mise en production demandée par l'utilisateur** (« tu peux déjà mettre
+  ça en production ») : `main` avancé en avance rapide sur `feat/sur-mesure`
+  (55 commits, de 2b05fa8), poussé → build de production Cloudflare
+  (`npx wrangler deploy`) sur https://semi-antony-supporter.p-machard-2001.workers.dev.
