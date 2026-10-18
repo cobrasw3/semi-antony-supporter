@@ -692,3 +692,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   toucher la carte pour ajouter un point. Réglage Cloudflare à revoir.
 - Réglage Cloudflare corrigé par l'utilisateur ; commit poussé sur `main`
   pour relancer le build de production.
+- **Production à jour** (build e64ac0cf, e3f7ff6, déployé en production
+  cette fois) : https://semi-antony-supporter.p-machard-2001.workers.dev
+  sert la nouvelle version (points libres, ravito sud). Scénario rejoué sur
+  la production (Edge headless) : point km 3,1 touché → horaires, ajout au
+  parcours, pointage km 1,4 à 15:32 → « 16 min de retard », rappel Live.
