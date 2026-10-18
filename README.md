@@ -200,7 +200,8 @@ Un projet est indépendant des autres sites du même compte Cloudflare
 2. Build command `npm run build`, deploy command `npx wrangler deploy`
    (défaut), branche de production **main**.
 3. Worker → Settings → Build → **Builds for non-production branches** :
-   activé (commande `npx wrangler versions upload`, défaut).
+   activé, commande `npx wrangler preview` (nécessite le bloc
+   `"previews": {}` de `wrangler.jsonc`).
 4. Option mesure d'audience : **Web Analytics → Add a site**, copier le
    *token* dans Worker → Settings → Build → **Variables and secrets** (ce
    sont des variables *de build*) : `VITE_CF_ANALYTICS_TOKEN`.
@@ -210,7 +211,8 @@ Un projet est indépendant des autres sites du même compte Cloudflare
 - Pousser une branche (`git push origin feat/xxx`) → Cloudflare construit
   une version et donne un **lien de test**
   `https://<branche>-semi-antony-supporter.<compte>.workers.dev`
-  (affiché dans le journal du build et dans Deployments).
+  (commande `npx wrangler preview` ; builds visibles dans le tableau de
+  bord sous **Previews → <branche>**, pas dans la liste des builds).
 - Une fois validé : fusionner la branche dans `main` (PR GitHub) →
   **production** `https://semi-antony-supporter.<compte>.workers.dev` en
   ~1 min. Tant que `main` n'a pas `wrangler.jsonc`, son build échoue : rien

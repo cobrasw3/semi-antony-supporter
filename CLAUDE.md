@@ -597,3 +597,9 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   bêta), qui exige un bloc `previews` dans la config → `"previews": {}`
   ajouté à `wrangler.jsonc`. (Le check GitHub « failure » du build
   fd3854be correspondait peut-être à cette même étape.)
+- **Lien de test de branche opérationnel** (build 51c2c48a, a0ac971) :
+  https://feat-sur-mesure-semi-antony-supporter.p-machard-2001.workers.dev
+  — rangé dans le tableau de bord sous Previews → feat-sur-mesure (pas
+  dans la liste des builds). Format : `<branche>-semi-antony-supporter.p-machard-2001.workers.dev`.
+  Vérifié : pages, sw.js, event.json, fond de carte en 200, en-têtes de
+  sécurité appliqués, carte hors-ligne (16 / 12 tuiles).
