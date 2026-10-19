@@ -801,3 +801,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   recalés, plus de bouton jusqu'au passage suivant.
 - Lien de démo conseillé pour le mail : `now=15:20` (« Là ! maintenant »
   au ravito sud, pointage → « 2 min d'avance »).
+- Accord de l'utilisateur (« oui mets en production ») : correction du
+  va-et-vient mise en production (`main` avancé sur `feat/sur-mesure`).
