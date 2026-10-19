@@ -812,3 +812,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   annule le pointage et rétablit les horaires prévus ; en démo l'heure est
   figée (15:20), donc on retombe toujours sur le même écran. Principe
   expliqué.
+- 2026-10-19 : l'utilisateur envoie le mail de proposition à la mairie
+  (production : https://semi-antony-supporter.semi-supporter.workers.dev,
+  `main` = e3209a0 + journal). Suite attendue : réponse de la mairie
+  (validation, tracé officiel, date 2027, ravitos).
