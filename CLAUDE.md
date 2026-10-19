@@ -807,3 +807,8 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   l'adresse principale → un clic, puis plus de bouton (corrigé).
 - Mail final redonné à l'utilisateur : liens de base et de démo
   (`?demo=1&now=15:20&name=Paul&pace=5:30`), « Léa » remplacé par « Paul ».
+- Question de l'utilisateur (« ça fait toujours des va-et-vient si
+  j'efface ») : vérifié en production, comportement attendu — « Effacer »
+  annule le pointage et rétablit les horaires prévus ; en démo l'heure est
+  figée (15:20), donc on retombe toujours sur le même écran. Principe
+  expliqué.
