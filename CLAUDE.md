@@ -786,3 +786,6 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (erreur NO_NAVSTART de Lighthouse avec Edge headless, 3 essais).
 - Accord de l'utilisateur (« ouais vasy ») : corrections des vérifications
   mises en production (`main` avancé sur `feat/sur-mesure`).
+- Production vérifiée (2198fd8) : contenu 2026-10-19.1, robots.txt servi,
+  assistant « 4 fois en restant sur place », audit rejoué (un seul domaine,
+  aucune erreur). Prêt pour l'envoi du mail.
