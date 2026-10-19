@@ -12,7 +12,11 @@ supporters du semi-marathon d'Antony : où se placer et à quelle heure le
 coureur passe, à partir de son allure ou d'un temps visé.
 Hébergement (choix du 2026-10-18) : **Cloudflare, Worker « fichiers
 statiques »** (`wrangler.jsonc`) relié au dépôt GitHub — branche = lien de
-test `*.workers.dev`, `main` = production. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
+test `*.workers.dev`, `main` = production.
+Adresses (sous-domaine du compte `semi-supporter` depuis le 2026-10-19) :
+production https://semi-antony-supporter.semi-supporter.workers.dev ;
+branche `<branche>-semi-antony-supporter.semi-supporter.workers.dev` ;
+démo jour J : `/?demo=1&now=15:35&name=Léa&pace=5:30`. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
 Historique : previews faites jusqu'ici avec la CLI Vercel (projet
 `semi-antony-supporter`, dépôt non relié à Vercel).
 Public visé par la démo : club Antony Athlétisme 92 et Direction des Sports
@@ -750,3 +754,10 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   lien de démo `?demo=1&now=15:35&name=Léa&pace=5:30`. Conseil : renommer
   l'adresse (sous-domaine `workers.dev` du compte, ou domaine personnalisé)
   avant l'envoi.
+- Adresse renommée par l'utilisateur (sous-domaine `workers.dev` du compte :
+  `p-machard-2001` → `semi-supporter`, pour ne pas exposer son nom dans le
+  lien envoyé à la mairie). Effet sur tout le compte : l'adresse de secours
+  `workers.dev` de son autre site change aussi ; son domaine
+  `atelier-fitness.com` répond toujours (200). L'ancienne adresse du semi
+  ne répond plus. Vérifié : nouvelle production et lien de branche en 200,
+  `event.json` à jour, lien de démo → « Étape 5/7 · Ravito du virage ».
