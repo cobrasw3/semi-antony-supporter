@@ -1,0 +1,4 @@
+# Prototype non officiel en attente de validation par l’organisateur :
+# pas d’indexation par les moteurs de recherche pour l’instant.
+User-agent: *
+Disallow: /

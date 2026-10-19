@@ -1,7 +1,7 @@
 {
   "$schema_doc": "Voir README, section « Configurer un événement ». Toute la config de l’événement est ici : changer ce fichier suffit pour un autre événement.",
-  "contentVersion": "2026-10-17.1",
-  "contentUpdatedAt": "2026-10-17",
+  "contentVersion": "2026-10-19.1",
+  "contentUpdatedAt": "2026-10-19",
   "event": {
     "id": "semi-antony-2027",
     "name": "Semi-marathon d’Antony",
@@ -32,7 +32,7 @@
   "infos": [
     {
       "title": "Départ et arrivée",
-      "text": "Stade Georges Suant, 165 avenue François-Molé, Antony."
+      "text": "Départ avenue François-Molé, à côté du stade Georges Suant (165 avenue François-Molé, Antony). Arrivée dans le stade, juste après le ravito du virage."
     },
     {
       "title": "Se déplacer entre les spots",

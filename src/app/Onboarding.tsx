@@ -15,7 +15,9 @@ import type { Supporter } from "./useSupporter";
 
 export function Onboarding({ s, onDone }: { s: Supporter; onDone: () => void }) {
   const [step, setStep] = useState(0);
-  const { prefs, updatePrefs, race, config, pace, runnerName, startMinutes, maxPlan, planOptions } = s;
+  const { prefs, updatePrefs, race, config, pace, runnerName, startMinutes, maxPlan, planOptions, stationaryPlan } = s;
+  // Même option « sur place » que l'onglet Plan (quelques pas autorisés).
+  const stay = stationaryPlan ?? planOptions[0] ?? maxPlan;
   const install = useInstallState();
   const [iosHelp, setIosHelp] = useState(false);
 
@@ -123,8 +125,8 @@ export function Onboarding({ s, onDone }: { s: Supporter; onDone: () => void }) 
               </p>
               {maxPlan.steps.length > 0 && (
                 <p className="onboarding__summary-plan">
-                  Tu peux voir {runnerName || "ton coureur"} <strong>{planOptions[0].steps.length} fois sans bouger</strong>
-                  {maxPlan.steps.length > planOptions[0].steps.length && (
+                  Tu peux voir {runnerName || "ton coureur"} <strong>{stay.steps.length} fois en restant sur place</strong>
+                  {maxPlan.steps.length > stay.steps.length && (
                     <>
                       , ou jusqu'à <strong>{maxPlan.steps.length} fois</strong> en marchant{" "}
                       {maxPlan.totalWalkKm.toFixed(1).replace(".", ",")} km

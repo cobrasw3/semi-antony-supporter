@@ -761,3 +761,26 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   `atelier-fitness.com` répond toujours (200). L'ancienne adresse du semi
   ne répond plus. Vérifié : nouvelle production et lien de branche en 200,
   `event.json` à jour, lien de démo → « Étape 5/7 · Ravito du virage ».
+
+### 2026-10-19 — Vérifications avant l'envoi du mail à la mairie
+
+- **Sécurité** (sur la production) : en-têtes CSP, HSTS, X-Frame-Options,
+  nosniff, Referrer-Policy, Permissions-Policy, COOP présents ; aucun
+  fichier sensible exposé (`/.git/config`, `/.env`, `package.json`,
+  `wrangler.jsonc`, sources, `CLAUDE.md`, `docs/`… → page de l'app) ; pas
+  de source maps ; aucun secret dans le build ; `npm audit --omit=dev` : 0
+  vulnérabilité (4 alertes sur les outils de dev seulement : vitest,
+  nanoid, source-map-js — non embarqués).
+- **Parcours complet** (navigateur neuf, profil iPhone) : assistant →
+  4 onglets → lien de démo (accent non encodé) → /qr. **Un seul domaine
+  contacté** (le site lui-même, 42 requêtes), aucun paramètre envoyé à un
+  tiers, aucune erreur console / CSP / HTTP.
+- **Incohérences corrigées** : l'assistant annonçait « 3 fois sans bouger »
+  alors que le Plan propose « 4 passages » sur place → même option
+  (`stationaryPlan`), « en restant sur place » ; infos « Départ et
+  arrivée » précisées (départ avenue, arrivée dans le stade après le ravito
+  du virage) ; `contentVersion` 2026-10-19.1.
+- Lighthouse : accessibilité 100, SEO 91 (robots.txt invalide → ajout de
+  `public/robots.txt` « Disallow: / » : pas d'indexation tant que le
+  prototype n'est pas validé). Performance / bonnes pratiques non mesurées
+  (erreur NO_NAVSTART de Lighthouse avec Edge headless, 3 essais).
