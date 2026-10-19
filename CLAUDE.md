@@ -744,3 +744,9 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - Production vérifiée (e6dadcb) : `event.json` avec `walkingGrid` et sans
   les anciennes rues ; scénario point libre + pointage rejoué sur
   l'adresse principale.
+- Avis donné sur le prototype avant contact de la mairie (prêt pour une
+  première prise de contact, données à confirmer présentées comme telles) ;
+  mail de proposition rédigé (dans la conversation, non versionné) avec le
+  lien de démo `?demo=1&now=15:35&name=Léa&pace=5:30`. Conseil : renommer
+  l'adresse (sous-domaine `workers.dev` du compte, ou domaine personnalisé)
+  avant l'envoi.
