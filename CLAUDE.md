@@ -741,3 +741,6 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   reste dans l'historique Git (et sur GitHub).
 - Accord de l'utilisateur (« c'est bon mets en production ») : `main` avancé
   sur `feat/sur-mesure` (3 repères, grille de distances, éventail) et poussé.
+- Production vérifiée (e6dadcb) : `event.json` avec `walkingGrid` et sans
+  les anciennes rues ; scénario point libre + pointage rejoué sur
+  l'adresse principale.
