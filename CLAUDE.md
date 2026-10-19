@@ -805,3 +805,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   va-et-vient mise en production (`main` avancé sur `feat/sur-mesure`).
 - Production vérifiée (e3209a0) : scénario du va-et-vient rejoué sur
   l'adresse principale → un clic, puis plus de bouton (corrigé).
+- Mail final redonné à l'utilisateur : liens de base et de démo
+  (`?demo=1&now=15:20&name=Paul&pace=5:30`), « Léa » remplacé par « Paul ».
