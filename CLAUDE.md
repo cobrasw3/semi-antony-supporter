@@ -784,3 +784,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   `public/robots.txt` « Disallow: / » : pas d'indexation tant que le
   prototype n'est pas validé). Performance / bonnes pratiques non mesurées
   (erreur NO_NAVSTART de Lighthouse avec Edge headless, 3 essais).
+- Accord de l'utilisateur (« ouais vasy ») : corrections des vérifications
+  mises en production (`main` avancé sur `feat/sur-mesure`).
