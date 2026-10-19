@@ -13,7 +13,7 @@ import { minutesToTimeString, type Passage } from "../lib/timing";
 import { readJson, writeJson } from "../lib/storage";
 import { Button, CountdownRing, SpotCard } from "../ui/components";
 import { haptic } from "../ui/haptics";
-import { checkinTarget, countdown, planProgress, ringProgress, startProgress, upcomingPassages } from "./liveModel";
+import { checkinTarget, passedByCheckin, countdown, planProgress, ringProgress, startProgress, upcomingPassages } from "./liveModel";
 import { Timeline } from "./Timeline";
 import type { useGeolocation } from "./useGeolocation";
 import type { Supporter } from "./useSupporter";
@@ -49,7 +49,7 @@ export function LiveTab({ s, geo, onGoPlan, onOpenSpot, onEditRunner, onCheckin 
   const spotName = (p: Passage) => spotById[p.spotId]?.shortName ?? p.spotId;
   // Pointage : vise l'étape du plan la plus proche de maintenant (pas forcément
   // celle affichée en grand, ex. coureur en retard sur l'étape précédente).
-  const isCheckedIn = (p: Passage) => !!s.checkin && s.checkin.spotId === p.spotId && Math.abs(s.checkin.km - p.km) < 0.05;
+  const isCheckedIn = (p: Passage) => passedByCheckin(s.checkin, p);
   const target = raceDay ? checkinTarget(plan.steps, clock.minutes, isCheckedIn) : null;
   const checkinButton = target ? (
     <CheckinButton

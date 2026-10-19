@@ -99,19 +99,37 @@ export function planProgress(
   return { current, next: nextIndex >= 0 ? steps[nextIndex] : null, nextIndex };
 }
 
+/** Avance tolérée : on peut pointer un passage prévu dans 5 min au plus (coureur en avance). */
+export const CHECKIN_AHEAD_MINUTES = 5;
+/** Retard toléré : on peut pointer un passage prévu il y a 20 min au plus (coureur en retard). */
+export const CHECKIN_BEHIND_MINUTES = 20;
+
 /**
- * Étape à pointer quand on touche « Il vient de passer » : celle du plan la
- * plus proche de l'heure actuelle (± `windowMinutes`), pas encore pointée.
+ * Étape à pointer quand on touche « Il vient de passer » : parmi les étapes
+ * du plan pas encore passées, celle dont l'heure prévue est la plus proche
+ * de maintenant — jamais une étape prévue plus de 5 min dans le futur
+ * (sinon un clic « en avance » ferait proposer l'étape suivante, et ainsi
+ * de suite).
  */
 export function checkinTarget(
   steps: Passage[],
   nowMinutes: number,
   isDone: (p: Passage) => boolean,
-  windowMinutes = 15
+  aheadMinutes = CHECKIN_AHEAD_MINUTES,
+  behindMinutes = CHECKIN_BEHIND_MINUTES
 ): Passage | null {
   return (
     steps
-      .filter((p) => !isDone(p) && Math.abs(p.estimatedMinutes - nowMinutes) <= windowMinutes)
+      .filter((p) => !isDone(p))
+      .filter((p) => p.estimatedMinutes - nowMinutes <= aheadMinutes && nowMinutes - p.estimatedMinutes <= behindMinutes)
       .sort((a, b) => Math.abs(a.estimatedMinutes - nowMinutes) - Math.abs(b.estimatedMinutes - nowMinutes))[0] ?? null
   );
+}
+
+/**
+ * Étape déjà passée d'après le pointage : celle pointée ET toutes celles
+ * d'avant sur le parcours (le coureur est forcément déjà passé par là).
+ */
+export function passedByCheckin(checkin: { km: number } | null, p: Passage): boolean {
+  return !!checkin && p.km <= checkin.km + 0.05;
 }

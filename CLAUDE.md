@@ -789,3 +789,15 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
 - Production vérifiée (2198fd8) : contenu 2026-10-19.1, robots.txt servi,
   assistant « 4 fois en restant sur place », audit rejoué (un seul domaine,
   aucune erreur). Prêt pour l'envoi du mail.
+- **Bug signalé par l'utilisateur** (lien de démo à 15:35) : le bouton
+  « … vient de passer » faisait des va-et-vient entre ravito du virage et
+  ravito sud. Reproduit : (1) le bouton visait une étape prévue 12 min
+  plus tard (fenêtre ± 15 min) → pointer « en avance » faisait proposer
+  l'étape suivante ; (2) un seul pointage est gardé, et une étape d'avant
+  le dernier pointage n'était pas considérée comme passée → retour au
+  spot précédent. Corrigé (`liveModel.ts`, testé) : fenêtre asymétrique
+  (5 min d'avance, 20 min de retard au plus) ; `passedByCheckin` : toutes
+  les étapes jusqu'au km pointé sont passées. Vérifié : un clic, horaires
+  recalés, plus de bouton jusqu'au passage suivant.
+- Lien de démo conseillé pour le mail : `now=15:20` (« Là ! maintenant »
+  au ravito sud, pointage → « 2 min d'avance »).

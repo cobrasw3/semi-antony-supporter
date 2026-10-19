@@ -3,7 +3,7 @@ import rawEvent from "../../public/data/event.json";
 import { computeDayStatus } from "../lib/dayStatus";
 import { parseEventConfig } from "../lib/event";
 import { computeAllPassages, timeStringToMinutes } from "../lib/timing";
-import { checkinTarget, countdown, headerInfo, planProgress, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
+import { checkinTarget, countdown, passedByCheckin, headerInfo, planProgress, ringProgress, shortDate, startProgress, upcomingPassages } from "./liveModel";
 
 const config = parseEventConfig(rawEvent);
 const semi = config.races[0];
@@ -98,6 +98,22 @@ describe("planProgress", () => {
   it("le pointage vise l'étape la plus proche de maintenant (pas la suivante)", () => {
     expect(checkinTarget(steps, timeStringToMinutes("14:46"), () => false)?.spotId).toBe("ravito-sud");
     expect(checkinTarget(steps, timeStringToMinutes("15:30"), () => false)).toBeNull();
+  });
+
+  it("ne propose jamais de pointer une étape prévue plus de 5 min dans le futur", () => {
+    // Ravito sud prévu ≈ 14:43 : à 14:36 c'est trop tôt, à 14:39 le coureur peut être en avance.
+    const departPassed = (p: (typeof steps)[number]) => p.spotId === "depart";
+    expect(checkinTarget(steps, timeStringToMinutes("14:36"), departPassed)).toBeNull();
+    expect(checkinTarget(steps, timeStringToMinutes("14:39"), departPassed)?.spotId).toBe("ravito-sud");
+  });
+
+  it("un pointage vaut pour toutes les étapes d'avant (pas de va-et-vient)", () => {
+    const ravito = steps[1];
+    const checkin = { km: ravito.km + 7 }; // pointé une boucle plus loin
+    expect(passedByCheckin(checkin, ravito)).toBe(true);
+    expect(passedByCheckin(checkin, steps[2])).toBe(steps[2].km <= checkin.km);
+    expect(passedByCheckin(null, ravito)).toBe(false);
+    expect(checkinTarget(steps, ravito.estimatedMinutes, (p) => passedByCheckin(checkin, p))?.spotId).not.toBe("ravito-sud");
   });
 
   it("plan terminé : ni étape en cours ni suivante", () => {
