@@ -803,3 +803,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   au ravito sud, pointage → « 2 min d'avance »).
 - Accord de l'utilisateur (« oui mets en production ») : correction du
   va-et-vient mise en production (`main` avancé sur `feat/sur-mesure`).
+- Production vérifiée (e3209a0) : scénario du va-et-vient rejoué sur
+  l'adresse principale → un clic, puis plus de bouton (corrigé).
