@@ -739,3 +739,5 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   du dépôt (`.gitignore`) : elles montrent des prénoms. La première
   capture (« Paul »), versionnée en d1b42d0 puis supprimée en 0337024,
   reste dans l'historique Git (et sur GitHub).
+- Accord de l'utilisateur (« c'est bon mets en production ») : `main` avancé
+  sur `feat/sur-mesure` (3 repères, grille de distances, éventail) et poussé.
