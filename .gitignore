@@ -30,3 +30,7 @@ track.imported.json
 
 # Cloudflare wrangler (état local de wrangler dev)
 .wrangler/
+
+# Captures d'écran partagées pour les retours (non versionnées : prénoms)
+docs/*.png
+docs/*.jpg

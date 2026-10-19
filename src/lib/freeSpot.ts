@@ -1,8 +1,8 @@
 // Points libres : un endroit du parcours choisi en touchant la carte. Le
 // point est ramené sur le tracé (km dans la boucle), devient un spot comme
-// les autres (passages à chaque boucle), mais la marche depuis / vers les
-// autres spots est estimée (vol d'oiseau × détour), faute d'itinéraire
-// pré-calculé. Fonctions pures, testées.
+// les autres (passages à chaque boucle) ; la marche depuis / vers les autres
+// spots vient de la grille de distances à pied (src/lib/walkingGrid.ts), à
+// 100 m près. Fonctions pures, testées.
 
 import type { LatLng, Race, Spot } from "./event";
 import { pointAtDistance, projectPointOntoRoute, routeLengthKm } from "./geo.ts";
@@ -78,7 +78,7 @@ export function freeSpotToSpot(data: FreeSpotData, track: LatLng[], race: RaceSh
     address: "Point choisi sur la carte",
     lat: p.lat,
     lng: p.lng,
-    access: "Distances à pied estimées (à vol d'oiseau × 1,3) : garde un peu de marge.",
+    access: "Distances à pied calculées par les rues, à 100 m près : garde un peu de marge.",
     description: "Ton point à toi, choisi sur la carte.",
     km: passageKms(data.kmInLoop, race),
     free: true,

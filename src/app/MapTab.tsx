@@ -121,10 +121,12 @@ function FitToRoute({ points }: { points: LatLng[] }) {
     // cadre une fois la taille connue (sinon le cadrage est faux).
     const fit = () => {
       map.invalidateSize();
+      // Bas : la hauteur réelle du tiroir des spots (variable selon l'écran).
+      const drawer = map.getContainer().closest(".map-tab")?.querySelector<HTMLElement>(".map-drawer");
+      const bottom = (drawer?.offsetHeight ?? 260) + 16;
       map.fitBounds(points.map((p) => [p.lat, p.lng]) as [number, number][], {
-        // Haut : légendes ; bas : tiroir des spots (~260 px) + marqueurs.
-        paddingTopLeft: [16, 80],
-        paddingBottomRight: [16, 300],
+        paddingTopLeft: [12, 60], // légendes
+        paddingBottomRight: [12, bottom],
       });
     };
     const frame = requestAnimationFrame(fit);
@@ -181,63 +183,61 @@ function Calibrage({ track, onResult }: { track: LatLng[]; onResult: (r: { lat: 
   return null;
 }
 
-/** Marqueur de spots qui se chevauchent à ce zoom : « 1 · 3 · 7 ». */
-const groupIcon = (numbers: number[], active: boolean, inPlan: boolean) =>
-  L.divIcon({
-    html: `<div class="pin pin--group${active ? " is-active" : ""}${inPlan ? " pin--plan" : ""}">${numbers.map((n) => `<span>${n}</span>`).join("")}</div>`,
-    className: "pin-wrap",
-    iconSize: [16 + numbers.length * 22, 40],
-    iconAnchor: [(16 + numbers.length * 22) / 2, 20],
-  });
-
 /** Distance (px) sous laquelle deux marqueurs de spots se gênent. */
-const OVERLAP_PX = 36;
+const OVERLAP_PX = 38;
+
+// Petit point à la position réelle d'un spot écarté (vue d'ensemble).
+const anchorIcon = L.divIcon({ html: '<div class="map-anchor" aria-hidden="true"></div>', className: "pin-wrap", iconSize: [10, 10], iconAnchor: [5, 5] });
 
 /**
- * Spots sur la carte : ceux qui se chevauchent au zoom courant sont réunis
- * en un marqueur « 1 · 3 · 7 » ; le toucher zoome jusqu'à les séparer.
+ * Spots sur la carte. Ceux qui se chevauchent au zoom courant sont écartés
+ * en éventail autour de leur position, reliés à elle par un trait : chacun
+ * reste lisible et se touche normalement.
  */
 function SpotMarkers({
   spots,
   render,
-  groupIcon: icon,
+  lineColor,
 }: {
   spots: Spot[];
-  render: (spot: Spot, i: number) => ReactElement;
-  groupIcon: (group: Array<{ spot: Spot; i: number }>) => L.DivIcon;
+  render: (spot: Spot, i: number, position: [number, number]) => ReactElement;
+  lineColor: string;
 }) {
   const map = useMap();
   const [zoom, setZoom] = useState(() => map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
-  const groups = useMemo(() => {
+  const placed = useMemo(() => {
     const pts = spots.map((spot, i) => ({ spot, i, ...map.project([spot.lat, spot.lng], zoom) }));
-    return groupOverlapping(pts, OVERLAP_PX);
+    return groupOverlapping(pts, OVERLAP_PX).flatMap((group) => {
+      if (group.length === 1) return [{ ...group[0], at: [group[0].spot.lat, group[0].spot.lng] as [number, number], moved: false }];
+      const cx = group.reduce((t, g) => t + g.x, 0) / group.length;
+      const cy = group.reduce((t, g) => t + g.y, 0) / group.length;
+      const radius = 22 + 6 * group.length;
+      return group.map((g, k) => {
+        const angle = -Math.PI / 2 + (2 * Math.PI * k) / group.length;
+        const ll = map.unproject([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)], zoom);
+        return { ...g, at: [ll.lat, ll.lng] as [number, number], moved: true };
+      });
+    });
   }, [spots, zoom, map]);
   return (
     <>
-      {groups.map((group) => {
-        if (group.length === 1) return render(group[0].spot, group[0].i);
-        const lat = group.reduce((t, g) => t + g.spot.lat, 0) / group.length;
-        const lng = group.reduce((t, g) => t + g.spot.lng, 0) / group.length;
-        const label = group.map((g) => g.spot.shortName).join(", ");
-        return (
-          <Marker
-            key={`groupe-${group.map((g) => g.spot.id).join("-")}`}
-            position={[lat, lng]}
-            icon={icon(group)}
-            title={`${label} : toucher pour zoomer`}
-            alt={label}
-            zIndexOffset={1500}
-            eventHandlers={{
-              click: () =>
-                map.flyToBounds(
-                  group.map((g) => [g.spot.lat, g.spot.lng] as [number, number]),
-                  { paddingTopLeft: [80, 120], paddingBottomRight: [80, 300], maxZoom: 18, duration: 0.5 }
-                ),
-            }}
+      {placed
+        .filter((p) => p.moved)
+        .map((p) => (
+          <Polyline
+            key={`lien-${p.spot.id}`}
+            positions={[[p.spot.lat, p.spot.lng], p.at]}
+            interactive={false}
+            pathOptions={{ color: lineColor, weight: 2, opacity: 0.8 }}
           />
-        );
-      })}
+        ))}
+      {placed
+        .filter((p) => p.moved)
+        .map((p) => (
+          <Marker key={`ancre-${p.spot.id}`} position={[p.spot.lat, p.spot.lng]} icon={anchorIcon} interactive={false} keyboard={false} />
+        ))}
+      {placed.map((p) => render(p.spot, p.i, p.at))}
     </>
   );
 }
@@ -499,10 +499,10 @@ export default function MapTab({
           ))}
           <SpotMarkers
             spots={spots}
-            render={(spot, i) => (
+            render={(spot, i, position) => (
               <Marker
                 key={spot.id}
-                position={[spot.lat, spot.lng]}
+                position={position}
                 icon={spotIcon(spotNumbers[spot.id], !!spot.highlight, i === active, planSpotIds.has(spot.id), !!spot.free, aidSpotIds.has(spot.id))}
                 title={`${spotNumbers[spot.id]}. ${spot.shortName}`}
                 alt={`${spotNumbers[spot.id]}. ${spot.shortName}`}
@@ -515,13 +515,7 @@ export default function MapTab({
                 }}
               />
             )}
-            groupIcon={(group) =>
-              groupIcon(
-                group.map((g) => spotNumbers[g.spot.id]),
-                group.some((g) => g.i === active),
-                group.some((g) => planSpotIds.has(g.spot.id))
-              )
-            }
+            lineColor={routeColor}
           />
           {runnerPos && (
             <Marker position={[runnerPos.lat, runnerPos.lng]} icon={runnerIcon} zIndexOffset={3000} title={`${runnerName || "Coureur"} (position estimée)`} />
@@ -605,7 +599,7 @@ export default function MapTab({
                 </button>
               )}
             </div>
-            <p className="caption">Marche vers ce point estimée à vol d'oiseau : garde un peu de marge.</p>
+            <p className="caption">Marche vers ce point calculée par les rues, à 100 m près : garde un peu de marge.</p>
           </div>
         )}
         {drawerOpen && !picked && (

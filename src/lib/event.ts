@@ -65,6 +65,11 @@ export interface Race {
   /** Tracé d'UNE boucle, en paires [lat, lng]. */
   track: Array<[number, number]>;
   spots: Spot[];
+  /**
+   * Grille de distances à pied entre points du parcours (tous les 100 m),
+   * pour les points libres. Générée par scripts/compute-walking-grid.ts.
+   */
+  walkingGrid?: { stepKm: number; points: Array<[number, number]>; km: number[][] };
   /** Ravitaillements (affichés sur la carte), placés par leur km dans la boucle. */
   aidStations?: Array<{ name: string; kmInLoop: number }>;
   /**

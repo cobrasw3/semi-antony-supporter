@@ -23,10 +23,10 @@ describe("countdown", () => {
 describe("ringProgress", () => {
   it("se remplit entre le passage précédent et le suivant", () => {
     const ravito = passages.find((p) => p.spotId === "ravito-sud")!;
-    const marius = passages.find((p) => p.spotId === "rue-marius-hue")!;
-    expect(ringProgress(passages, ravito, marius.estimatedMinutes, start)).toBeCloseTo(0);
+    const depart = passages.find((p) => p.spotId === "depart")!;
+    expect(ringProgress(passages, ravito, depart.estimatedMinutes, start)).toBeCloseTo(0);
     expect(ringProgress(passages, ravito, ravito.estimatedMinutes, start)).toBeCloseTo(1);
-    const mid = (marius.estimatedMinutes + ravito.estimatedMinutes) / 2;
+    const mid = (depart.estimatedMinutes + ravito.estimatedMinutes) / 2;
     expect(ringProgress(passages, ravito, mid, start)).toBeCloseTo(0.5);
   });
 
@@ -60,7 +60,7 @@ describe("headerInfo", () => {
 
 describe("upcomingPassages", () => {
   it("donne les prochains passages, ou les premiers avant le jour J", () => {
-    expect(upcomingPassages(passages, null).map((p) => p.spotId)).toEqual(["depart", "rue-marius-hue", "ravito-sud"]);
+    expect(upcomingPassages(passages, null).map((p) => p.spotId)).toEqual(["depart", "ravito-sud", "ravito-virage"]);
     expect(upcomingPassages(passages, timeStringToMinutes("14:40"))[0].spotId).toBe("ravito-sud");
   });
 });

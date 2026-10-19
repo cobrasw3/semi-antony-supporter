@@ -8,7 +8,8 @@ import { computeAllPassages, timeStringToMinutes } from "./timing";
 const config = parseEventConfig(rawEvent);
 const semi = config.races[0];
 const track = trackOf(semi);
-const champs = semi.spots.find((s) => s.id === "rue-des-champs")!;
+// Un endroit du parcours au km 4 (montée de la rue des Champs).
+const champs = freeSpotToSpot({ id: "libre-champs", raceId: "semi", kmInLoop: 4 }, track, semi);
 
 describe("passageKms", () => {
   it("un passage par boucle, jamais au-delà de l'arrivée", () => {

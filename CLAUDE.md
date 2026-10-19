@@ -711,3 +711,31 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   `feat/sur-mesure` (ravito du virage, spots regroupés) et poussé.
 - Production vérifiée (build f7d4eac3, 1c3cf50) : `event.json` servi avec
   `ravito-virage`, marqueur groupé « 1·3·7 » affiché en vue d'ensemble.
+
+### 2026-10-19 — 3 repères + points libres partout (branche `feat/sur-mesure`)
+
+- Retour utilisateur (capture iPhone dans `docs/`) : en vue d'ensemble, le
+  regroupement donnait une énorme pastille « 1·3·6·7·8·9 » qui cachait le
+  parcours ; idée de l'utilisateur : supprimer les spots prédéfinis et ne
+  garder que les points touchés. Avis donné (garder un parcours par défaut
+  et des distances fiables) → choix validé : **3 repères seulement**.
+- `event.json` : spots = Départ, Ravito sud, Ravito du virage (rues Marius
+  Hue, des Champs, des Sources Prolongée, des Hautes Bièvres supprimées).
+  Meilleur parcours par défaut inchangé (7 passages, 1,8 km à 5:30).
+- **Grille de distances à pied** (`scripts/compute-walking-grid.ts`) :
+  70 points tous les 100 m le long de la boucle, 4 900 distances OSRM
+  piéton (tables par blocs de 25), `races[].walkingGrid` (event.json
+  29 → 34 Ko). `lib/walkingGrid.ts` (testé) : un point libre est rattaché
+  au point de grille le plus proche → distance par les rues (à 100 m près)
+  au lieu du vol d'oiseau ; `withGridRoutes` complète les distances des
+  points libres sans toucher aux itinéraires exacts entre repères.
+- Carte : plus de pastille groupée. Les spots qui se chevauchent sont
+  écartés en éventail autour de leur position (trait + petit point à la
+  position réelle), chacun reste lisible et touchable. Cadrage initial
+  calculé avec la hauteur réelle du tiroir (la carte était trop dézoomée
+  sur iPhone).
+- Tests : les combinaisons de l'ancienne version sont rejouées avec des
+  points libres aux mêmes km (grille) — 233 ✅. Captures de `docs/` exclues
+  du dépôt (`.gitignore`) : elles montrent des prénoms. La première
+  capture (« Paul »), versionnée en d1b42d0 puis supprimée en 0337024,
+  reste dans l'historique Git (et sur GitHub).

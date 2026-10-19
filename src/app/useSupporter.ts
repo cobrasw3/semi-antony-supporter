@@ -25,6 +25,7 @@ import { freeSpotToSpot, isFreeSpotId, type FreeSpotData } from "../lib/freeSpot
 import { estimatedKm } from "../lib/runnerPosition";
 import { planOptions, spotsToDrop, stayPutOption } from "../lib/itinerary";
 import { readJson, writeJson } from "../lib/storage";
+import { withGridRoutes } from "../lib/walkingGrid";
 import { computeAllPassages, groupPassagesBySpot, timeStringToMinutes, type Passage } from "../lib/timing";
 import { applyBranding } from "../ui/branding";
 import { needsOnboarding } from "./onboardingRule";
@@ -136,8 +137,9 @@ export function useSupporter() {
   // calcule sur leurs seuls passages.
   const [chosenSpots, setChosenSpots] = useState<string[]>(() => readJson<string[]>(SPOTS_KEY) ?? []);
   useEffect(() => writeJson(SPOTS_KEY, chosenSpots), [chosenSpots]);
-  // Distances à pied réelles (itinéraires piétons pré-calculés), sinon estimation.
-  const routes = race.walkingRoutes?.km;
+  // Distances à pied réelles : itinéraires pré-calculés entre repères, grille
+  // tous les 100 m pour les points libres, sinon estimation.
+  const routes = useMemo(() => withGridRoutes(race.walkingRoutes?.km, race.spots, race.walkingGrid), [race]);
   // Trois façons de suivre le coureur :
   //  - « meilleur parcours » (par défaut) : le plus de passages possible ;
   //  - « reste au stade » : sans marcher (le meilleur spot sans bouger) ;
@@ -182,15 +184,16 @@ export function useSupporter() {
       const candidate = [...(planKind === "custom" ? required : []), id];
       const spots = newFree ? [...race.spots, freeSpotToSpot(newFree, track, officialRace)] : race.spots;
       const pool = newFree ? passagesWith(spots) : passages;
-      if (planOptions(pool, spots, walking, routes, candidate, true).length === 0) {
-        return { ok: false, drop: spotsToDrop(pool, spots, walking, candidate, routes, true).filter((x) => x !== id) };
+      const r = newFree ? withGridRoutes(race.walkingRoutes?.km, spots, race.walkingGrid) : routes;
+      if (planOptions(pool, spots, walking, r, candidate, true).length === 0) {
+        return { ok: false, drop: spotsToDrop(pool, spots, walking, candidate, r, true).filter((x) => x !== id) };
       }
       if (newFree) setFreeSpotData((list) => [...list, newFree]);
       setChosenSpots(candidate);
       setSpotMode("mine");
       return { ok: true };
     },
-    [planKind, required, race.spots, track, officialRace, passagesWith, passages, walking, routes]
+    [planKind, required, race.spots, race.walkingRoutes, race.walkingGrid, track, officialRace, passagesWith, passages, walking, routes]
   );
   const removeSpot = useCallback(
     (id: string) => {

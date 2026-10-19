@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import rawEvent from "../../public/data/event.json";
-import { parseEventConfig, type Spot } from "./event";
+import { freeSpotToSpot } from "./freeSpot";
+import { withGridRoutes } from "./walkingGrid";
+import { parseEventConfig, trackOf, type Spot } from "./event";
 import {
   chronologicalTransitions,
   evaluateTransition,
@@ -232,11 +234,35 @@ describe("planOptions (compromis passages ↔ marche)", () => {
   });
 });
 
-describe("planOptions avec spots choisis", () => {
+/**
+ * Le semi + des points libres aux km des anciennes rues (1 ; 4 ; 5,2 ; 6,5),
+ * avec les distances à pied de la grille : de quoi tester des combinaisons
+ * variées sur le vrai parcours.
+ */
+function semiAvecPoints() {
   const config = parseEventConfig(rawEvent);
-  const semi = config.races[0];
-  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
-  const routes = semi.walkingRoutes?.km;
+  const base = config.races[0];
+  const track = trackOf(base);
+  const points = (
+    [
+      ["rue-marius-hue", 1],
+      ["rue-des-champs", 4],
+      ["rue-des-sources-prolongee", 5.2],
+      ["rue-des-hautes-bievres", 6.5],
+    ] as const
+  ).map(([id, km]) => freeSpotToSpot({ id, raceId: base.id, kmInLoop: km }, track, base));
+  const spots = [...base.spots, ...points];
+  const semi = { ...base, spots };
+  return {
+    config,
+    semi,
+    passages: computeAllPassages(semi, 5.5, config.settings.margin),
+    routes: withGridRoutes(base.walkingRoutes?.km, spots, base.walkingGrid),
+  };
+}
+
+describe("planOptions avec spots choisis", () => {
+  const { config, semi, passages, routes } = semiAvecPoints();
 
   it("ravito du virage + rue des Hautes Bièvres : chaque option passe par les deux spots, et seulement eux", () => {
     const options = planOptions(passages, semi.spots, config.settings.walking, routes, ["ravito-virage", "rue-des-hautes-bievres"]);
@@ -290,10 +316,7 @@ describe("planOptions avec spots choisis", () => {
 });
 
 describe("incompatiblePairs", () => {
-  const config = parseEventConfig(rawEvent);
-  const semi = config.races[0];
-  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
-  const routes = semi.walkingRoutes?.km;
+  const { config, semi, passages, routes } = semiAvecPoints();
   const w = config.settings.walking;
 
   it("ravito du virage + rue des Sources Prolongée : compatibles", () => {
@@ -320,10 +343,7 @@ describe("incompatiblePairs", () => {
 });
 
 describe("spotsToDrop", () => {
-  const config = parseEventConfig(rawEvent);
-  const semi = config.races[0];
-  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
-  const routes = semi.walkingRoutes?.km;
+  const { config, semi, passages, routes } = semiAvecPoints();
   const w = config.settings.walking;
 
   it("sélection possible : rien à décocher", () => {
@@ -343,10 +363,7 @@ describe("spotsToDrop", () => {
 });
 
 describe("trajets depuis le départ (retour utilisateur)", () => {
-  const config = parseEventConfig(rawEvent);
-  const semi = config.races[0];
-  const passages = computeAllPassages(semi, 5.5, config.settings.margin);
-  const routes = semi.walkingRoutes?.km;
+  const { config, semi, passages, routes } = semiAvecPoints();
   const w = config.settings.walking;
   const byId = indexSpots(semi.spots);
   const depart = passages.find((p) => p.spotId === "depart" && p.kind === "start")!;
@@ -359,7 +376,7 @@ describe("trajets depuis le départ (retour utilisateur)", () => {
         return evaluateTransition(depart, first, byId, w, routes).slackMinutes >= 0;
       })
       .map((s) => s.id);
-    expect(reachable).toEqual(["ravito-sud", "rue-des-champs", "rue-des-sources-prolongee", "rue-des-hautes-bievres", "ravito-virage"]);
+    expect(reachable.sort()).toEqual(["ravito-sud", "ravito-virage", "rue-des-champs", "rue-des-hautes-bievres", "rue-des-sources-prolongee"]);
   });
 
   it("rue des Champs est « juste » : écartée des meilleurs plans, acceptée quand l'utilisateur l'impose", () => {
