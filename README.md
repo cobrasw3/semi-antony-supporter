@@ -44,6 +44,31 @@ wrangler.jsonc, public/_headers  Hébergement Cloudflare (fichiers statiques), e
 public/carte/                  Fond de carte de la zone (PMTiles), cf. scripts/build-basemap.ts
 ```
 
+## 🚨 Antony : remettre la version en production en 2 minutes
+
+Version de référence (envoyée à la mairie) : tag git **`antony-prod-avant-multi`**
+(commit `e3209a0`), version Cloudflare **`ae3f3563-3d09-440f-8fae-3462527b93b9`**,
+servie sur https://semi-antony-supporter.semi-supporter.workers.dev.
+
+En cas de problème sur la production d'Antony, au choix :
+
+1. **Le plus rapide (tableau de bord, ~1 min)** : Cloudflare → Workers & Pages →
+   `semi-antony-supporter` → **Deployments** → version `ae3f3563…` → **Rollback**.
+2. **En ligne de commande (~1 min)**, après `npx wrangler login` :
+   ```bash
+   npx wrangler rollback ae3f3563-3d09-440f-8fae-3462527b93b9 --name semi-antony-supporter
+   ```
+3. **Reconstruire depuis le tag (~2 min)** :
+   ```bash
+   git checkout antony-prod-avant-multi
+   npm ci && npm run build && npx wrangler deploy
+   git checkout -   # revenir à la branche de travail
+   ```
+
+Ne pas oublier ensuite : si `main` avait été modifiée, la remettre sur le tag
+(`git push origin antony-prod-avant-multi:main` — refusé si `main` a avancé :
+voir avec Claude avant de forcer).
+
 ## Configurer un événement (`public/data/event.json`)
 
 - `event` : nom, date (`AAAA-MM-JJ`), `dateToConfirm`, fuseau.

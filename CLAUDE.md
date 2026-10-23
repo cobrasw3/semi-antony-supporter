@@ -816,3 +816,27 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (production : https://semi-antony-supporter.semi-supporter.workers.dev,
   `main` = e3209a0 + journal). Suite attendue : réponse de la mairie
   (validation, tracé officiel, date 2027, ravitos).
+
+### 2026-10-23 — Multi-courses (branche `feat/multi-courses`, depuis `feat/sur-mesure`)
+
+- Prompt « Démos multi-courses » de l'utilisateur : un dossier par course,
+  mode démo non officielle, import GPX, 5 démos (Vincennes, Rambouillet,
+  Joinville, Malakoff, Charenton), tableau de bord. **Règle absolue :
+  la production d'Antony est gelée** (lien envoyé à la mairie) : rien
+  dans `main`, aucun déploiement sur le Worker `semi-antony-supporter`
+  (seules les previews de branche, automatiques, sont permises).
+- **Étape 0** : état des lieux (tâches 1 et 2 du prompt précédent déjà
+  faites ; pas de bug d'arrivée : départ km 0 + ravito du virage Fin
+  boucle 1 / Fin boucle 2 / Arrivée, choix utilisateur du 19/10 ; aucun
+  GPX ni dossier `courses/` fourni). Tag annoté
+  **`antony-prod-avant-multi`** sur `e3209a0` (prod, version Cloudflare
+  `ae3f3563-3d09-440f-8fae-3462527b93b9`), poussé — vérifié : aucun build
+  déclenché. Procédure de retour arrière en 2 min dans le README.
+- Références de non-régression capturées AVANT toute modification :
+  `tests/reference/antony-logique.json` (allures 4:30/5:30/6:30, temps
+  visés 1:35/1:56/2:17 : passages, options, meilleur parcours, sur place,
+  recalage démo Paul 15:20 ; test `src/reference/antony.reference.test.ts`)
+  et `tests/reference/antony-ui.json` (17 scénarios, 83 écrans, textes
+  relevés sur la production par `scripts/reference-ui.mjs`, stable sur
+  deux passages ; `puppeteer-core` en dépendance de dev, sans navigateur
+  embarqué).

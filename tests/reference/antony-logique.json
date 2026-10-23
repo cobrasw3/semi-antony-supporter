@@ -1,0 +1,515 @@
+{
+  "allure 4:30": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:41 [14:39–14:43]",
+      "ravito-virage@7 Fin boucle 1 15:02 [15:00–15:03]",
+      "ravito-sud@9.37 Boucle 2 15:12 [15:10–15:14]",
+      "ravito-virage@14 Fin boucle 2 15:33 [15:30–15:36]",
+      "ravito-sud@16.37 Boucle 3 15:44 [15:41–15:47]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:05 [16:01–16:09]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:41",
+          "ravito-sud@15:12",
+          "ravito-sud@15:44"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:02",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-sud@15:12",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-sud@15:12",
+          "ravito-virage@15:33",
+          "ravito-sud@15:44",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:41",
+        "ravito-virage@15:02",
+        "ravito-sud@15:12",
+        "ravito-virage@15:33",
+        "ravito-sud@15:44",
+        "ravito-virage@16:05"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:02",
+        "ravito-virage@15:33",
+        "ravito-virage@16:05"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "allure 5:30": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:43 [14:41–14:45]",
+      "ravito-virage@7 Fin boucle 1 15:09 [15:07–15:10]",
+      "ravito-sud@9.37 Boucle 2 15:22 [15:19–15:24]",
+      "ravito-virage@14 Fin boucle 2 15:47 [15:44–15:50]",
+      "ravito-sud@16.37 Boucle 3 16:00 [15:56–16:04]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:26 [16:21–16:31]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:43",
+          "ravito-sud@15:22",
+          "ravito-sud@16:00"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:09",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:09",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:09",
+          "ravito-sud@15:22",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:09",
+          "ravito-sud@15:22",
+          "ravito-virage@15:47",
+          "ravito-sud@16:00",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:43",
+        "ravito-virage@15:09",
+        "ravito-sud@15:22",
+        "ravito-virage@15:47",
+        "ravito-sud@16:00",
+        "ravito-virage@16:26"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:09",
+        "ravito-virage@15:47",
+        "ravito-virage@16:26"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "allure 6:30": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:45 [14:43–14:47]",
+      "ravito-virage@7 Fin boucle 1 15:16 [15:13–15:18]",
+      "ravito-sud@9.37 Boucle 2 15:31 [15:28–15:34]",
+      "ravito-virage@14 Fin boucle 2 16:01 [15:57–16:05]",
+      "ravito-sud@16.37 Boucle 3 16:16 [16:12–16:21]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:47 [16:42–16:52]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:45",
+          "ravito-sud@15:31",
+          "ravito-sud@16:16"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:16",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:16",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:16",
+          "ravito-sud@15:31",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:16",
+          "ravito-sud@15:31",
+          "ravito-virage@16:01",
+          "ravito-sud@16:16",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:45",
+        "ravito-virage@15:16",
+        "ravito-sud@15:31",
+        "ravito-virage@16:01",
+        "ravito-sud@16:16",
+        "ravito-virage@16:47"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:16",
+        "ravito-virage@16:01",
+        "ravito-virage@16:47"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "temps visé 1:35": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:41 [14:39–14:43]",
+      "ravito-virage@7 Fin boucle 1 15:02 [15:00–15:04]",
+      "ravito-sud@9.37 Boucle 2 15:12 [15:10–15:14]",
+      "ravito-virage@14 Fin boucle 2 15:33 [15:30–15:36]",
+      "ravito-sud@16.37 Boucle 3 15:44 [15:41–15:47]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:05 [16:01–16:09]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:41",
+          "ravito-sud@15:12",
+          "ravito-sud@15:44"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:02",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-sud@15:12",
+          "ravito-virage@15:33",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:41",
+          "ravito-virage@15:02",
+          "ravito-sud@15:12",
+          "ravito-virage@15:33",
+          "ravito-sud@15:44",
+          "ravito-virage@16:05"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:41",
+        "ravito-virage@15:02",
+        "ravito-sud@15:12",
+        "ravito-virage@15:33",
+        "ravito-sud@15:44",
+        "ravito-virage@16:05"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:02",
+        "ravito-virage@15:33",
+        "ravito-virage@16:05"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "temps visé 1:56": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:43 [14:41–14:45]",
+      "ravito-virage@7 Fin boucle 1 15:08 [15:06–15:10]",
+      "ravito-sud@9.37 Boucle 2 15:22 [15:19–15:24]",
+      "ravito-virage@14 Fin boucle 2 15:47 [15:44–15:50]",
+      "ravito-sud@16.37 Boucle 3 16:00 [15:56–16:04]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:26 [16:21–16:31]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:43",
+          "ravito-sud@15:22",
+          "ravito-sud@16:00"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:08",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:08",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:08",
+          "ravito-sud@15:22",
+          "ravito-virage@15:47",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:43",
+          "ravito-virage@15:08",
+          "ravito-sud@15:22",
+          "ravito-virage@15:47",
+          "ravito-sud@16:00",
+          "ravito-virage@16:26"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:43",
+        "ravito-virage@15:08",
+        "ravito-sud@15:22",
+        "ravito-virage@15:47",
+        "ravito-sud@16:00",
+        "ravito-virage@16:26"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:08",
+        "ravito-virage@15:47",
+        "ravito-virage@16:26"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "temps visé 2:17": {
+    "passages": [
+      "depart@0 Départ 14:30 [14:28–14:32]",
+      "ravito-sud@2.37 Boucle 1 14:45 [14:43–14:47]",
+      "ravito-virage@7 Fin boucle 1 15:15 [15:13–15:18]",
+      "ravito-sud@9.37 Boucle 2 15:31 [15:28–15:33]",
+      "ravito-virage@14 Fin boucle 2 16:01 [15:57–16:05]",
+      "ravito-sud@16.37 Boucle 3 16:16 [16:12–16:21]",
+      "ravito-virage@21.0975 Arrivée 🏁 16:47 [16:42–16:52]"
+    ],
+    "options": [
+      {
+        "etapes": [
+          "ravito-sud@14:45",
+          "ravito-sud@15:31",
+          "ravito-sud@16:16"
+        ],
+        "marcheKm": 0
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-virage@15:15",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 0.137
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:15",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 0.505
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:15",
+          "ravito-sud@15:31",
+          "ravito-virage@16:01",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 1.147
+      },
+      {
+        "etapes": [
+          "depart@14:30",
+          "ravito-sud@14:45",
+          "ravito-virage@15:15",
+          "ravito-sud@15:31",
+          "ravito-virage@16:01",
+          "ravito-sud@16:16",
+          "ravito-virage@16:47"
+        ],
+        "marcheKm": 1.789
+      }
+    ],
+    "meilleur": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-sud@14:45",
+        "ravito-virage@15:15",
+        "ravito-sud@15:31",
+        "ravito-virage@16:01",
+        "ravito-sud@16:16",
+        "ravito-virage@16:47"
+      ],
+      "marcheKm": 1.789
+    },
+    "surPlace": {
+      "etapes": [
+        "depart@14:30",
+        "ravito-virage@15:15",
+        "ravito-virage@16:01",
+        "ravito-virage@16:47"
+      ],
+      "marcheKm": 0.137
+    }
+  },
+  "démo Paul 5:30 pointé ravito sud 15:20": [
+    "depart@0 Départ 14:30 [14:28–14:32]",
+    "ravito-sud@2.37 Boucle 1 14:43 [14:41–14:45]",
+    "ravito-virage@7 Fin boucle 1 15:09 [15:07–15:10]",
+    "ravito-sud@9.37 Boucle 2 15:20 [15:19–15:21]",
+    "ravito-virage@14 Fin boucle 2 15:45 [15:43–15:47]",
+    "ravito-sud@16.37 Boucle 3 15:58 [15:56–16:00]",
+    "ravito-virage@21.0975 Arrivée 🏁 16:23 [16:21–16:26]"
+  ]
+}
