@@ -75,7 +75,8 @@ for (const slug of listCourses()) {
   // Lien démo sur la première course dont le parcours est intégré.
   const shown = races.find((r) => r.track.length >= 2 && r.spots.length > 0) ?? races[0];
   const raceParam = shown !== races[0] ? `&race=${shown.id}` : "";
-  const demo = `${url}/?demo=1&now=${slug === "antony" ? "15:20" : demoTime(shown.startTime, shown.distanceKm)}&name=${name}&pace=5:30${raceParam}`;
+  // Lien démo choisi dans event.json (deploy.demo), sinon calculé.
+  const demo = ev.deploy?.demo ?? `${url}/?demo=1&now=${slug === "antony" ? "15:20" : demoTime(shown.startTime, shown.distanceKm)}&name=${name}&pace=5:30${raceParam}`;
   const toConfirm =
     (ev.event.dateToConfirm ? 1 : 0) +
     (ev.organizer?.aConfirmer ? 1 : 0) +

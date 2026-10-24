@@ -87,6 +87,12 @@ Statut d'une course (`event.json` → `status`) :
 2. **Importer le tracé** : déposer le GPX dans `courses/<slug>/parcours.gpx`, puis
    `npm run import-gpx -- <slug>` (tracé simplifié et recalé, dénivelé, spots
    candidats nommés d'après la rue, tous « à confirmer »).
+   **Pas de GPX publié ?** Lire les carrefours sur le plan officiel dans
+   `courses/<slug>/waypoints.json` (modèle : `courses/paris14/`), puis
+   `npm run gpx-from-waypoints -- <slug>` : réseau de rues OSM, plus court
+   chemin, contrôles (longueurs, bornes km), aperçu `apercu.html` à
+   valider ; un carrefour introuvable ou ambigu est listé (forcer `lat` /
+   `lon`). Ensuite `import-gpx` comme ci-dessus.
 3. **Choisir les spots** : dans `event.json`, garder 3 à 6 spots (les ★
    « passages multiples » d'abord), les renommer, retirer `aConfirmer` de ceux
    qui sont validés.

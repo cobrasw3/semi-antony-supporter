@@ -1,16 +1,17 @@
 # Tableau de bord des courses
 
-> Généré par `npm run courses` le 24/10/2026 16:04:44. Ne pas modifier à la main :
+> Généré par `npm run courses` le 24/10/2026 16:36:28. Ne pas modifier à la main :
 > la source est `courses/<slug>/event.json` et `SUIVI.md`.
 
 | Course | Statut | En ligne | À confirmer | Prochaine action |
 |---|---|---|---|---|
-| [Semi-marathon d’Antony](antony/SUIVI.md) | prête | en ligne | 3 | Attendre la réponse de la mairie (validation, GPX officiel, date 2027, ravitos). |
-| [Foulées Charentonnaises](charenton/SUIVI.md) | 15 km : spots à valider (6) · 5 km : spots à valider (5) | en ligne | 18 | Choisir / renommer les spots (15 km et 5 km) ; faire valider le tracé reconstitué du 15 km et le tracé runtrail du 5 km par l'organisateur. |
-| [Semi-marathon de Joinville](joinville/SUIVI.md) | Semi-marathon : en attente du GPX · 10 km : en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/joinville/parcours.gpx, puis npm run import-gpx -- joinville. |
-| [Foulées de Malakoff](malakoff/SUIVI.md) | 10 km : en attente du GPX · 5 km : en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/malakoff/parcours.gpx, puis npm run import-gpx -- malakoff. |
-| [Semi-marathon de Rambouillet](rambouillet/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/rambouillet/parcours.gpx, puis npm run import-gpx -- rambouillet. |
-| [Semi-marathon du Bois de Vincennes](vincennes/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/vincennes/parcours.gpx, puis npm run import-gpx -- vincennes. |
+| [Semi-marathon d’Antony](antony/SUIVI.md) | prête | ? | 3 | Attendre la réponse de la mairie (validation, GPX officiel, date 2027, ravitos). |
+| [Foulées Charentonnaises](charenton/SUIVI.md) | 15 km : spots à valider (6) · 5 km : spots à valider (5) | ? | 18 | Choisir / renommer les spots (15 km et 5 km) ; faire valider le tracé reconstitué du 15 km et le tracé runtrail du 5 km par l'organisateur. |
+| [Semi-marathon de Joinville](joinville/SUIVI.md) | Semi-marathon : en attente du GPX · 10 km : en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/joinville/parcours.gpx, puis npm run import-gpx -- joinville. |
+| [Foulées de Malakoff](malakoff/SUIVI.md) | 10 km : en attente du GPX · 5 km : en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/malakoff/parcours.gpx, puis npm run import-gpx -- malakoff. |
+| [10K du 14e](paris14/SUIVI.md) | spots à valider (6) | ? | 8 | Envoyer le lien de démo à l’Office du Mouvement Sportif du 14e (Paul) ; faire confirmer l’heure, le départ, l’arrivée et les spots. |
+| [Semi-marathon de Rambouillet](rambouillet/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/rambouillet/parcours.gpx, puis npm run import-gpx -- rambouillet. |
+| [Semi-marathon du Bois de Vincennes](vincennes/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/vincennes/parcours.gpx, puis npm run import-gpx -- vincennes. |
 
 ## Liens
 
@@ -26,6 +27,9 @@
 - **Foulées de Malakoff** — https://malakoff.semi-supporter.workers.dev
   - démo : https://malakoff.semi-supporter.workers.dev/?demo=1&now=11:40&name=Léa&pace=5:30
   - QR code : [`malakoff/assets/qr-demo.png`](malakoff/assets/qr-demo.png)
+- **10K du 14e** — https://paris14.semi-supporter.workers.dev
+  - démo : https://paris14.semi-supporter.workers.dev/?demo=1&now=09:50&name=Léa&pace=5:00
+  - QR code : [`paris14/assets/qr-demo.png`](paris14/assets/qr-demo.png)
 - **Semi-marathon de Rambouillet** — https://rambouillet.semi-supporter.workers.dev
   - démo : https://rambouillet.semi-supporter.workers.dev/?demo=1&now=09:50&name=Léa&pace=5:30
   - QR code : [`rambouillet/assets/qr-demo.png`](rambouillet/assets/qr-demo.png)

@@ -29,7 +29,8 @@ export interface CourseEvent {
   status?: "demo" | "official" | "prototype";
   organizer?: { name?: string; aConfirmer?: boolean };
   app: CourseApp;
-  deploy?: { worker?: string };
+  /** worker : nom du Worker ; url : adresse ; demo : lien démo à mettre dans le QR code. */
+  deploy?: { worker?: string; url?: string; demo?: string };
   event: { id: string; name: string; shortName: string };
   races: Array<{ id: string; name: string; track: unknown[]; spots: unknown[] }>;
 }

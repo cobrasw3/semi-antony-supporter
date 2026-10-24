@@ -2,11 +2,11 @@
   <!-- Pictogramme de l'app : une boucle de parcours avec son sens, et un
        repère de spectateur. Fond plein (compatible icône « maskable » :
        le motif tient dans le cercle central de 80 %). -->
-  <rect width="512" height="512" fill="#2f8fd8"/>
+  <rect width="512" height="512" fill="#1b2a6b"/>
   <path d="M168 330 C110 300 112 196 180 168 C240 142 268 196 318 172 C372 146 410 196 394 252 C378 308 330 300 300 326 C266 356 220 356 168 330 Z"
         fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round"/>
   <path d="M286 150 L338 172 L292 204 Z" fill="#fff"/>
   <path d="M256 352 C256 352 206 290 206 256 C206 228 228 206 256 206 C284 206 306 228 306 256 C306 290 256 352 256 352 Z"
-        fill="#e8b800" stroke="#2f8fd8" stroke-width="10" stroke-linejoin="round"/>
-  <circle cx="256" cy="256" r="18" fill="#2f8fd8"/>
+        fill="#e8b800" stroke="#1b2a6b" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="18" fill="#1b2a6b"/>
 </svg>

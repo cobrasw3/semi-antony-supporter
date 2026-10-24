@@ -1154,3 +1154,33 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   Charles-Divry) ; les 90 derniers mètres de Mouton-Duvernet passent par
   l'allée parallèle (tronçon non relié dans OSM, < 20 m d'écart). Aperçu
   régénéré avec le plan à côté. En attente de validation.
+- Tracé du 10K du 14e **validé par l'utilisateur** (« oui c'est validé »).
+- Étape 3 : `courses/paris14/event.json` — « 10K du 14e », 42e édition,
+  dimanche 17/01/2027 (sur le plan → confirmée), départ 9:30 (à
+  confirmer), 10 km en 2 boucles de 5 km (tracé entier, loops = 1), départ
+  rue Gassendi, arrivée rue Saillard, organisateur « l’Office du Mouvement
+  Sportif du 14e », statut demo, thème bleu marine `#1b2a6b` / bleu clair
+  `#5b9bd5` (sans logo), icônes régénérées. GPX importé (+1,7 %, pas
+  d'altitudes).
+- Étape 4 : 6 spots (positions sur le tracé, passages par
+  `passagesThrough`, métro le plus proche d'après les stations OSM) :
+  Départ rue Gassendi ★ (0 · 4,86 · 9,73 ; Mouton-Duvernet 380 m), rue des
+  Plantes / Abbé-Carton (0,61 · 5,48 ; Alésia), rue Raymond-Losserand à
+  Pernety (1,94 · 6,8 ; station sur le parcours), Montparnasse rue du
+  Départ / Edgar-Quinet (3,35 · 8,2 ; Montparnasse-Bienvenüe 175 m, Edgar
+  Quinet 210 m), rue Émile-Richard (4,42 · 9,29 ; Raspail, Denfert),
+  Arrivée rue Saillard (10 ; Mouton-Duvernet 260 m). Plan optimal
+  honnête : 3× sans bouger au départ à 4:00 et 5:00/km ; 4× avec 3 km de
+  marche à 6:00 ; l'arrivée ne s'enchaîne pas avec le dernier passage.
+- Étape 5 : bandeau « Démo non officielle — préparée pour l’Office du
+  Mouvement Sportif du 14e », noindex, robots fermé, pied de page (déjà en
+  place via le statut demo).
+- Étape 6 : 262 tests ✅ ; Antony `reference-ui compare` sur le build
+  local → identique (17 scénarios) ; captures 390×844 (pendant, avant,
+  après, carte, plan, infos) relues — corrigé : nom de course dans Infos
+  (« 10K (2 boucles de 5 km) ») ; Antony + 10K du 14e côte à côte : noms,
+  couleurs, SW, caches et prénoms séparés, installables. **Démo déployée**
+  (`npm run deploy -- paris14`) : https://paris14.semi-supporter.workers.dev
+  — titre, noindex, 3 liens démo vérifiés ; prod d'Antony inchangée.
+  `deploy.demo` dans event.json (lien du QR code), `qr-demo.png` généré ;
+  SUIVI.md complet ; README : variante « pas de GPX → gpx-from-waypoints ».
