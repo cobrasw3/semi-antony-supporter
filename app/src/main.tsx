@@ -12,10 +12,10 @@ import { initAnalytics, track } from "./lib/analytics";
 import { parseDemoParams } from "./lib/clock";
 import { isStandalone } from "./pwa/platform";
 import { warmBasemap } from "./pwa/basemap";
-import { registerServiceWorker, restoreScrollAfterUpdate } from "./pwa/serviceWorker";
+import { importOrReload, registerServiceWorker, restoreScrollAfterUpdate } from "./pwa/serviceWorker";
 
 // Pages hors app (non liées) : chargées à part.
-const Styleguide = lazy(() => import("./ui/StyleguidePage"));
+const Styleguide = lazy(importOrReload(() => import("./ui/StyleguidePage")));
 
 applyBranding(BUNDLED_EVENT.branding?.colors);
 

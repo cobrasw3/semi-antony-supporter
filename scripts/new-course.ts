@@ -1,5 +1,5 @@
 // Crée une nouvelle course à partir du modèle : `npm run new-course -- <slug>`
-// Options : --nom "Semi de X" --court "Semi de X" --couleur "#1f6f8b"
+// Options : --nom "Semi de X" --court "Semi de X" --icone "X" --couleur "#1f6f8b"
 //           --organisateur "Club Y" --ville "X"
 // Copie courses/_modele/ vers courses/<slug>/, remplit les {{MARQUEURS}},
 // puis génère les icônes (si `sharp` est installé).
@@ -36,6 +36,8 @@ const values: Record<string, string> = {
   "{{SLUG}}": slug,
   "{{NOM}}": opt("nom") ?? titre,
   "{{NOM_COURT}}": opt("court") ?? opt("nom") ?? titre,
+  // Nom sous l'icône de l'écran d'accueil : court (≈ 12 caractères), la ville par défaut.
+  "{{NOM_ICONE}}": opt("icone") ?? opt("ville") ?? titre,
   "{{COULEUR}}": couleur,
   "{{ORGANISATEUR}}": opt("organisateur") ?? "l’organisateur",
   "{{VILLE}}": opt("ville") ?? titre,

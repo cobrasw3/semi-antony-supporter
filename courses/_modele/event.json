@@ -9,7 +9,7 @@
   },
   "app": {
     "name": "{{NOM_COURT}} — Supporter",
-    "shortName": "{{NOM_COURT}}",
+    "shortName": "{{NOM_ICONE}}",
     "description": "Où se placer et à quelle heure ton coureur passe, à la course {{NOM}}. Fonctionne hors-ligne le jour J.",
     "themeColor": "{{COULEUR}}",
     "backgroundColor": "#ffffff"

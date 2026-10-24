@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
@@ -42,6 +42,30 @@ function gitSha(): string {
   }
 }
 
+/**
+ * Fichiers de la version précédente en ligne (courses/<slug>/legacy-assets/,
+ * cf. scripts/fetch-legacy-assets.ts) : servis à leur adresse d'origine pour
+ * qu'une page restée ouverte sur l'ancienne version puisse encore charger un
+ * écran à la demande (sinon : page blanche). Hors du cache hors-ligne.
+ */
+const legacyOnly = new Set<string>();
+function legacyAssets(): Plugin {
+  const dir = join(courseDir(course), "legacy-assets");
+  return {
+    name: "legacy-assets",
+    apply: "build",
+    generateBundle(_, bundle) {
+      if (!existsSync(dir)) return;
+      for (const name of readdirSync(dir)) {
+        const fileName = `assets/${name}`;
+        if (fileName in bundle) continue; // fichier identique produit par ce build (polices…)
+        legacyOnly.add(fileName);
+        this.emitFile({ type: "asset", fileName, source: readFileSync(join(dir, name)) });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   root: "app",
   publicDir,
@@ -55,6 +79,7 @@ export default defineConfig({
   plugins: [
     react(),
     courseFiles(),
+    legacyAssets(),
     VitePWA({
       // Enregistrement maison (src/pwa/serviceWorker.ts) pour contrôler le
       // moment du rechargement après une mise à jour.
@@ -73,6 +98,8 @@ export default defineConfig({
         // event.json est embarqué dans le JS (donc précaché lui aussi).
         // woff2 : polices auto-hébergées, disponibles hors-ligne.
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
+        // Les fichiers de l'ancienne version restent servis, pas précachés.
+        manifestTransforms: [async (entries) => ({ manifest: entries.filter((e) => !legacyOnly.has(e.url)), warnings: [] })],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/_vercel\//, /^\/data\//],
         runtimeCaching: [

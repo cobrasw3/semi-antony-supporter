@@ -144,6 +144,53 @@ Ne pas oublier ensuite : si `main` avait été modifiée, la remettre sur le tag
 (`git push origin antony-prod-avant-multi:main` — refusé si `main` a avancé :
 voir avec Claude avant de forcer).
 
+## 🔁 Antony : bascule vers l'architecture multi-courses (à déclencher par Paul)
+
+La production d'Antony sert encore la version d'avant la refonte (tag
+`antony-prod-avant-multi`). La bascule = fusionner `feat/multi-courses` dans
+`main` ; Cloudflare reconstruit alors Antony (`npm run build` sans argument
+= Antony) avec les **mêmes réglages** qu'aujourd'hui. Durée : ~10 min.
+
+**Avant**
+1. Récupérer les fichiers de la version en ligne (pages restées ouvertes) :
+   `node scripts/fetch-legacy-assets.ts antony`, puis commiter
+   `courses/antony/legacy-assets/` s'il a changé.
+2. Vérifier le lien de test de la branche (build Cloudflare réel) :
+   `node scripts/reference-ui.mjs compare https://feat-multi-courses-semi-antony-supporter.semi-supporter.workers.dev`
+   → « Identique à la référence ».
+3. Cloudflare → Worker `semi-antony-supporter` → Settings → Build : branche de
+   production `main`, build `npm run build`, déploiement `npx wrangler deploy`
+   (inchangés).
+
+**Bascule**
+4. ```bash
+   git checkout main && git pull
+   git merge --ff-only feat/multi-courses
+   git push origin main
+   ```
+5. Attendre le build (Deployments, ~1 min), puis
+   `node scripts/reference-ui.mjs compare https://semi-antony-supporter.semi-supporter.workers.dev`
+   → identique. Ouvrir l'app déjà installée sur un téléphone : elle se recharge
+   seule sur la nouvelle version.
+
+**Service worker** : les téléphones déjà venus ont l'ancien service worker ;
+il installe le nouveau, qui prend la main aussitôt (skipWaiting) et l'app se
+recharge seule (état conservé). Si une saisie est en cours, l'app attend
+(bandeau « Nouvelle version disponible ») : la page ancienne peut encore
+charger ses écrans (carte) grâce aux fichiers conservés dans
+`legacy-assets/`, servis sans être mis en cache. Répétée en local à partir
+d'une copie exacte de la production, sans cache HTTP : pas de page blanche,
+carte et prénom conservés, hors-ligne OK après mise à jour.
+
+**Retour arrière (~1 min)** : Cloudflare → `semi-antony-supporter` →
+Deployments → version précédente (`ae3f3563…` si c'est la première bascule)
+→ **Rollback** (ou `npx wrangler rollback <version> --name semi-antony-supporter`).
+Ensuite, ne plus pousser sur `main` avant d'avoir corrigé sur la branche
+(chaque push sur `main` redéploie).
+
+**À chaque future mise en production d'Antony** : relancer l'étape 1
+(fichiers de la version en ligne) avant de pousser sur `main`.
+
 ## Configurer un événement (`courses/<slug>/event.json`)
 
 - `event` : nom, date (`AAAA-MM-JJ`), `dateToConfirm`, fuseau.

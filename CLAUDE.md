@@ -923,3 +923,32 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   `courses/<slug>/assets/qr-demo.png` (dépendance de dev `qrcode` ; le QR
   n'est pas embarqué dans l'app). État : Antony prête et en ligne, 5 démos
   en attente du GPX, non déployées.
+- **Étape 6 — vérifications** :
+  - 249 tests ✅ (dont non-régression des calculs d'Antony), lint OK
+    (1 avertissement habituel), 6 builds OK ; `npm run new-course -- test`
+    → build OK → supprimée.
+  - Antony : `reference-ui.mjs compare` sur le build final → **identique
+    (17 scénarios)**. Pas de « bug d'arrivée » à signaler (déjà corrigé
+    le 19/10, cf. étape 0).
+  - **Risque de page blanche trouvé et corrigé** pour la bascule : une page
+    restée ouverte sur l'ancienne version (saisie en cours → l'app attend
+    avant de recharger) qui ouvre la Carte demande l'ancien fichier
+    MapTab ; avec le nouveau service worker et sans cache HTTP → 404 →
+    page blanche, prénom perdu (reproduit). Corrections : (1)
+    `scripts/fetch-legacy-assets.ts` récupère les fichiers JS/CSS/polices
+    de la version EN LIGNE (20 fichiers, 924 Ko, `courses/antony/
+    legacy-assets/`) ; le build les sert à leur adresse d'origine, hors
+    précache (`manifestTransforms`) ; (2) `importOrReload` : si un écran
+    chargé à la demande manque après une future mise à jour, la page se
+    recharge (état conservé) au lieu de planter. Répétition depuis une
+    **copie exacte de la production** (bundle index-21lbHY4s) vers le
+    nouveau build, sans cache HTTP : scénario normal (rechargement auto) et
+    saisie + Carte → carte affichée, prénom conservé ; hors-ligne OK.
+  - Deux apps côte à côte (Antony et Rambouillet, deux origines) :
+    manifestes, titres, couleurs, service workers, caches et prénoms
+    mémorisés séparés ; les deux installables ; noindex seulement sur la
+    démo. Noms d'icône raccourcis (« Rambouillet »…), `--icone` dans
+    new-course.
+  - `.oxlintrc.json` : écrasé par erreur puis restauré depuis Git, seule
+    l'exclusion `legacy-assets/` ajoutée.
+  - README : procédure de bascule pas à pas + retour arrière.

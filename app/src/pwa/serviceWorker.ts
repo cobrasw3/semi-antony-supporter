@@ -92,3 +92,22 @@ export async function registerServiceWorker() {
   window.addEventListener("online", check);
   window.setInterval(check, UPDATE_CHECK_INTERVAL_MS);
 }
+
+/**
+ * Chargement différé d'un écran (ex. la carte) qui survit à une mise à jour :
+ * si une nouvelle version a été publiée pendant que la page était ouverte,
+ * l'ancien fichier n'existe plus et l'import échoue. On recharge alors la
+ * page (état conservé) sur la nouvelle version, au lieu d'une page blanche.
+ */
+export function importOrReload<T>(load: () => Promise<T>): () => Promise<T> {
+  return () =>
+    load().catch((error: unknown) => {
+      const key = "semi-supporter:reload-apres-import";
+      // Une seule tentative par minute : si le fichier manque vraiment, on laisse l'erreur remonter.
+      const last = Number(sessionStorage.getItem(key) ?? 0);
+      if (Date.now() - last < 60_000) throw error;
+      sessionStorage.setItem(key, String(Date.now()));
+      reloadKeepingState();
+      return new Promise<T>(() => {});
+    });
+}

@@ -1,16 +1,16 @@
 # Tableau de bord des courses
 
-> Généré par `npm run courses` le 24/10/2026 14:46:01. Ne pas modifier à la main :
+> Généré par `npm run courses` le 24/10/2026 15:02:38. Ne pas modifier à la main :
 > la source est `courses/<slug>/event.json` et `SUIVI.md`.
 
 | Course | Statut | En ligne | À confirmer | Prochaine action |
 |---|---|---|---|---|
-| [Semi-marathon d’Antony](antony/SUIVI.md) | prête | en ligne | 3 | Attendre la réponse de la mairie (validation, GPX officiel, date 2027, ravitos). |
-| [Foulées Charentonnaises](charenton/SUIVI.md) | en attente du GPX | non déployée | 4 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/charenton/parcours.gpx, puis npm run import-gpx -- charenton. |
-| [Semi-marathon de Joinville](joinville/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/joinville/parcours.gpx, puis npm run import-gpx -- joinville. |
-| [Foulées de Malakoff](malakoff/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/malakoff/parcours.gpx, puis npm run import-gpx -- malakoff. |
-| [Semi-marathon de Rambouillet](rambouillet/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/rambouillet/parcours.gpx, puis npm run import-gpx -- rambouillet. |
-| [Semi-marathon du Bois de Vincennes](vincennes/SUIVI.md) | en attente du GPX | non déployée | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/vincennes/parcours.gpx, puis npm run import-gpx -- vincennes. |
+| [Semi-marathon d’Antony](antony/SUIVI.md) | prête | ? | 3 | Attendre la réponse de la mairie (validation, GPX officiel, date 2027, ravitos). |
+| [Foulées Charentonnaises](charenton/SUIVI.md) | en attente du GPX | ? | 4 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/charenton/parcours.gpx, puis npm run import-gpx -- charenton. |
+| [Semi-marathon de Joinville](joinville/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/joinville/parcours.gpx, puis npm run import-gpx -- joinville. |
+| [Foulées de Malakoff](malakoff/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/malakoff/parcours.gpx, puis npm run import-gpx -- malakoff. |
+| [Semi-marathon de Rambouillet](rambouillet/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/rambouillet/parcours.gpx, puis npm run import-gpx -- rambouillet. |
+| [Semi-marathon du Bois de Vincennes](vincennes/SUIVI.md) | en attente du GPX | ? | 5 | Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans courses/vincennes/parcours.gpx, puis npm run import-gpx -- vincennes. |
 
 ## Liens
 

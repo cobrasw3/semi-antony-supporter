@@ -9,7 +9,7 @@ import { track } from "../lib/analytics";
 import { courseReady, demoBanner, spotWhere } from "../lib/event";
 import { formatPace } from "../lib/format";
 import { minutesToTimeString } from "../lib/timing";
-import { onUpdateReady, reloadKeepingState } from "../pwa/serviceWorker";
+import { importOrReload, onUpdateReady, reloadKeepingState } from "../pwa/serviceWorker";
 import { AppHeader, Button, RunnerChip, SpotCard, Stepper } from "../ui/components";
 import { BottomSheet, StatusStrip, TabBar, ToastStack, type ToastItem } from "../ui/overlays";
 import { GoalControls } from "./GoalControls";
@@ -24,7 +24,7 @@ import { useReminders } from "./useReminders";
 import type { Supporter } from "./useSupporter";
 
 // Leaflet est chargé seulement à l'ouverture de l'onglet Carte.
-const MapTab = lazy(() => import("./MapTab"));
+const MapTab = lazy(importOrReload(() => import("./MapTab")));
 
 export type TabId = "live" | "plan" | "carte" | "infos";
 
