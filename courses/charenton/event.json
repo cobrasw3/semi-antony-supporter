@@ -40,8 +40,18 @@
   },
   "infos": [
     {
-      "title": "Le parcours",
-      "text": "Une boucle entre la ville et les allées du bois de Vincennes. Plus de 2 000 participants.",
+      "title": "Départ et arrivée",
+      "text": "Centre de Charenton, près du gymnase Nelson Paillou (métro Charenton-Écoles).",
+      "toConfirm": true
+    },
+    {
+      "title": "Les courses",
+      "text": "15 km à 8 h 45 (deux tours différents entre la ville et le bois de Vincennes, autour du lac Daumesnil), 5 km à 11 h 45 (bitume, ville et bois). « Challenge » : les deux courses avec un seul dossard. Courses enfants à partir de 11 h.",
+      "toConfirm": true
+    },
+    {
+      "title": "Consigne",
+      "text": "Une consigne est prévue pour les sacs entre les deux courses.",
       "toConfirm": true
     },
     {
@@ -73,12 +83,25 @@
       "id": "15km",
       "name": "15 km",
       "distanceKm": 15,
-      "startTime": "10:00",
+      "startTime": "08:45",
       "aConfirmer": true,
       "loops": 1,
       "loopLengthKm": 15,
       "defaultPace": "5:30",
       "defaultTargetTime": "1:23",
+      "track": [],
+      "spots": []
+    },
+    {
+      "id": "5km",
+      "name": "5 km",
+      "distanceKm": 5,
+      "startTime": "11:45",
+      "aConfirmer": true,
+      "loops": 1,
+      "loopLengthKm": 5,
+      "defaultPace": "5:30",
+      "defaultTargetTime": "0:28",
       "track": [],
       "spots": []
     }

@@ -1050,3 +1050,14 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   passage multiple). Écart de -66 % avec les 15 km annoncés : 3 tours de
   5 km ou tracé d'une autre course ? L'utilisateur vérifie ; rien n'est
   importé. Noté dans SUIVI.md.
+- Charenton, site officiel consulté (lien donné par l'utilisateur,
+  https://www.lesfouleescharentonnaises.fr/les-courses/) : 15 km à 8:45
+  (**2 tours différents**, ≈ 7,5 km chacun, km balisés par tour sur le plan),
+  5 km à 11:45, départ/arrivée près du gymnase Nelson Paillou
+  (Charenton-Écoles), « Challenge » 15 + 5 km, courses enfants. Plans en
+  image seulement (pas de GPX, pas de carte intégrée). Le GPX runtrail de
+  5,09 km ressemble au 5 km (Valmy + bois) mais longe le lac Daumesnil, ce
+  que ne fait pas le plan 2025 du 5 km → probablement une ancienne version
+  ou un tracé d'utilisateur. `event.json` mis à jour (15 km 8:45 + course
+  5 km 11:45, infos départ / courses / consigne, tout à confirmer) ;
+  SUIVI.md complété (sources). Build OK.
