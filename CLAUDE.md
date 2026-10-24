@@ -1078,3 +1078,21 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   ignorent les courses sans tracé ; `npm run courses` : statut course par
   course, lien démo sur la course prête (`&race=`), heure démo selon la
   distance (≈ 45 % de la course à 5:30/km).
+- **Charenton 15 km reconstitué d'après le plan officiel** (demande de
+  l'utilisateur) : plan (image) géoréférencé par transformation affine sur
+  4 points communs avec le GPX runtrail (écarts 4 à 19 m ; 47 m sur le
+  départ, placé à l'œil) ; points de passage lus sur le plan (tour 1 :
+  petit détour de Valmy ; tour 2 : détour par la rue Marius Delcher ; bois :
+  lac Daumesnil par le nord, rive sud, route intérieure, route de la Plaine,
+  boucle avenue de Gravelle, diagonale) ; itinéraire piéton OSRM tronçon
+  par tronçon, segment du plan quand OSRM fait un détour (61/92 tronçons
+  sur les rues). Contrôle : les 15 bornes km du plan tombent à ± 0,13 km
+  après recalage (la borne 14, sur un passage double, à 14,0 au 1er
+  passage) ; longueur mesurée 16,06 km (+7 %, signalé à l'import).
+  Visuellement conforme au plan. Importé (`parcours-15km.gpx`, sans
+  altitude) : 6 candidats, ★ avenue de Gravelle 5 passages ; meilleur
+  parcours 4× sans marcher. Distances, grille, fond de carte (3,6 Mo),
+  plan de repli recalculés. Démo vérifiée à 9:20 (Live, Plan, Carte).
+  Outils de reconstitution dans le scratchpad (georef.py, build15.py,
+  full15.py) — à transformer en script si on le refait pour d'autres
+  courses.
