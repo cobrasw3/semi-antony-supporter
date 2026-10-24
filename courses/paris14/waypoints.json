@@ -99,8 +99,15 @@
     }
   ],
   "arrivee": {
-    "description": "Après la 2e boucle, au point de départ, bifurquer vers le sud-est puis remonter la rue Saillard jusqu'à l'arrivée.",
+    "description": "Après la 2e boucle, au point de départ, bifurquer vers le sud-est par la rue Mouton-Duvernet, puis remonter la rue Saillard jusqu'à l'arrivée (plan officiel).",
     "points": [
+      {
+        "id": "a0",
+        "nom": "Rue Mouton-Duvernet vers le sud-est",
+        "requete": "rue Mouton Duvernet & rue Pierre Castagnou, 75014 Paris",
+        "aConfirmer": true,
+        "correction": "Point ajouté d'après le plan officiel : la bretelle d'arrivée suit la rue Mouton-Duvernet (qui part de la rue Gassendi au départ) jusqu'à la rue Saillard."
+      },
       {
         "id": "a1",
         "nom": "Bifurcation : bas de la rue Saillard (rue Mouton-Duvernet)",
@@ -113,7 +120,7 @@
         "nom": "Arrivée — haut de la rue Saillard (rue Charles-Divry), point exact à confirmer",
         "requete": "rue Saillard & rue Charles Divry, 75014 Paris",
         "aConfirmer": true,
-        "correction": "Proposition : arrivée au bout nord de la rue Saillard (« remonter la rue Saillard »). Point exact à confirmer sur le plan ; forcer lat/lon au besoin."
+        "correction": "D'après le plan officiel : drapeau d'arrivée en haut de la rue Saillard (côté rue Charles-Divry). Point exact à confirmer."
       }
     ]
   },

@@ -1140,3 +1140,17 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   - `courses/paris14/parcours.gpx` et `apercu.html` (carte, points,
     bornes, plan à côté). **En attente de validation de l'aperçu par
     l'utilisateur** (et du plan officiel pour le crochet).
+- Plan officiel reçu (`PARCOUR2027.png`, renommé `plan-officiel-2027.png`).
+  **Diagnostic corrigé** : les numéros 1 à 9 du plan sont les bornes de
+  tout le parcours (2 boucles) ; lues sur le plan, elles tombent toutes au
+  bon endroit du tracé calculé (3 = rue du Cmdt-Mouchotte près de Gaîté,
+  4 = angle Edgar-Quinet / Raspail, 7 = zigzag Lebouis / Texel, 8 = rue du
+  Départ, 9 = Émile-Richard). Le « ≈ 350 m manquants » annoncé avant était
+  faux (hypothèse « borne 3 = rue du Départ ») : rien ne manque. Le plan
+  confirme aussi les 3 corrections OSM. Le contrôle automatique des
+  bornes (nom de rue à ± 120 m) reste trop strict pour « vers Gaîté ».
+  Bretelle d'arrivée selon le plan : rue Mouton-Duvernet (point a0 ajouté)
+  puis rue Saillard jusqu'au drapeau, en haut de la rue (côté
+  Charles-Divry) ; les 90 derniers mètres de Mouton-Duvernet passent par
+  l'allée parallèle (tronçon non relié dans OSM, < 20 m d'écart). Aperçu
+  régénéré avec le plan à côté. En attente de validation.

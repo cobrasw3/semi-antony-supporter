@@ -217,6 +217,7 @@ writeFileSync(join(dir, "apercu.html"), html);
 // Compte rendu.
 console.log(`\nBoucle : ${loopKm.toFixed(2)} km (attendu ${wp.longueurBoucleKmAttendue} km, ${pct(loopKm, wp.longueurBoucleKmAttendue).toFixed(1)} %) · total ${totalKm.toFixed(2)} km`);
 for (const p of [...loop, ...finish]) console.log(`  ${p.issue ? "✗" : "✓"} ${p.id.padEnd(8)} ${p.issue ?? `${p.at!.lat.toFixed(5)}, ${p.at!.lng.toFixed(5)}${p.note ? ` (${p.note})` : ""}`}`);
+for (const l of legs.slice(loopLegs * wp.nombreBoucles)) console.log(`  bretelle ${l.from.id} → ${l.to.id} : ${Math.round(l.km * 1000)} m (${l.streets.map((x) => x.name || "sans nom").join(" › ")})`);
 for (const l of legs.slice(0, loopLegs)) console.log(`  ${l.from.id} → ${l.to.id} : ${Math.round(l.km * 1000)} m (${l.streets.map((x) => x.name || "sans nom").join(" › ")})`);
 for (const mk of markers) console.log(`  borne ${mk.km} ${mk.ok ? "✓" : "✗"} attendue « ${mk.desc} » — tracé : ${mk.names.join(", ") || "?"}`);
 for (const i of issues) console.log(`  ⚠️ ${i}`);
