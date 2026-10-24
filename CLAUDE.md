@@ -1096,3 +1096,9 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   Outils de reconstitution dans le scratchpad (georef.py, build15.py,
   full15.py) — à transformer en script si on le refait pour d'autres
   courses.
+- **Démo Charenton déployée** (`npm run deploy -- charenton`, Worker
+  `charenton`, wrangler) : https://charenton.semi-supporter.workers.dev —
+  200, titre, `noindex, nofollow`, robots.txt fermé, en-têtes de sécurité ;
+  liens démo 15 km (9:20) et 5 km (`&race=5km`, 11:55) vérifiés dans le
+  navigateur. Production d'Antony inchangée (bundle index-21lbHY4s).
+  Spots encore « à confirmer » (à choisir par l'utilisateur).
