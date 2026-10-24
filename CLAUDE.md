@@ -914,3 +914,12 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   icônes générées à la couleur. Aucun GPX fourni → aucun tracé : les 5
   démos affichent « Parcours à venir ». Les 5 builds passent (titre,
   noindex) ; Antony reste le build par défaut.
+- **Étape 5** : `npm run courses` (`scripts/courses.ts`) : statut de chaque
+  course (prête / GPX à importer / en attente du GPX / spots à valider),
+  URL et si elle répond (`--hors-ligne` pour ne pas tester ; 404 →
+  « non déployée »), nombre de points à confirmer, lien démo (heure = 50 min
+  après le premier départ ; Antony : Paul 15:20), prochaine action (section
+  « Prochaine action » de SUIVI.md). Écrit `courses/TABLEAU.md` et
+  `courses/<slug>/assets/qr-demo.png` (dépendance de dev `qrcode` ; le QR
+  n'est pas embarqué dans l'app). État : Antony prête et en ligne, 5 démos
+  en attente du GPX, non déployées.

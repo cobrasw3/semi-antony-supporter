@@ -35,7 +35,7 @@ Tout est **à confirmer** avec l'organisateur :
 ## Démo
 
 - URL : https://joinville.semi-supporter.workers.dev *(pas encore déployée)*
-- Lien démo (une fois le parcours intégré) : https://joinville.semi-supporter.workers.dev/?demo=1&now=09:45&name=Léa&pace=5:30
+- Lien démo (une fois le parcours intégré) : https://joinville.semi-supporter.workers.dev/?demo=1&now=09:35&name=Léa&pace=5:30
 - QR code : `assets/qr-demo.png` (généré par `npm run courses`)
 
 ## Historique

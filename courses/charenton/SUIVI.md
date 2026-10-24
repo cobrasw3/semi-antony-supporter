@@ -35,7 +35,7 @@ Tout est **à confirmer** avec l'organisateur :
 ## Démo
 
 - URL : https://charenton.semi-supporter.workers.dev *(pas encore déployée)*
-- Lien démo (une fois le parcours intégré) : https://charenton.semi-supporter.workers.dev/?demo=1&now=10:45&name=Léa&pace=5:30
+- Lien démo (une fois le parcours intégré) : https://charenton.semi-supporter.workers.dev/?demo=1&now=10:50&name=Léa&pace=5:30
 - QR code : `assets/qr-demo.png` (généré par `npm run courses`)
 
 ## Historique
