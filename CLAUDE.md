@@ -952,3 +952,12 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   - `.oxlintrc.json` : écrasé par erreur puis restauré depuis Git, seule
     l'exclusion `legacy-assets/` ajoutée.
   - README : procédure de bascule pas à pas + retour arrière.
+- Branche `feat/multi-courses` poussée (7b1cc9b) → build Cloudflare de
+  preview (47c0d86c, sous Previews → feat-multi-courses) réussi avec la
+  nouvelle architecture : `reference-ui.mjs compare
+  https://feat-multi-courses-semi-antony-supporter.semi-supporter.workers.dev`
+  → **identique (17 scénarios)** ; ancien fichier carte servi (200), absent
+  du précache. Production inchangée (bundle index-21lbHY4s, aucun build
+  sur `main`). Reste : connexion wrangler de l'utilisateur pour déployer les
+  5 démos (Workers dédiés), GPX des 5 courses, bascule d'Antony (à
+  déclencher par l'utilisateur).
