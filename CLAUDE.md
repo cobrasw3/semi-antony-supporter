@@ -874,3 +874,15 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
     `scripts/reference-ui.mjs compare` → **identique (17 scénarios)** ;
     236 tests ✅. Deux serveurs Vite oubliés (ports 5173 et 5181) arrêtés :
     ils bloquaient le renommage de `src/`.
+- **Étape 3 (en cours, pause demandée par l'utilisateur)** : logique d'import
+  GPX écrite et testée (`app/src/lib/gpxImport.ts`, 10 tests) : lecture GPX
+  avec altitudes, dénivelé lissé (moyenne ± 50 m + hystérésis 2 m),
+  Douglas-Peucker (5 m), recalage sur la distance officielle (alerte > 2 %),
+  passages multiples (< 40 m, > 1 km d'écart), candidats réguliers tous les
+  2,5 km + départ/arrivée. Moteur : un point touché sur un tracé « parcours
+  entier » (loops = 1) trouve tous ses passages (`passagesThrough`, testé).
+  **Reste à faire** : `scripts/import-gpx.ts` (écriture dans event.json,
+  candidats `aConfirmer`, géocodage Nominatim 1 req/s), puis étapes 4
+  (5 configs), 5 (tableau de bord, QR), 6 (vérifications), procédure de
+  bascule d'Antony. Rien n'est poussé sur GitHub pour l'instant ; la
+  production d'Antony n'a pas été touchée.

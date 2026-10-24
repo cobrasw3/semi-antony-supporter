@@ -63,3 +63,16 @@ describe("nearestPassageKm", () => {
     expect(nearestPassageKm([], 900, start, 5.5)).toBeNull();
   });
 });
+
+describe("parcours entier (une seule « boucle » dans la config)", () => {
+  it("un point touché sur un aller-retour donne ses deux passages", () => {
+    const A = { lat: 48.8, lng: 2.3 };
+    const out = Array.from({ length: 100 }, (_, i) => ({ lat: A.lat + (0.018 * i) / 99, lng: A.lng })); // 2 km
+    const track = [...out, ...out.slice(0, -1).reverse()]; // 4 km
+    const race = { loops: 1, loopLengthKm: 4, distanceKm: 4 };
+    const p = coursePointAt(track, race, { lat: A.lat + 0.0045, lng: A.lng + 0.0002 })!; // ≈ 500 m du départ
+    expect(p.km).toHaveLength(2);
+    expect(p.km[0]).toBeCloseTo(0.5, 1);
+    expect(p.km[1]).toBeCloseTo(3.5, 1);
+  });
+});

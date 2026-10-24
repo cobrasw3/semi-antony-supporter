@@ -5,7 +5,7 @@
 // 100 m près. Fonctions pures, testées.
 
 import type { LatLng, Race, Spot } from "./event";
-import { pointAtDistance, projectPointOntoRoute, routeLengthKm } from "./geo.ts";
+import { cumulativeDistancesKm, haversineDistanceKm, pointAtDistance, projectPointOntoRoute, routeLengthKm } from "./geo.ts";
 
 /** Au-delà, le point touché est jugé trop loin du parcours (km). */
 export const MAX_OFF_ROUTE_KM = 0.15;
@@ -18,6 +18,11 @@ export interface FreeSpotData {
   raceId: string;
   /** Position sur le tracé (km dans la boucle, à l'échelle officielle). */
   kmInLoop: number;
+  /**
+   * Tous les passages (km) quand le tracé est le parcours entier et repasse
+   * par ce point (ex. deux boucles différentes) ; sinon déduits des boucles.
+   */
+  km?: number[];
 }
 
 export interface CoursePoint {
@@ -55,7 +60,35 @@ export function coursePointAt(track: LatLng[], race: RaceShape, target: LatLng, 
   if (proj.distanceFromRouteKm > maxOffKm) return null;
   const trackKm = routeLengthKm(track);
   const kmInLoop = round2((proj.distanceAlongRouteKm * officialLoopKm(race)) / trackKm);
-  return { ...pointOf(track, race, kmInLoop), kmInLoop, km: passageKms(kmInLoop, race) };
+  const point = pointOf(track, race, kmInLoop);
+  // Boucles identiques : un passage par boucle. Parcours entier : tous les
+  // endroits du tracé qui repassent par ce point.
+  const km = race.loops > 1 ? passageKms(kmInLoop, race) : passagesThrough(track, race, point);
+  return { ...point, kmInLoop, km: km.length ? km : [kmInLoop] };
+}
+
+/**
+ * Km (officiels) de chaque passage du tracé à moins de `radiusKm` du point,
+ * un par passage (passages séparés d'au moins 0,5 km sur le parcours).
+ */
+export function passagesThrough(track: LatLng[], race: RaceShape, point: LatLng, radiusKm = 0.04): number[] {
+  const cum = cumulativeDistancesKm(track);
+  const scale = officialLoopKm(race) / cum[cum.length - 1];
+  const runs: Array<{ km: number; d: number }> = [];
+  // Échantillonnage tous les 10 m le long du tracé.
+  for (let d = 0, i = 0; d <= cum[cum.length - 1]; d += 0.01) {
+    while (i < track.length - 2 && cum[i + 1] < d) i++;
+    const seg = cum[i + 1] - cum[i];
+    const t = seg === 0 ? 0 : Math.min(1, (d - cum[i]) / seg);
+    const p = { lat: track[i].lat + (track[i + 1].lat - track[i].lat) * t, lng: track[i].lng + (track[i + 1].lng - track[i].lng) * t };
+    const dist = haversineDistanceKm(p, point);
+    if (dist > radiusKm) continue;
+    const last = runs.at(-1);
+    if (last && d * scale - last.km < 0.5) {
+      if (dist < last.d) Object.assign(last, { km: d * scale, d: dist });
+    } else runs.push({ km: d * scale, d: dist });
+  }
+  return runs.map((r) => round2(r.km));
 }
 
 function pointOf(track: LatLng[], race: RaceShape, kmInLoop: number): LatLng {
@@ -80,7 +113,7 @@ export function freeSpotToSpot(data: FreeSpotData, track: LatLng[], race: RaceSh
     lng: p.lng,
     access: "Distances à pied calculées par les rues, à 100 m près : garde un peu de marge.",
     description: "Ton point à toi, choisi sur la carte.",
-    km: passageKms(data.kmInLoop, race),
+    km: data.km ?? passageKms(data.kmInLoop, race),
     free: true,
   };
 }

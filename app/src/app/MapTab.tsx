@@ -353,7 +353,7 @@ export default function MapTab({
     if (!picked) return;
     const id = `${FREE_SPOT_PREFIX}${Date.now().toString(36)}`;
     const label = coursePointLabel(picked.kmInLoop);
-    const result = s.addSpot(id, { id, raceId: s.officialRace.id, kmInLoop: picked.kmInLoop });
+    const result = s.addSpot(id, { id, raceId: s.officialRace.id, kmInLoop: picked.kmInLoop, ...(race.loops > 1 ? {} : { km: picked.km }) });
     if (result.ok) {
       setPicked(null);
       setSelectId(id);
