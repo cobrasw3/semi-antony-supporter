@@ -900,3 +900,17 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   0,1 · 7 · 14,1 · 21,1, 4 passages), écart de distance +0,4 %, carte et
   écrans OK ; course supprimée ensuite. README : procédure « Ajouter une
   course » en 5 étapes et doc de l'import.
+- **Étape 4** : 5 dossiers créés par `npm run new-course` puis remplis avec
+  les seules infos du tableau du prompt (tout `aConfirmer` /
+  `dateToConfirm`) : `vincennes` (semi, 9:30, 2 boucles différentes → tracé
+  entier), `rambouillet` (semi, 9:00, 14/03/2027), `joinville` (semi 8:45 +
+  10 km), `malakoff` (10 km en 2 boucles de 5 km + 5 km, 11:15, 06/02/2027),
+  `charenton` (15 km). Dates inconnues : date provisoire un week-end +
+  `dateText` (« octobre 2027 », « mars ou avril 2027 », « mi-février
+  2027 »). Heures inconnues (10 km de Joinville, 5 km de Malakoff,
+  Charenton) : valeur provisoire marquée à confirmer et notée dans SUIVI.md.
+  Couleurs d'ambiance sans charte officielle (Vincennes sarcelle, Rambouillet
+  vert forêt, Joinville bleu Marne, Malakoff orange-rouge, Charenton violet),
+  icônes générées à la couleur. Aucun GPX fourni → aucun tracé : les 5
+  démos affichent « Parcours à venir ». Les 5 builds passent (titre,
+  noindex) ; Antony reste le build par défaut.

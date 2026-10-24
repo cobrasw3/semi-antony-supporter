@@ -1,0 +1,90 @@
+{
+  "$schema_doc": "Démo non officielle. Données issues de recherches publiques, à confirmer avec l’organisateur (aConfirmer / dateToConfirm). Tracé et spots : déposer parcours.gpx puis npm run import-gpx -- rambouillet.",
+  "contentVersion": "2026-10-24.1",
+  "contentUpdatedAt": "2026-10-24",
+  "status": "demo",
+  "organizer": {
+    "name": "ASCC Rambouillet Olympique",
+    "aConfirmer": true
+  },
+  "app": {
+    "name": "Semi de Rambouillet — Supporter",
+    "shortName": "Semi de Rambouillet",
+    "description": "Où se placer et à quelle heure ton coureur passe, au semi-marathon de Rambouillet. Fonctionne hors-ligne le jour J.",
+    "themeColor": "#2e6b3a",
+    "backgroundColor": "#f2f6f1"
+  },
+  "deploy": {
+    "worker": "rambouillet",
+    "url": "https://rambouillet.semi-supporter.workers.dev"
+  },
+  "event": {
+    "id": "rambouillet-2027",
+    "name": "Semi-marathon de Rambouillet",
+    "shortName": "Semi de Rambouillet",
+    "city": "Rambouillet",
+    "date": "2027-03-14",
+    "dateToConfirm": true,
+    "timeZone": "Europe/Paris"
+  },
+  "branding": {
+    "tagline": "Où l’encourager, et à quelle heure il passe.",
+    "logo": null,
+    "official": false,
+    "colors": {
+      "ink": "#14213d",
+      "sprint": "#2e6b3a",
+      "signal": "#d7f205"
+    }
+  },
+  "infos": [
+    {
+      "title": "Départ et arrivée",
+      "text": "Stade du Vieux-Moulin.",
+      "toConfirm": true
+    },
+    {
+      "title": "Le parcours",
+      "text": "Une seule boucle : environ 7 km en ville, puis environ 14 km en forêt. Environ 2 500 arrivants.",
+      "toConfirm": true
+    },
+    {
+      "title": "Se déplacer entre les spots",
+      "text": "Pendant la course, on se déplace à pied. L’onglet Plan tient compte du temps de marche."
+    },
+    {
+      "title": "Zéro papier",
+      "text": "Cette app remplace les plans imprimés : partage le lien ou le QR code plutôt que d’imprimer."
+    }
+  ],
+  "settings": {
+    "margin": {
+      "percentage": 0.035,
+      "minMinutes": 1.5
+    },
+    "walking": {
+      "speedKmh": 4.5,
+      "detourFactor": 1.3,
+      "safetyMarginMinutes": 3
+    },
+    "pace": {
+      "minMinPerKm": 3,
+      "maxMinPerKm": 9
+    }
+  },
+  "races": [
+    {
+      "id": "semi",
+      "name": "Semi-marathon",
+      "distanceKm": 21.0975,
+      "startTime": "09:00",
+      "aConfirmer": true,
+      "loops": 1,
+      "loopLengthKm": 21.0975,
+      "defaultPace": "5:30",
+      "defaultTargetTime": "1:56",
+      "track": [],
+      "spots": []
+    }
+  ]
+}

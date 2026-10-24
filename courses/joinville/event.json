@@ -1,0 +1,99 @@
+{
+  "$schema_doc": "Démo non officielle. Données issues de recherches publiques, à confirmer avec l’organisateur (aConfirmer / dateToConfirm). Tracé et spots : déposer parcours.gpx puis npm run import-gpx -- joinville.",
+  "contentVersion": "2026-10-24.1",
+  "contentUpdatedAt": "2026-10-24",
+  "status": "demo",
+  "organizer": {
+    "name": "AC Paris Joinville, avec la ville de Joinville-le-Pont",
+    "aConfirmer": true
+  },
+  "app": {
+    "name": "Semi de Joinville — Supporter",
+    "shortName": "Semi de Joinville",
+    "description": "Où se placer et à quelle heure ton coureur passe, au semi-marathon de Joinville. Fonctionne hors-ligne le jour J.",
+    "themeColor": "#1d6fb8",
+    "backgroundColor": "#f1f5fa"
+  },
+  "deploy": {
+    "worker": "joinville",
+    "url": "https://joinville.semi-supporter.workers.dev"
+  },
+  "event": {
+    "id": "joinville-2027",
+    "name": "Semi-marathon de Joinville",
+    "shortName": "Semi de Joinville",
+    "city": "Joinville-le-Pont",
+    "date": "2027-03-28",
+    "dateToConfirm": true,
+    "dateText": "mars ou avril 2027",
+    "timeZone": "Europe/Paris"
+  },
+  "branding": {
+    "tagline": "Où l’encourager, et à quelle heure il passe.",
+    "logo": null,
+    "official": false,
+    "colors": {
+      "ink": "#14213d",
+      "sprint": "#1d6fb8",
+      "signal": "#d7f205"
+    }
+  },
+  "infos": [
+    {
+      "title": "Départ et arrivée",
+      "text": "Départ quai de Polangis, arrivée place Bergisch Gladbach. Le parcours passe par un parc.",
+      "toConfirm": true
+    },
+    {
+      "title": "Se déplacer entre les spots",
+      "text": "Pendant la course, on se déplace à pied. L’onglet Plan tient compte du temps de marche."
+    },
+    {
+      "title": "Zéro papier",
+      "text": "Cette app remplace les plans imprimés : partage le lien ou le QR code plutôt que d’imprimer."
+    }
+  ],
+  "settings": {
+    "margin": {
+      "percentage": 0.035,
+      "minMinutes": 1.5
+    },
+    "walking": {
+      "speedKmh": 4.5,
+      "detourFactor": 1.3,
+      "safetyMarginMinutes": 3
+    },
+    "pace": {
+      "minMinPerKm": 3,
+      "maxMinPerKm": 9
+    }
+  },
+  "races": [
+    {
+      "id": "semi",
+      "name": "Semi-marathon",
+      "distanceKm": 21.0975,
+      "startTime": "08:45",
+      "aConfirmer": true,
+      "loops": 1,
+      "loopLengthKm": 21.0975,
+      "defaultPace": "5:30",
+      "defaultTargetTime": "1:56",
+      "track": [],
+      "spots": []
+    },
+    {
+      "id": "10km",
+      "name": "10 km",
+      "distanceKm": 10,
+      "startTime": "08:45",
+      "aConfirmer": true,
+      "loops": 1,
+      "loopLengthKm": 10,
+      "defaultPace": "5:30",
+      "defaultTargetTime": "0:55",
+      "track": [],
+      "spots": []
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "$doc": "Annonces de l’organisateur (bandeau). level : info | important ; start/end : date-heure ISO avec fuseau ; demoOnly : seulement en mode démo.",
+  "annonces": []
+}
