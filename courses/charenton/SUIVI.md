@@ -37,7 +37,7 @@ Tout est **à confirmer** avec l'organisateur :
 ## Démo
 
 - URL : https://charenton.semi-supporter.workers.dev *(pas encore déployée)*
-- Lien démo (une fois le parcours intégré) : https://charenton.semi-supporter.workers.dev/?demo=1&now=10:50&name=Léa&pace=5:30
+- Lien démo (une fois le parcours intégré) : https://charenton.semi-supporter.workers.dev/?demo=1&now=11:55&name=Léa&pace=5:30&race=5km
 - QR code : `assets/qr-demo.png` (généré par `npm run courses`)
 
 ## Historique
@@ -46,6 +46,7 @@ Tout est **à confirmer** avec l'organisateur :
 |---|---|
 | 24/10/2026 | Dossier créé (infos connues, en attente du GPX) |
 | 24/10/2026 | Site officiel consulté : 15 km (2 tours différents) à 8:45, 5 km à 11:45, départ gymnase Nelson Paillou ; plans en image seulement. Le GPX runtrail ressemble au 5 km (diffère dans le bois : longe le lac). |
+| 24/10/2026 | Comparaison GPX / plan officiel : le 15 km officiel = 2 tours d'≈ 7,5 km (km 1-7, 8-15), plus longs que la boucle runtrail (tour du lac par le nord, boucle avenue de Gravelle) → **pas 3 × la boucle**. Boucle runtrail importée **provisoirement pour le 5 km** (`parcours-5km.gpx`, +1,8 %, D+ 33 m, 5 spots candidats : rue de Paris départ/arrivée, Valmy, Reuilly, lac Daumesnil, route du Bac). Distances à pied, grille, fond de carte, plan de repli calculés. 15 km toujours sans tracé. |
 | 24/10/2026 | GPX reçu (`les-foulees-charentonnaises_147906.gpx`, export runtrail.run) : boucle de 5,09 km, 167 points avec altitude (44–58 m, D+ ≈ 33 m), départ/arrivée à 74 m près de Charenton-Écoles, passe par Valmy, Porte de Charenton et le lac Daumesnil. **Écart avec les 15 km annoncés : 3 tours ? autre course ?** Paul vérifie ; rien d'importé. |
 
 ## Prix proposé
@@ -54,4 +55,4 @@ Tout est **à confirmer** avec l'organisateur :
 
 ## Prochaine action
 
-Récupérer le GPX du parcours (site de la course ou OpenRunner) et le déposer dans `courses/charenton/parcours.gpx`, puis `npm run import-gpx -- charenton`.
+Choisir / renommer les spots du 5 km (event.json) ; obtenir le tracé du 15 km (plan officiel en image : reconstituer ou demander le GPX) ; confirmer que le tracé du 5 km est à jour.

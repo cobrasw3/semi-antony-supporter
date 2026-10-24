@@ -13,7 +13,12 @@ import type { EventConfig, LatLng } from "../app/src/lib/event.ts";
 
 const SLUG = slugFromArgs();
 const config = JSON.parse(readFileSync(resolve(`courses/${SLUG}/event.json`), "utf-8")) as EventConfig;
-const race = config.races[0];
+// Plan de repli de la première course dont le tracé est connu.
+const race = config.races.find((r) => r.track.length >= 2);
+if (!race) {
+  console.error("Aucune course avec un tracé : rien à dessiner.");
+  process.exit(1);
+}
 const track: LatLng[] = race.track.map(([lat, lng]) => ({ lat, lng }));
 
 const W = 800;

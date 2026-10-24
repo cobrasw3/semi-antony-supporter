@@ -27,6 +27,10 @@ const config = JSON.parse(raw) as EventConfig;
 
 const grids: Record<string, string> = {};
 for (const race of config.races) {
+  if (race.track.length < 2) {
+    console.log(`${race.name} : pas de tracé, ignorée.`);
+    continue;
+  }
   const track = race.track.map(([lat, lng]) => ({ lat, lng }));
   const loopKm = race.loops > 1 ? race.loopLengthKm : race.distanceKm;
   const trackKm = routeLengthKm(track);
@@ -69,6 +73,7 @@ for (const race of config.races) {
 // reformater le reste du fichier.
 let out = raw;
 for (const race of config.races) {
+  if (!grids[race.id]) continue;
   const marker = `"id": "${race.id}",`;
   const at = out.indexOf(marker);
   if (at < 0) throw new Error(`course ${race.id} introuvable`);

@@ -10,6 +10,7 @@
 //     données © OpenStreetMap) ; `--sans-rues` pour s'en passer.
 //
 // Options : --course <id> (si plusieurs courses ; défaut : la première)
+//           --gpx <fichier> (dans courses/<slug>/ ; défaut : parcours.gpx)
 //           --tous-les <km> (espacement des candidats réguliers, défaut 2,5)
 //
 // Les spots déjà validés (sans "aConfirmer") sont conservés ; seuls les
@@ -29,9 +30,9 @@ const opt = (name: string) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const slug = slugFromArgs(args.filter((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--")));
-const gpxFile = join(courseDir(slug), "parcours.gpx");
+const gpxFile = join(courseDir(slug), opt("gpx") ?? "parcours.gpx");
 if (!existsSync(gpxFile)) {
-  console.error(`Pas de tracé : déposer le fichier GPX dans courses/${slug}/parcours.gpx`);
+  console.error(`Pas de tracé : déposer le fichier GPX dans ${gpxFile}`);
   process.exit(1);
 }
 

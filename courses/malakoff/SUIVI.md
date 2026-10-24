@@ -35,7 +35,7 @@ Tout est **à confirmer** avec l'organisateur :
 ## Démo
 
 - URL : https://malakoff.semi-supporter.workers.dev *(pas encore déployée)*
-- Lien démo (une fois le parcours intégré) : https://malakoff.semi-supporter.workers.dev/?demo=1&now=12:05&name=Léa&pace=5:30
+- Lien démo (une fois le parcours intégré) : https://malakoff.semi-supporter.workers.dev/?demo=1&now=11:40&name=Léa&pace=5:30
 - QR code : `assets/qr-demo.png` (généré par `npm run courses`)
 
 ## Historique

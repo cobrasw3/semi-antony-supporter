@@ -27,6 +27,11 @@ const path = resolve(courseDir(slugFromArgs()), "event.json");
 const config = JSON.parse(readFileSync(path, "utf-8")) as EventConfig;
 
 for (const race of config.races) {
+  // Course sans tracé ou avec un seul spot : rien à calculer.
+  if (race.spots.length < 2) {
+    console.log(`${race.name} : moins de 2 spots, ignorée.`);
+    continue;
+  }
   const coords = race.spots.map((s) => `${s.lng},${s.lat}`).join(";");
   const response = await fetch(`${SERVICE}/${coords}?annotations=distance`);
   if (!response.ok) throw new Error(`Service d'itinéraires : HTTP ${response.status}`);

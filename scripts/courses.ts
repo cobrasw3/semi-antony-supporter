@@ -8,7 +8,7 @@
 //
 // --hors-ligne : ne vérifie pas si les URL répondent.
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import QRCode from "qrcode";
 import { COURSES_DIR, courseDir, listCourses, readCourseEvent } from "./lib/course.ts";
@@ -26,10 +26,10 @@ interface Row {
 
 const offline = process.argv.includes("--hors-ligne");
 
-/** Heure « pendant la course » pour le lien démo : 50 min après le premier départ. */
-function demoTime(start: string): string {
+/** Heure « pendant la course » pour le lien démo : à ≈ 45 % de la course pour un coureur à 5:30/km. */
+function demoTime(start: string, distanceKm: number): string {
   const [h, m] = start.split(":").map(Number);
-  const t = h * 60 + m + 50;
+  const t = h * 60 + m + Math.round((distanceKm * 5.5 * 0.45) / 5) * 5;
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
@@ -57,20 +57,25 @@ const rows: Row[] = [];
 for (const slug of listCourses()) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ev = readCourseEvent(slug) as any;
-  const races = ev.races as Array<{ name: string; startTime: string; track: unknown[]; spots: Array<{ aConfirmer?: boolean }>; aConfirmer?: boolean }>;
-  const hasGpx = existsSync(join(courseDir(slug), "parcours.gpx"));
-  const ready = races.every((r) => r.track.length >= 2 && r.spots.length > 0);
-  const spotsToCheck = races.reduce((n, r) => n + r.spots.filter((s) => s.aConfirmer).length, 0);
-  const status = !ready
-    ? hasGpx
-      ? "GPX à importer"
-      : "en attente du GPX"
-    : spotsToCheck
-      ? `spots à valider (${spotsToCheck})`
-      : "prête";
+  const races = ev.races as Array<{ id: string; distanceKm: number; name: string; startTime: string; track: unknown[]; spots: Array<{ aConfirmer?: boolean }>; aConfirmer?: boolean }>;
+  const hasGpx = readdirSync(courseDir(slug)).some((f) => f.toLowerCase().endsWith(".gpx"));
+  const raceStatus = (r: (typeof races)[number]) =>
+    r.track.length < 2 || r.spots.length === 0
+      ? hasGpx && races.length === 1
+        ? "tracé à importer"
+        : "en attente du GPX"
+      : r.spots.some((x) => x.aConfirmer)
+        ? `spots à valider (${r.spots.filter((x) => x.aConfirmer).length})`
+        : "prête";
+  const spotsToCheck = races.reduce((n, r) => n + r.spots.filter((x) => x.aConfirmer).length, 0);
+  // Une seule course : son statut ; plusieurs : course par course.
+  const status = races.length === 1 ? raceStatus(races[0]) : races.map((r) => `${r.name} : ${raceStatus(r)}`).join(" · ");
   const url = ev.deploy?.url ?? `https://${ev.deploy?.worker ?? slug}.semi-supporter.workers.dev`;
   const name = slug === "antony" ? "Paul" : "Léa";
-  const demo = `${url}/?demo=1&now=${slug === "antony" ? "15:20" : demoTime(races[0].startTime)}&name=${name}&pace=5:30`;
+  // Lien démo sur la première course dont le parcours est intégré.
+  const shown = races.find((r) => r.track.length >= 2 && r.spots.length > 0) ?? races[0];
+  const raceParam = shown !== races[0] ? `&race=${shown.id}` : "";
+  const demo = `${url}/?demo=1&now=${slug === "antony" ? "15:20" : demoTime(shown.startTime, shown.distanceKm)}&name=${name}&pace=5:30${raceParam}`;
   const toConfirm =
     (ev.event.dateToConfirm ? 1 : 0) +
     (ev.organizer?.aConfirmer ? 1 : 0) +

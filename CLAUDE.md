@@ -1061,3 +1061,20 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   ou un tracé d'utilisateur. `event.json` mis à jour (15 km 8:45 + course
   5 km 11:45, infos départ / courses / consigne, tout à confirmer) ;
   SUIVI.md complété (sources). Build OK.
+- Charenton (suite) : comparaison GPX runtrail / plan officiel du 15 km :
+  même début (km 1 Valmy, km 2 Pelouse de Reuilly) mais le tour officiel
+  (≈ 7,5 km) contourne le lac par le nord et fait une boucle avenue de
+  Gravelle → le 15 km n'est **pas** 3 × la boucle (hypothèse de
+  l'utilisateur écartée, carte comparative montrée). Accord de
+  l'utilisateur : GPX importé **provisoirement pour le 5 km**
+  (`parcours-5km.gpx`, `import-gpx --course 5km --gpx … --tous-les 1`) :
+  +1,8 %, D+ 33 m, 5 spots candidats nommés (rue de Paris départ/arrivée,
+  rue de Valmy, route de Reuilly, route de la Ceinture du Lac, route du
+  Bac) ; distances à pied (20 trajets), grille (50 points), fond de carte
+  (3,4 Mo), plan de repli. Démo vérifiée (`&race=5km`, 12:00) : bandeau,
+  Live, Plan (2 passages sans marcher : départ et arrivée), carte. Non
+  déployée (spots à choisir par l'utilisateur).
+  Scripts : `import-gpx --gpx <fichier>` ; routes / grille / plan de repli
+  ignorent les courses sans tracé ; `npm run courses` : statut course par
+  course, lien démo sur la course prête (`&race=`), heure démo selon la
+  distance (≈ 45 % de la course à 5:30/km).
