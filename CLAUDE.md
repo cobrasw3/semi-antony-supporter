@@ -1038,3 +1038,7 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   24/10). L'ancien point d'étape du 18/10 reste dans le journal, marqué
   comme dépassé. Prochaine action de l'utilisateur : `npx wrangler login`,
   puis dépôt des GPX.
+- Connexion wrangler faite par l'utilisateur (`npx wrangler login`,
+  wrangler 4.152.0, compte 4a1d84c16b651f5917bf27a89105573f) : déploiement
+  des démos possible (`npm run deploy -- <slug>`). Aucun GPX déposé pour
+  l'instant.
