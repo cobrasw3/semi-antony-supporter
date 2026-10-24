@@ -1042,3 +1042,11 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   wrangler 4.152.0, compte 4a1d84c16b651f5917bf27a89105573f) : déploiement
   des démos possible (`npm run deploy -- <slug>`). Aucun GPX déposé pour
   l'instant.
+- GPX de Charenton reçu (`courses/charenton/les-foulees-charentonnaises_147906.gpx`,
+  export runtrail.run, pas encore renommé `parcours.gpx`) : vérifié sans
+  import — boucle propre de 5,09 km (167 points, altitudes 44–58 m, D+
+  lissé 33 m, départ/arrivée à 74 m près de Charenton-Écoles, Valmy, Porte
+  de Charenton, lac Daumesnil, plus grand écart entre points 270 m, aucun
+  passage multiple). Écart de -66 % avec les 15 km annoncés : 3 tours de
+  5 km ou tracé d'une autre course ? L'utilisateur vérifie ; rien n'est
+  importé. Noté dans SUIVI.md.

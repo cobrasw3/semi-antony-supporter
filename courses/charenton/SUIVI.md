@@ -43,6 +43,7 @@ Tout est **à confirmer** avec l'organisateur :
 | Date | Événement |
 |---|---|
 | 24/10/2026 | Dossier créé (infos connues, en attente du GPX) |
+| 24/10/2026 | GPX reçu (`les-foulees-charentonnaises_147906.gpx`, export runtrail.run) : boucle de 5,09 km, 167 points avec altitude (44–58 m, D+ ≈ 33 m), départ/arrivée à 74 m près de Charenton-Écoles, passe par Valmy, Porte de Charenton et le lac Daumesnil. **Écart avec les 15 km annoncés : 3 tours ? autre course ?** Paul vérifie ; rien d'importé. |
 
 ## Prix proposé
 
