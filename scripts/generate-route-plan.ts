@@ -1,16 +1,18 @@
-// Génère public/parcours-plan.svg : plan schématique du parcours (tracé,
+// Génère courses/<slug>/assets/parcours-plan.svg : plan schématique du parcours (tracé,
 // sens, bornes km, spots numérotés), affiché à la place de la carte quand
 // les tuiles ne chargent pas (hors-ligne, réseau saturé le jour J).
 //
 // Usage : node scripts/generate-route-plan.ts   (à relancer après toute
-// modification du tracé ou des spots dans public/data/event.json)
+// modification du tracé ou des spots dans courses/<slug>/event.json)
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { slugFromArgs } from "./lib/course.ts";
 import { resolve } from "node:path";
-import { directionArrows, kmMarks } from "../src/lib/mapMarkers.ts";
-import type { EventConfig, LatLng } from "../src/lib/event.ts";
+import { directionArrows, kmMarks } from "../app/src/lib/mapMarkers.ts";
+import type { EventConfig, LatLng } from "../app/src/lib/event.ts";
 
-const config = JSON.parse(readFileSync(resolve("public/data/event.json"), "utf-8")) as EventConfig;
+const SLUG = slugFromArgs();
+const config = JSON.parse(readFileSync(resolve(`courses/${SLUG}/event.json`), "utf-8")) as EventConfig;
 const race = config.races[0];
 const track: LatLng[] = race.track.map(([lat, lng]) => ({ lat, lng }));
 
@@ -63,5 +65,5 @@ ${arrows}${kms}${spots}
 </svg>
 `;
 
-writeFileSync(resolve("public/parcours-plan.svg"), svg, "utf-8");
-console.log(`public/parcours-plan.svg écrit (${(svg.length / 1024).toFixed(1)} Ko)`);
+writeFileSync(resolve(`courses/${SLUG}/assets/parcours-plan.svg`), svg, "utf-8");
+console.log(`courses/${SLUG}/assets/parcours-plan.svg écrit (${(svg.length / 1024).toFixed(1)} Ko)`);

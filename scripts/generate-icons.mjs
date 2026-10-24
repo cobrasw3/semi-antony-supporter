@@ -1,18 +1,22 @@
-// Génère les icônes PNG de la PWA à partir de public/icon.svg.
+// Génère les icônes PNG de la PWA d'une course à partir de
+// courses/<slug>/assets/icon.svg.
 // sharp n'est volontairement pas une dépendance du projet (lourd, utile
-// une seule fois) :
-//   npm i --no-save sharp && node scripts/generate-icons.mjs
-import { readFileSync } from "node:fs";
+// une seule fois par course) :
+//   npm i --no-save sharp && node scripts/generate-icons.mjs [slug]
+import { mkdirSync, readFileSync } from "node:fs";
 import sharp from "sharp";
 
-const svg = readFileSync("public/icon.svg");
+const slug = process.argv.slice(2).find((a) => !a.startsWith("-")) ?? "antony";
+const dir = `courses/${slug}/assets`;
+const svg = readFileSync(`${dir}/icon.svg`);
+mkdirSync(`${dir}/icons`, { recursive: true });
 const targets = [
-  { file: "public/icons/icon-192.png", size: 192 },
-  { file: "public/icons/icon-512.png", size: 512 },
+  { file: `${dir}/icons/icon-192.png`, size: 192 },
+  { file: `${dir}/icons/icon-512.png`, size: 512 },
   // Fond plein et motif centré : la même image sert de version maskable.
-  { file: "public/icons/icon-maskable-512.png", size: 512 },
-  { file: "public/icons/apple-touch-icon.png", size: 180 },
-  { file: "public/favicon-32.png", size: 32 },
+  { file: `${dir}/icons/icon-maskable-512.png`, size: 512 },
+  { file: `${dir}/icons/apple-touch-icon.png`, size: 180 },
+  { file: `${dir}/favicon-32.png`, size: 32 },
 ];
 
 for (const { file, size } of targets) {

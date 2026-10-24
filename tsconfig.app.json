@@ -20,7 +20,10 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Config de la course (alias Vite @course → courses/<slug>/) ; vérification de types sur Antony */
+    "paths": { "@course/*": ["./courses/antony/*"] }
   },
-  "include": ["src"]
+  "include": ["app/src"]
 }

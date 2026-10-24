@@ -29,20 +29,24 @@ de la mairie.
 - Pas de backend, dépendances minimales. Aucune donnée personnelle envoyée
   à un serveur (prénom/allure restent sur l'appareil ; analytics sans
   paramètres d'URL).
-- Toute la config de l'événement est dans `public/data/event.json` (aucune
-  valeur d'événement codée en dur). Logique pure dans `src/lib/` avec tests.
+- **Multi-courses** (depuis le 2026-10-24) : code commun dans `app/`, une
+  course = un dossier `courses/<slug>/` (event.json, annonces.json,
+  parcours.gpx, SUIVI.md, assets/). Aucune valeur de course codée en dur.
+  Logique pure dans `app/src/lib/` avec tests. `npm run build` sans argument
+  = Antony (build automatique de la prod). **Jamais de déploiement sur le
+  Worker `semi-antony-supporter` hors bascule validée par l'utilisateur.**
 - localStorage uniquement via `src/lib/storage.ts` (try/catch).
 - La fonction `urlPattern` de `vite.config.ts` est sérialisée dans `sw.js` :
   elle ne doit référencer aucune variable extérieure.
 - Nouveau fournisseur de tuiles = mettre à jour `src/config/tiles.ts`, la
-  CSP de `public/_headers` (img-src ET connect-src) et la règle de cache SW.
+  CSP de `app/public/_headers` (img-src ET connect-src) et la règle de cache SW.
 - Pas de `_redirects` : avec les Workers il redirige `/qr` vers `/` ; les
   routes de l'app passent par `not_found_handling: single-page-application`.
-- Fond de carte : `public/carte/<id>-<date>.pmtiles` (nom daté, immuable),
+- Fond de carte : `courses/<slug>/assets/carte/<id>-<date>.pmtiles` (nom daté, immuable),
   référencé par `event.json` → `map.basemap` ; régénérer avec
-  `scripts/build-basemap.ts`.
+  `scripts/build-basemap.ts <slug>`.
 
-- Design system (branche `feat/redesign`) : tokens dans `src/ui/tokens.css`
+- Design system : tokens dans `app/src/ui/tokens.css`
   (aucune couleur en dur dans les composants), composants dans
   `src/ui/components.tsx` et `src/ui/overlays.tsx`, page `/styleguide`.
   Couleurs de marque surchargeables via `event.json` → `branding.colors`
@@ -840,3 +844,33 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   relevés sur la production par `scripts/reference-ui.mjs`, stable sur
   deux passages ; `puppeteer-core` en dépendance de dev, sans navigateur
   embarqué).
+- **Étapes 1 et 2** (architecture, mode démo) :
+  - `git mv` : `src/` et `index.html` → `app/` ; données et fichiers
+    d'Antony (`event.json`, `annonces.json`, icônes, favicon, fond de carte,
+    plan de repli) → `courses/antony/` ; `public/` supprimé. Manifeste et
+    robots.txt générés depuis `event.json` (`scripts/lib/course.ts`,
+    `prepareCoursePublic` → `node_modules/.course/<slug>/public`, servi par
+    Vite comme `publicDir`) ; `app/index.html` à marqueurs %…%. Alias Vite
+    `@course` → `courses/<slug>/`. Scripts slug-aware (routes, grille,
+    fond de carte, plan, icônes) ; `import-track.ts` supprimé (remplacé
+    par l'import GPX).
+  - `npm run dev|build|preview -- <slug>` (`scripts/course-run.mjs`, Antony
+    par défaut), `npm run new-course -- <slug>` (copie `courses/_modele/`,
+    icônes via sharp), `npm run deploy -- <slug>` (Worker dédié par course,
+    config wrangler générée hors dépôt) — **refuse Antony** (vérifié).
+  - `event.json` : `status` (`demo` / `prototype` / `official`),
+    `organizer`, `app` (noms, couleurs du manifeste), `deploy` (Worker,
+    URL), `event.dateText`, `race.aConfirmer`, `spot.aConfirmer`. Antony :
+    `status: "prototype"` pour rester identique (pas de bandeau démo).
+    Tracé vide autorisé : page « Parcours à venir » (date, départ,
+    distance, à confirmer) à la place de Live / Plan / Carte.
+  - Mode démo (`status: "demo"`) : bandeau permanent « Démo non officielle —
+    préparée pour … », `<meta name="robots" content="noindex, nofollow">`,
+    robots.txt `Disallow: /` (pas de sitemap), pied de page « Application
+    non officielle, en attente de validation par l'organisateur. Parcours
+    et horaires indicatifs. »
+  - **Non-régression d'Antony** : build identique à la prod (manifeste,
+    robots.txt, index.html hors un commentaire, données) et
+    `scripts/reference-ui.mjs compare` → **identique (17 scénarios)** ;
+    236 tests ✅. Deux serveurs Vite oubliés (ports 5173 et 5181) arrêtés :
+    ils bloquaient le renommage de `src/`.

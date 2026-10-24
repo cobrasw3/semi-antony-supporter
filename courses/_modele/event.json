@@ -1,0 +1,86 @@
+{
+  "$schema_doc": "Modèle de course : copier avec `npm run new-course -- <slug>`, puis compléter. Tout ce qui n’est pas confirmé par l’organisateur : aConfirmer / dateToConfirm = true. Le tracé et les spots viennent de `npm run import-gpx -- <slug>`.",
+  "contentVersion": "2026-10-24.1",
+  "contentUpdatedAt": "2026-10-24",
+  "status": "demo",
+  "organizer": {
+    "name": "{{ORGANISATEUR}}",
+    "aConfirmer": true
+  },
+  "app": {
+    "name": "{{NOM_COURT}} — Supporter",
+    "shortName": "{{NOM_COURT}}",
+    "description": "Où se placer et à quelle heure ton coureur passe, à la course {{NOM}}. Fonctionne hors-ligne le jour J.",
+    "themeColor": "{{COULEUR}}",
+    "backgroundColor": "#ffffff"
+  },
+  "deploy": {
+    "worker": "{{SLUG}}",
+    "url": "https://{{SLUG}}.semi-supporter.workers.dev"
+  },
+  "event": {
+    "id": "{{SLUG}}-2027",
+    "name": "{{NOM}}",
+    "shortName": "{{NOM_COURT}}",
+    "city": "{{VILLE}}",
+    "date": "2027-01-01",
+    "dateToConfirm": true,
+    "dateText": "2027",
+    "timeZone": "Europe/Paris"
+  },
+  "branding": {
+    "tagline": "Où l’encourager, et à quelle heure il passe.",
+    "logo": null,
+    "official": false,
+    "colors": {
+      "ink": "#14213d",
+      "sprint": "{{COULEUR}}",
+      "signal": "#d7f205"
+    }
+  },
+  "infos": [
+    {
+      "title": "Départ et arrivée",
+      "text": "À confirmer avec l’organisateur.",
+      "toConfirm": true
+    },
+    {
+      "title": "Se déplacer entre les spots",
+      "text": "Pendant la course, on se déplace à pied. L’onglet Plan tient compte du temps de marche."
+    },
+    {
+      "title": "Zéro papier",
+      "text": "Cette app remplace les plans imprimés : partage le lien ou le QR code plutôt que d’imprimer."
+    }
+  ],
+  "settings": {
+    "margin": {
+      "percentage": 0.035,
+      "minMinutes": 1.5
+    },
+    "walking": {
+      "speedKmh": 4.5,
+      "detourFactor": 1.3,
+      "safetyMarginMinutes": 3
+    },
+    "pace": {
+      "minMinPerKm": 3,
+      "maxMinPerKm": 9
+    }
+  },
+  "races": [
+    {
+      "id": "principale",
+      "name": "Course principale",
+      "distanceKm": 10,
+      "startTime": "10:00",
+      "aConfirmer": true,
+      "loops": 1,
+      "loopLengthKm": 10,
+      "defaultPace": "5:30",
+      "defaultTargetTime": "0:55",
+      "track": [],
+      "spots": []
+    }
+  ]
+}

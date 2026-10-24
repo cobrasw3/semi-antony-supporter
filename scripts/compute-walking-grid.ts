@@ -2,23 +2,24 @@
 // `STEP_KM` (100 m) : sert aux points libres touchés sur la carte, pour
 // donner une distance par les rues (et pas à vol d'oiseau) entre n'importe
 // quels endroits du parcours. Calculée une fois ici, embarquée dans
-// public/data/event.json (races[].walkingGrid) : l'app reste hors-ligne.
+// courses/<slug>/event.json (races[].walkingGrid) : l'app reste hors-ligne.
 //
-// Usage : node scripts/compute-walking-grid.ts
+// Usage : node scripts/compute-walking-grid.ts [slug]   (Antony par défaut)
 //
 // Service : OSRM profil piéton de routing.openstreetmap.de (FOSSGIS, données
 // © contributeurs OpenStreetMap), requêtes « table » par blocs.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { EventConfig } from "../src/lib/event.ts";
-import { pointAtDistance, routeLengthKm } from "../src/lib/geo.ts";
+import { courseDir, slugFromArgs } from "./lib/course.ts";
+import type { EventConfig } from "../app/src/lib/event.ts";
+import { pointAtDistance, routeLengthKm } from "../app/src/lib/geo.ts";
 
 const STEP_KM = 0.1;
 const BLOCK = 25; // origines par requête
 const SERVICE = "https://routing.openstreetmap.de/routed-foot/table/v1/driving";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const path = resolve("public/data/event.json");
+const path = resolve(courseDir(slugFromArgs()), "event.json");
 const raw = readFileSync(path, "utf-8");
 const config = JSON.parse(raw) as EventConfig;
 

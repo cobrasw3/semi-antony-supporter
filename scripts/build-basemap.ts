@@ -1,21 +1,23 @@
-// Génère le fond de carte hébergé avec l'app (public/carte/<zone>-<date>.pmtiles)
+// Génère le fond de carte hébergé avec l'app (courses/<slug>/assets/carte/<zone>-<date>.pmtiles)
 // à partir de l'export quotidien Protomaps (données OpenStreetMap), puis
 // affiche les valeurs à reporter dans event.json (map.basemap / map.bounds).
 //
 // Prérequis : l'outil `pmtiles` (https://github.com/protomaps/go-pmtiles/releases)
 // dans le PATH, ou son chemin dans la variable PMTILES.
 //
-// Usage : node scripts/build-basemap.ts [ouest,sud,est,nord]
+// Usage : node scripts/build-basemap.ts [slug] [ouest,sud,est,nord]   (Antony par défaut)
 //   Sans emprise : celle du parcours (event.json), avec ~800 m de marge.
 //
 // Le nom du fichier est daté : un nouveau fond = nouvelle URL, les téléphones
 // le retéléchargent et l'ancien est supprimé du cache (src/pwa/basemap.ts).
 
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { slugFromArgs } from "./lib/course.ts";
 
-const EVENT = "public/data/event.json";
-const DIR = "public/carte";
+const SLUG = slugFromArgs(process.argv.slice(2).filter((a) => !a.includes(",")));
+const EVENT = `courses/${SLUG}/event.json`;
+const DIR = `courses/${SLUG}/assets/carte`;
 const MARGIN_DEG = 0.008;
 
 const event = JSON.parse(readFileSync(EVENT, "utf-8"));
@@ -39,10 +41,12 @@ async function latestBuild(): Promise<string> {
   throw new Error("Aucun export Protomaps trouvé sur les 10 derniers jours.");
 }
 
-const bbox = process.argv[2] ? (process.argv[2].split(",").map(Number) as [number, number, number, number]) : trackBbox();
+const bboxArg = process.argv.slice(2).find((a) => a.includes(","));
+const bbox = bboxArg ? (bboxArg.split(",").map(Number) as [number, number, number, number]) : trackBbox();
 const date = await latestBuild();
 const name = `${event.event?.id ?? "zone"}-${date}.pmtiles`.replace(/[^\w.-]/g, "-");
 
+mkdirSync(DIR, { recursive: true });
 console.log(`Export ${date}, emprise ${bbox.join(",")} → ${DIR}/${name}`);
 execFileSync(pmtiles, ["extract", `https://build.protomaps.com/${date}.pmtiles`, `${DIR}/${name}`, `--bbox=${bbox.join(",")}`, "--maxzoom=15"], {
   stdio: "inherit",

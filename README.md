@@ -5,7 +5,7 @@ hors-ligne**, qui répond à *« où je me place et à quelle heure mon coureur
 passe ? »* pour les supporters du semi-marathon d'Antony (3 boucles de 7 km).
 
 Pas de compte, pas de backend : un lien (ou un QR code) suffit. Tout est
-calculé sur le téléphone à partir de `public/data/event.json`. Le prénom et
+calculé sur le téléphone à partir de `courses/<slug>/event.json`. Le prénom et
 l'allure restent sur l'appareil.
 
 ## URLs utiles
@@ -20,29 +20,64 @@ l'allure restent sur l'appareil.
 | `/styleguide` | Design system : tous les composants et états (non lié dans l'app) |
 | `#live`, `#plan`, `#carte`, `#infos` | Onglet ouvert directement (ex. `/?name=Léa&pace=5:30#plan`) |
 
-## Structure
+## Structure : un moteur, un dossier par course
 
 ```
-public/data/event.json         TOUTE la config de l'événement (voir ci-dessous)
-public/data/annonces.json      Annonces de l'organisateur (bandeau)
-public/manifest.webmanifest    Manifest PWA ; icônes dans public/icons (scripts/generate-icons.mjs)
-public/parcours-plan.svg       Plan statique de repli (scripts/generate-route-plan.ts)
-src/lib/                       Logique pure, testée (*.test.ts) :
-  timing.ts                      horaires de passage, étiquettes Départ/Boucle/Fin boucle/Arrivée
-  itinerary.ts                   temps de marche, faisabilité ✅⚠️❌, plan optimal (DP sur DAG)
-  dayStatus.ts, clock.ts         mode jour J (prochain passage), fuseau, mode démo
-  reminders.ts                   rappels 10 min avant, export agenda .ics
-  annonces.ts, remoteData.ts     annonces, données en stale-while-revalidate
-  format.ts, event.ts, geo.ts, mapMarkers.ts, analytics.ts, gpxKml.ts
-src/pwa/                       Service worker (mises à jour auto), installation, plateforme
-src/app/                       Écrans : assistant (Onboarding), coque à onglets (Shell),
-                                 LiveTab, PlanTab, MapTab (chargé à la demande), InfosTab,
-                                 useSupporter (assemble l'état, sans calcul), page /qr
-src/ui/                        Design system : tokens.css (couleurs, typo, formes), composants,
-                                 marque par événement (branding.ts), page /styleguide
-wrangler.jsonc, public/_headers  Hébergement Cloudflare (fichiers statiques), en-têtes de sécurité et de cache
-public/carte/                  Fond de carte de la zone (PMTiles), cf. scripts/build-basemap.ts
+app/                           Le code commun (moteur, écrans, PWA) — un correctif profite à toutes les courses
+  index.html                     Page (titre, couleurs, robots remplis depuis event.json au build)
+  public/_headers                En-têtes de sécurité et de cache (Cloudflare)
+  src/lib/                       Logique pure, testée (*.test.ts) :
+    timing.ts                      horaires de passage, étiquettes Départ/Boucle/Fin boucle/Arrivée
+    itinerary.ts                   temps de marche, faisabilité, meilleur parcours (DP)
+    checkin.ts, freeSpot.ts        pointage « il vient de passer », points libres sur la carte
+    walkingGrid.ts, geo.ts         distances à pied (grille), géométrie
+    dayStatus.ts, clock.ts         mode jour J, fuseau, mode démo
+    event.ts                       modèle de event.json, statut démo / prototype / officiel
+  src/app/                       Écrans : assistant, Live, Plan, Carte, Infos, page /qr
+  src/ui/                        Design system (tokens.css), marque par course (branding.ts)
+  src/pwa/                       Service worker, installation, fond de carte hors-ligne
+courses/
+  _modele/                       Modèle copié par `npm run new-course -- <slug>`
+  <slug>/                        Une course = un projet :
+    event.json                     config complète (course(s), spots, thème, statut, déploiement)
+    annonces.json                  annonces de l'organisateur
+    parcours.gpx                   tracé source (déposé à la main)
+    SUIVI.md                       fiche projet (contacts, sources, à confirmer, historique)
+    assets/                        icônes, favicon, plan de repli, fond de carte (carte/*.pmtiles)
+scripts/
+  course-run.mjs                 npm run dev|build|preview -- <slug>
+  new-course.ts, deploy-course.ts, import-gpx.ts, courses.ts …
+  lib/course.ts                  outils communs (dossier d'une course, manifeste, robots)
+tests/reference/               Références de non-régression d'Antony (calculs et écrans)
+wrangler.jsonc                 Worker de la PRODUCTION D'ANTONY (build automatique depuis main)
 ```
+
+## Multi-courses : commandes
+
+```bash
+npm run dev -- vincennes          # serveur de dev d'une course (Antony sans argument)
+npm run build -- vincennes        # build d'une course dans dist/
+npm run new-course -- <slug> --nom "Semi de X" --couleur "#1f6f8b" --organisateur "Club Y"
+npm run import-gpx -- <slug>      # tracé + spots candidats depuis courses/<slug>/parcours.gpx
+npm run deploy -- <slug>          # déploie la course sur SON Worker (jamais celui d'Antony)
+npm run courses                   # tableau de bord des courses (courses/TABLEAU.md)
+```
+
+Chaque course est une app indépendante, sur sa propre URL
+(`https://<slug>.semi-supporter.workers.dev`) : service worker, cache et
+données mémorisées ne se mélangent pas. Le déploiement d'une démo demande
+d'être connecté à Cloudflare une fois : `npx wrangler login`.
+
+`npm run build` **sans argument construit Antony** : c'est ce que lance le
+build automatique de Cloudflare pour la production d'Antony. Le script de
+déploiement refuse le Worker `semi-antony-supporter`.
+
+Statut d'une course (`event.json` → `status`) :
+- `demo` : bandeau permanent « Démo non officielle — préparée pour … »,
+  `noindex, nofollow`, robots.txt fermé, pied de page « non officielle,
+  parcours et horaires indicatifs », aucun logo officiel ;
+- `prototype` : non officielle, sans bandeau (Antony) ;
+- `official` : validée par l'organisateur (indexable).
 
 ## 🚨 Antony : remettre la version en production en 2 minutes
 
@@ -69,7 +104,7 @@ Ne pas oublier ensuite : si `main` avait été modifiée, la remettre sur le tag
 (`git push origin antony-prod-avant-multi:main` — refusé si `main` a avancé :
 voir avec Claude avant de forcer).
 
-## Configurer un événement (`public/data/event.json`)
+## Configurer un événement (`courses/<slug>/event.json`)
 
 - `event` : nom, date (`AAAA-MM-JJ`), `dateToConfirm`, fuseau.
 - `settings.margin` : demi-largeur des fourchettes (`max(temps écoulé × %, plancher)`).
@@ -115,7 +150,7 @@ automatiquement.
 | `VITE_CF_ANALYTICS_TOKEN` | token Cloudflare Web Analytics (Production seulement) |
 
 Un nouveau domaine externe (tuiles…) doit aussi être ajouté à la CSP
-(`public/_headers`) et à la règle de cache du service worker (`vite.config.ts`).
+(`app/public/_headers`) et à la règle de cache du service worker (`vite.config.ts`).
 
 ## Mises à jour et hors-ligne
 
@@ -166,7 +201,7 @@ Les annonces s'affichent en bandeau en haut de l'app, chez tout le monde,
 **sans nouvelle version de l'app** (l'app relit le fichier au retour au
 premier plan, au retour du réseau et toutes les 15 min).
 
-1. Ouvrir `public/data/annonces.json` (directement sur GitHub : icône ✏️).
+1. Ouvrir `courses/<slug>/annonces.json` (directement sur GitHub : icône ✏️).
 2. Ajouter une entrée dans `annonces` :
 
    ```json
@@ -247,20 +282,20 @@ Un projet est indépendant des autres sites du même compte Cloudflare
   vérification au retour dans l'app et toutes les 15 min, rechargement
   automatique ou bandeau « Nouvelle version disponible »).
 
-`public/_headers` (sécurité, cache) est appliqué par Cloudflare. Les routes
+`app/public/_headers` (sécurité, cache) est appliqué par Cloudflare. Les routes
 `/qr` et `/styleguide` sont servies par le mode « single-page-application »
 de `wrangler.jsonc` (pas de `_redirects` : il provoquait une redirection
 `/qr` → `/`).
 
 ### Fond de carte
 
-`public/carte/*.pmtiles` : extrait de la zone du parcours (≈ 3,5 Mo, données
+`courses/<slug>/assets/carte/*.pmtiles` : extrait de la zone du parcours (≈ 3,5 Mo, données
 OpenStreetMap via Protomaps), affiché par `protomaps-leaflet`. Le fichier
 est téléchargé EN ENTIER (au premier lancement, en arrière-plan), gardé
 dans le cache du navigateur et découpé en mémoire (`src/pwa/basemap.ts`) :
 ne dépend pas des requêtes partielles du serveur (Cloudflare Workers les
 ignore) et la carte est complète hors-ligne. Pour le régénérer (autre événement, carte plus
-récente) : `node scripts/build-basemap.ts` (outil `pmtiles` requis), puis
+récente) : `node scripts/build-basemap.ts <slug>` (outil `pmtiles` requis), puis
 reporter le bloc affiché dans `event.json` → `map`.
 
 ## Hors périmètre

@@ -1,10 +1,10 @@
 // Calcule les distances À PIED réelles (itinéraires piétons OpenStreetMap)
 // entre chaque paire de spots, ainsi que le tracé de chaque trajet (pour
 // dessiner le plan du supporter sur la carte), et les enregistre dans
-// public/data/event.json (races[].walkingRoutes). L'app reste sans backend et hors-ligne : le calcul
+// courses/<slug>/event.json (races[].walkingRoutes). L'app reste sans backend et hors-ligne : le calcul
 // est fait une fois, ici, à relancer après tout ajout ou déplacement de spot.
 //
-// Usage : node scripts/compute-walking-routes.ts
+// Usage : node scripts/compute-walking-routes.ts [slug]   (Antony par défaut)
 //
 // Service : OSRM profil piéton de routing.openstreetmap.de (FOSSGIS, données
 // © contributeurs OpenStreetMap). Une seule requête « table » par course.
@@ -16,13 +16,14 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { EventConfig } from "../src/lib/event.ts";
+import { courseDir, slugFromArgs } from "./lib/course.ts";
+import type { EventConfig } from "../app/src/lib/event.ts";
 
 const SERVICE = "https://routing.openstreetmap.de/routed-foot/table/v1/driving";
 const ROUTE_SERVICE = "https://routing.openstreetmap.de/routed-foot/route/v1/driving";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const round5 = (n: number) => Math.round(n * 1e5) / 1e5;
-const path = resolve("public/data/event.json");
+const path = resolve(courseDir(slugFromArgs()), "event.json");
 const config = JSON.parse(readFileSync(path, "utf-8")) as EventConfig;
 
 for (const race of config.races) {
