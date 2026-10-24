@@ -1,4 +1,4 @@
-# CLAUDE.md — Semi d'Antony Supporter
+# CLAUDE.md — Supporters de courses (Semi d'Antony et démos multi-courses)
 
 > **Règle (demandée par l'utilisateur) :** ce fichier est tenu à jour pour
 > **chaque** modification, action, test ou décision, de Claude ou de
@@ -7,74 +7,141 @@
 
 ## Projet
 
-PWA prototype (React 19 + Vite 8 + TypeScript, Leaflet, Vitest) pour les
-supporters du semi-marathon d'Antony : où se placer et à quelle heure le
-coureur passe, à partir de son allure ou d'un temps visé.
-Hébergement (choix du 2026-10-18) : **Cloudflare, Worker « fichiers
-statiques »** (`wrangler.jsonc`) relié au dépôt GitHub — branche = lien de
-test `*.workers.dev`, `main` = production.
-Adresses (sous-domaine du compte `semi-supporter` depuis le 2026-10-19) :
-production https://semi-antony-supporter.semi-supporter.workers.dev ;
-branche `<branche>-semi-antony-supporter.semi-supporter.workers.dev` ;
-démo jour J : `/?demo=1&now=15:35&name=Léa&pace=5:30`. ⚠️ Ne jamais fusionner dans `main` sans accord explicite.
-Historique : previews faites jusqu'ici avec la CLI Vercel (projet
-`semi-antony-supporter`, dépôt non relié à Vercel).
-Public visé par la démo : club Antony Athlétisme 92 et Direction des Sports
-de la mairie.
+PWA (React 19 + Vite 8 + TypeScript, Leaflet, Vitest, Workbox) pour les
+supporters de courses à pied : où se placer et à quelle heure le coureur
+passe, à partir de son allure ou d'un temps visé ; parcours conseillé,
+points libres touchés sur la carte, pointage « il vient de passer » qui
+recale les horaires, carte hors-ligne. Aucun backend, aucune donnée
+personnelle envoyée.
+
+Né pour le **semi-marathon d'Antony** (prototype présenté à la mairie et au
+club Antony Athlétisme 92), devenu **multi-courses** le 2026-10-24 : un seul
+moteur (`app/`), une course = un dossier (`courses/<slug>/`), une app
+installable et une URL par course. Objectif : proposer des démos à d'autres
+organisateurs d'Île-de-France (Vincennes, Rambouillet, Joinville, Malakoff,
+Charenton), puis vendre le service.
+
+**Hébergement** : Cloudflare, Workers « fichiers statiques » (sous-domaine
+du compte : `semi-supporter.workers.dev`).
+- **Antony** : Worker `semi-antony-supporter`, relié à GitHub (Workers
+  Builds) : `main` = production
+  https://semi-antony-supporter.semi-supporter.workers.dev ; toute autre
+  branche = lien de test `<branche>-semi-antony-supporter.semi-supporter.workers.dev`
+  (rangé sous Previews dans le tableau de bord). Build `npm run build`
+  (= Antony), déploiement `npx wrangler deploy`, branches `npx wrangler
+  preview` (bloc `previews` de `wrangler.jsonc`).
+- **Autres courses** : un Worker par course, déployé en ligne de commande
+  (`npm run deploy -- <slug>`, après `npx wrangler login`) →
+  `https://<slug>.semi-supporter.workers.dev`. Pas relié à GitHub.
+- Lien envoyé à la mairie (19/10/2026) :
+  `…/?demo=1&now=15:20&name=Paul&pace=5:30`.
+
+## ⚠️ Règles absolues
+
+- **La production d'Antony est gelée** (lien envoyé à la mairie) : ne rien
+  fusionner dans `main`, ne jamais déployer sur le Worker
+  `semi-antony-supporter` sans l'accord explicite de l'utilisateur. La
+  bascule vers l'architecture multi-courses est déclenchée par lui (README,
+  « 🔁 Antony : bascule »). Version de référence : tag
+  `antony-prod-avant-multi` (e3209a0, Cloudflare `ae3f3563-3d09-440f-8fae-3462527b93b9`).
+- Toute mise en production = accord explicite, à chaque fois.
+- Démos des autres courses : statut `demo` (bandeau « Démo non officielle —
+  préparée pour … », noindex), aucun logo officiel, aucun tracé fabriqué,
+  tout ce qui n'est pas confirmé marqué `aConfirmer`.
+- Ne pas publier de captures contenant des prénoms (`docs/*.png` ignorés).
 
 ## Conventions
 
-- Français partout (UI en tutoiement, commentaires, commits).
+- Français partout (UI en tutoiement, commentaires, commits) ; formulations
+  neutres (« vient de passer », « as-tu vu »), jamais d'accord genré.
 - Un commit par tâche, message clair, terminé par la ligne Co-Authored-By.
 - Pas de backend, dépendances minimales. Aucune donnée personnelle envoyée
-  à un serveur (prénom/allure restent sur l'appareil ; analytics sans
-  paramètres d'URL).
-- **Multi-courses** (depuis le 2026-10-24) : code commun dans `app/`, une
-  course = un dossier `courses/<slug>/` (event.json, annonces.json,
-  parcours.gpx, SUIVI.md, assets/). Aucune valeur de course codée en dur.
-  Logique pure dans `app/src/lib/` avec tests. `npm run build` sans argument
-  = Antony (build automatique de la prod). **Jamais de déploiement sur le
-  Worker `semi-antony-supporter` hors bascule validée par l'utilisateur.**
-- localStorage uniquement via `src/lib/storage.ts` (try/catch).
+  à un serveur (prénom, allure, pointage, points libres restent sur
+  l'appareil). Mesure d'audience : Cloudflare Web Analytics seulement si
+  `VITE_CF_ANALYTICS_TOKEN` (non configuré à ce jour).
+- **Multi-courses** : code commun dans `app/`, une course = un dossier
+  `courses/<slug>/` (event.json, annonces.json, parcours.gpx, SUIVI.md,
+  assets/, legacy-assets/ pour Antony). Aucune valeur de course codée en
+  dur dans les composants. Logique pure dans `app/src/lib/` avec tests.
+  `npm run build` sans argument = Antony. Alias Vite `@course` →
+  `courses/<slug>/`. Manifeste, robots.txt et titres générés depuis
+  `event.json` (`scripts/lib/course.ts`).
+- `event.json` : écrire avec `writeCourseEvent` / `formatEventJson`
+  (mise en forme compacte du projet), jamais `JSON.stringify` brut.
+- localStorage uniquement via `app/src/lib/storage.ts` (try/catch) ; clés
+  `semi-supporter:*` (isolées par origine : une course = une URL).
 - La fonction `urlPattern` de `vite.config.ts` est sérialisée dans `sw.js` :
   elle ne doit référencer aucune variable extérieure.
-- Nouveau fournisseur de tuiles = mettre à jour `src/config/tiles.ts`, la
+- Nouveau fournisseur de tuiles = mettre à jour `app/src/config/tiles.ts`, la
   CSP de `app/public/_headers` (img-src ET connect-src) et la règle de cache SW.
 - Pas de `_redirects` : avec les Workers il redirige `/qr` vers `/` ; les
   routes de l'app passent par `not_found_handling: single-page-application`.
-- Fond de carte : `courses/<slug>/assets/carte/<id>-<date>.pmtiles` (nom daté, immuable),
-  référencé par `event.json` → `map.basemap` ; régénérer avec
-  `scripts/build-basemap.ts <slug>`.
-
-- Design system : tokens dans `app/src/ui/tokens.css`
-  (aucune couleur en dur dans les composants), composants dans
-  `src/ui/components.tsx` et `src/ui/overlays.tsx`, page `/styleguide`.
-  Couleurs de marque surchargeables via `event.json` → `branding.colors`
-  (textes dérivés recalculés pour rester AA, `src/ui/branding.ts`).
-  Contrastes vérifiés par `src/ui/contrast.test.ts` : toute nouvelle paire
-  texte/fond doit y être ajoutée. Texte sur `--sprint` = `--on-sprint`
-  (bleu nuit), jamais blanc (3,1:1). Icônes : lucide-react uniquement, pas
-  d'emoji dans l'UI sauf 🏁.
+- Fond de carte : `courses/<slug>/assets/carte/<id>-<date>.pmtiles` (nom
+  daté, immuable), écrit dans `event.json` → `map` par
+  `scripts/build-basemap.ts <slug>` (outil pmtiles, variable `PMTILES`).
+- **Avant chaque mise en production d'Antony** : `node
+  scripts/fetch-legacy-assets.ts antony` (fichiers de la version en ligne
+  servis hors précache : pas de page blanche pour une page restée ouverte).
+- Non-régression d'Antony : `tests/reference/` (calculs : test Vitest ;
+  écrans : `node scripts/reference-ui.mjs compare <url>`). Ne régénérer une
+  référence qu'après un changement voulu et validé.
+- Design system : tokens dans `app/src/ui/tokens.css` (aucune couleur en dur
+  dans les composants), composants dans `app/src/ui/components.tsx` et
+  `overlays.tsx`, page `/styleguide`. Couleurs de marque via `event.json` →
+  `branding.colors` (textes dérivés recalculés pour rester AA,
+  `app/src/ui/branding.ts`). Contrastes vérifiés par
+  `app/src/ui/contrast.test.ts`. Texte sur `--sprint` = `--on-sprint`,
+  jamais blanc. Icônes : lucide-react uniquement, pas d'emoji sauf 🏁.
 
 ## Commandes
 
 ```bash
-npm run dev        # serveur de dev (pas de service worker en dev)
-npm test           # Vitest (toute la logique de calcul)
-npm run build      # tsc + vite build + génération du SW
-npx oxlint         # lint
-node scripts/generate-route-plan.ts   # régénère public/parcours-plan.svg
-npm i --no-save sharp && node scripts/generate-icons.mjs   # régénère les icônes
-node scripts/import-track.ts fichier.gpx                   # importe un tracé
+npm run dev -- <slug>              # serveur de dev d'une course (Antony sans argument)
+npm run build -- <slug>            # build d'une course dans dist/ (Antony sans argument)
+npm test                           # Vitest (logique, non-régression des calculs d'Antony)
+npx oxlint                         # lint
+npm run new-course -- <slug> --nom "…" --court "…" --icone "Ville" --couleur "#rrggbb" --organisateur "…" --ville "…"
+npm run import-gpx -- <slug>       # tracé + spots candidats depuis courses/<slug>/parcours.gpx
+node scripts/compute-walking-routes.ts <slug>   # distances à pied entre spots (OSRM)
+node scripts/compute-walking-grid.ts <slug>     # grille de marche pour les points libres
+node scripts/build-basemap.ts <slug>            # fond de carte hors-ligne (pmtiles)
+node scripts/generate-route-plan.ts <slug>      # plan de repli
+npm i --no-save sharp && node scripts/generate-icons.mjs <slug>   # icônes
+npm run deploy -- <slug>           # déploie une démo sur son Worker (refuse Antony)
+npm run courses                    # tableau de bord → courses/TABLEAU.md + QR codes
+node scripts/fetch-legacy-assets.ts antony      # avant une mise en prod d'Antony
+node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'Antony
 ```
 
-## À confirmer avec l'organisateur (état actuel)
+## À confirmer avec les organisateurs
 
-- Date de l'édition 2027 (mise au 21/03/2027, `dateToConfirm: true`).
-- Dénivelé (180 m, `elevationToConfirm: true`).
-- Accès et conseils de chaque spot, position exacte des spots.
-- Tracé et spots du 5 km (départ 13:15 en 2026) pour activer le sélecteur.
-- Autorisation d'utiliser le nom de l'événement / validation officielle.
+- **Antony** : date 2027 (21/03 provisoire), dénivelé (180 m), tracé
+  officiel (GPX), emplacement exact des ravitos, consigne, autorisation du
+  nom / validation officielle.
+- **Démos** (tout est à confirmer, voir chaque `courses/<slug>/SUIVI.md`) :
+  dates 2027, heures de départ (inconnues : 10 km de Joinville, 5 km de
+  Malakoff, Charenton → valeurs provisoires), organisateurs (Malakoff,
+  Charenton), départs/arrivées, parcours officiels.
+
+## Où on en est (2026-10-24)
+
+- **Production d'Antony** : inchangée depuis le 19/10 (`main` = e3209a0 +
+  journal, bundle `index-21lbHY4s.js`), mail envoyé à la mairie, réponse
+  attendue.
+- **Branche `feat/multi-courses`** (poussée sur GitHub, lien de test
+  https://feat-multi-courses-semi-antony-supporter.semi-supporter.workers.dev
+  identique à la production sur les 17 scénarios de référence) : étapes 0 à
+  6 du prompt « Démos multi-courses » faites, prête pour la bascule
+  d'Antony (procédure dans le README, à déclencher par l'utilisateur).
+- **5 démos** (Vincennes, Rambouillet, Joinville, Malakoff, Charenton) :
+  configurées, **en attente des GPX** et **non déployées**. Prochaines
+  étapes annoncées par l'utilisateur : `npx wrangler login`, puis dépôt des
+  GPX dans `courses/<slug>/parcours.gpx` → import, choix des spots,
+  distances, fond de carte, déploiement, liens démo.
+- Pistes ouvertes : tests sur vrais iPhone/Android (en partie faits par
+  l'utilisateur sur iPhone) ; créneau « j'arrive à / je pars à » (proposé,
+  non validé) ; prix des démos à définir ; `npm audit` : alertes sur des
+  outils de dev uniquement.
 
 ## Journal
 
@@ -427,7 +494,7 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   https://semi-antony-supporter-ekfayy31m-pmachard2001-5765s-projects.vercel.app
   — Ready, `/` en 200.
 
-## Où on en est (fin de session du 2026-10-18)
+### 2026-10-18 — Point d'étape (historique : dépassé, voir « Où on en est » en haut)
 
 - Branches empilées, rien de fusionné dans `main` (prod inchangée) :
   `main` → `feat/demo-finale` (poussée sur GitHub) → `feat/redesign` →
@@ -961,3 +1028,13 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   sur `main`). Reste : connexion wrangler de l'utilisateur pour déployer les
   5 démos (Workers dédiés), GPX des 5 courses, bascule d'Antony (à
   déclencher par l'utilisateur).
+
+### 2026-10-24 — Mise à jour de CLAUDE.md
+
+- À la demande de l'utilisateur : sections du haut réécrites pour refléter
+  tout le projet (multi-courses, hébergement Cloudflare par course, règles
+  absolues dont le gel de la production d'Antony, conventions et chemins
+  `app/` / `courses/`, commandes, points à confirmer par course, état au
+  24/10). L'ancien point d'étape du 18/10 reste dans le journal, marqué
+  comme dépassé. Prochaine action de l'utilisateur : `npx wrangler login`,
+  puis dépôt des GPX.
