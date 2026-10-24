@@ -153,12 +153,17 @@ export function junction(graph: StreetGraph, a: string, b: string): Junction {
   return { ok: false, reason: `« ${a} » et « ${b} » ne se croisent pas dans OSM${best ? ` (au plus près : ${Math.round(best[2] * 1000)} m)` : ""}` };
 }
 
-/** Nœud du graphe le plus proche d'un point (coordonnées forcées). */
+/**
+ * Nœud du graphe le plus proche d'un point (coordonnées forcées), pris sur
+ * une rue nommée (pas un trottoir ou une voie de service sans nom).
+ */
 export function nearestNode(graph: StreetGraph, p: LatLng): number {
+  const named = new Set<number>();
+  for (const set of graph.streetNodes.values()) for (const n of set) named.add(n);
   let best = -1;
   let bestD = Infinity;
   for (const [id, q] of graph.nodes) {
-    if (!graph.edges.has(id)) continue;
+    if (!graph.edges.has(id) || !named.has(id)) continue;
     const d = haversineDistanceKm(p, q);
     if (d < bestD) {
       best = id;

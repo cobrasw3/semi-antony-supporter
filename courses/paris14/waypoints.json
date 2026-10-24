@@ -14,7 +14,10 @@
       "id": "depart",
       "nom": "Départ — rue Gassendi, à la jonction avec la rue des Plantes",
       "requete": "rue Gassendi & rue des Plantes, 75014 Paris",
-      "aConfirmer": true
+      "aConfirmer": true,
+      "lat": 48.83288,
+      "lon": 2.32531,
+      "correction": "Coordonnées du départ reprises du GPX de Paul (calculitineraires.fr) : rue Gassendi, ≈ 45 m au nord de la jonction rue des Plantes / avenue du Maine."
     },
     {
       "id": "p1",
@@ -95,32 +98,41 @@
       "id": "p12",
       "nom": "Rue Gassendi vers le sud, retour au départ",
       "requete": "rue Gassendi & rue des Plantes, 75014 Paris",
-      "aConfirmer": true
+      "aConfirmer": true,
+      "lat": 48.83288,
+      "lon": 2.32531,
+      "correction": "Coordonnées du départ reprises du GPX de Paul (calculitineraires.fr) : rue Gassendi, ≈ 45 m au nord de la jonction rue des Plantes / avenue du Maine."
     }
   ],
   "arrivee": {
-    "description": "Après la 2e boucle, au point de départ, bifurquer vers le sud-est par la rue Mouton-Duvernet, puis remonter la rue Saillard jusqu'à l'arrivée (plan officiel).",
+    "description": "Après la 2e boucle, au départ, continuer vers le sud par l’avenue du Maine, prendre la rue Brézin vers le sud-est, puis remonter la rue Jacques-Perrin et la rue Saillard jusqu’à l’arrivée (d’après le GPX de Paul et le plan officiel).",
     "points": [
       {
         "id": "a0",
-        "nom": "Rue Mouton-Duvernet vers le sud-est",
-        "requete": "rue Mouton Duvernet & rue Pierre Castagnou, 75014 Paris",
+        "nom": "Avenue du Maine, puis rue Brézin",
+        "requete": "avenue du Maine & rue Brézin, 75014 Paris",
         "aConfirmer": true,
-        "correction": "Point ajouté d'après le plan officiel : la bretelle d'arrivée suit la rue Mouton-Duvernet (qui part de la rue Gassendi au départ) jusqu'à la rue Saillard."
+        "correction": "D’après le GPX de Paul : la bretelle part vers le sud, comme sur le plan."
       },
       {
         "id": "a1",
-        "nom": "Bifurcation : bas de la rue Saillard (rue Mouton-Duvernet)",
-        "requete": "rue Saillard & rue Mouton Duvernet, 75014 Paris",
+        "nom": "Rue Brézin, puis rue Jacques-Perrin vers le nord",
+        "requete": "rue Brézin & rue Jacques Perrin, 75014 Paris",
         "aConfirmer": true,
-        "correction": "OSM : la rue Saillard va de la rue Mouton-Duvernet (sud) à la rue Charles-Divry (nord), à ≈ 150 m à l'est du départ."
+        "correction": "D’après le GPX de Paul."
+      },
+      {
+        "id": "a2",
+        "nom": "Bas de la rue Saillard",
+        "requete": "rue Saillard & rue Mouton Duvernet, 75014 Paris",
+        "aConfirmer": true
       },
       {
         "id": "arrivee",
-        "nom": "Arrivée — haut de la rue Saillard (rue Charles-Divry), point exact à confirmer",
+        "nom": "Arrivée — haut de la rue Saillard (rue Charles-Divry)",
         "requete": "rue Saillard & rue Charles Divry, 75014 Paris",
         "aConfirmer": true,
-        "correction": "D'après le plan officiel : drapeau d'arrivée en haut de la rue Saillard (côté rue Charles-Divry). Point exact à confirmer."
+        "correction": "Arrivée en haut de la rue Saillard comme sur le plan (le GPX de Paul continue 130 m jusqu’à la place Ferdinand-Brunot, non retenu)."
       }
     ]
   },

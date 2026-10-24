@@ -1184,3 +1184,22 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   — titre, noindex, 3 liens démo vérifiés ; prod d'Antony inchangée.
   `deploy.demo` dans event.json (lien du QR code), `qr-demo.png` généré ;
   SUIVI.md complet ; README : variante « pas de GPX → gpx-from-waypoints ».
+- GPX déposé par l'utilisateur (`courses/paris14/10K_14eme.gpx`,
+  calculitineraires.fr, 10,19 km) comparé au tracé calculé : identique à
+  < 30 m sur les deux boucles ; diffère au départ (≈ 45 m plus au nord rue
+  Gassendi), sur la bretelle (avenue du Maine → rue Brézin → rue
+  Jacques-Perrin → rue Saillard, plus fidèle au plan) et par 130 m de plus
+  jusqu'à la place Ferdinand-Brunot. **Choix de l'utilisateur** : sa
+  bretelle, arrivée en haut de la rue Saillard. `waypoints.json` mis à jour
+  (départ forcé lat/lon, points a0–a2) ; `nearestNode` ne s'accroche plus
+  qu'aux rues nommées (sinon trottoir sans nom). Nouveau tracé : boucle
+  4,94 km, total 10,28 km (+2,8 %), seul écart avec le GPX = les 130 m
+  écartés. Réimporté en gardant les 6 spots (km recalculés : départ 0 ·
+  4,79 · 9,6 ; Plantes 0,63 · 5,44 ; Pernety 1,95 · 6,76 ; Montparnasse
+  3,34 · 8,15 ; Émile-Richard 4,41 · 9,21 ; arrivée 10). Distances,
+  grille, fond de carte, plan recalculés ; build OK.
+- **Pause demandée par l'utilisateur.** À reprendre : vérifier le plan
+  optimal et les captures avec le nouveau tracé, mettre à jour SUIVI.md
+  (km des spots, bretelle), **redéployer** `npm run deploy -- paris14` (la
+  démo en ligne a encore l'ancienne bretelle par la rue Mouton-Duvernet),
+  QR code (`npm run courses`).
