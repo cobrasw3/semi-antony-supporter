@@ -1102,3 +1102,41 @@ node scripts/reference-ui.mjs compare <url>     # non-régression des écrans d'
   liens démo 15 km (9:20) et 5 km (`&race=5km`, 11:55) vérifiés dans le
   navigateur. Production d'Antony inchangée (bundle index-21lbHY4s).
   Spots encore « à confirmer » (à choisir par l'utilisateur).
+
+### 2026-10-24 (suite) — Démo « 10K du 14e » (branche `feat/paris14`, depuis `feat/multi-courses`)
+
+- Prompt « Démo 10K du 14e » : il recoupe largement la mission
+  multi-courses déjà faite (structure, mode démo, références, bascule) →
+  branche `feat/paris14` construite sur `feat/multi-courses` pour tout
+  réutiliser. Production d'Antony inchangée (e3209a0, bundle
+  index-21lbHY4s) ; références d'écran revérifiées sur la prod le jour
+  même (17 scénarios identiques, dont allures 4:30/5:30/6:30, temps visés
+  et lien Paul 15:20). Tag **`antony-prod-avant-paris14`** (= e3209a0,
+  poussé) ; README mis à jour.
+- Étape 1 : `npm run new-course -- paris14` (« 10K du 14e », bleu
+  `#2f8fd8`, nom d'icône « 10K du 14e »). `waypoints.json` reçu dans la
+  conversation et enregistré ; **plan officiel (`plan-officiel-2027.png`)
+  pas encore fourni**.
+- Étape 2 : `npm run gpx-from-waypoints -- <slug>` (générique) +
+  `app/src/lib/streetGraph.ts` (testé, 13 tests : noms normalisés,
+  requêtes « rue A & rue B », graphe OSM, carrefours avec refus des cas
+  ambigus/introuvables, Dijkstra pénalisant les chemins piétons, bornes
+  km). Réseau du 14e téléchargé une fois (Overpass, emprise du géocodage
+  Nominatim de « 75014 Paris », cache `courses/<slug>/.cache/`, ignoré par
+  Git) : 82 761 nœuds, 1 126 rues.
+  - 1er passage : 3 points non placés → vérifiés dans OSM et corrigés dans
+    `waypoints.json` (champ `correction`, `aConfirmer`) : Abbé-Carton finit
+    rue des Suisses (décroché vers la rue Pauly, point p2b ajouté) ; rue du
+    Texel finit rue Vercingétorix, place de Catalogne vers Mouchotte (p7b) ;
+    rue Saillard de Mouton-Duvernet (bifurcation) à Charles-Divry (arrivée
+    proposée, point exact à confirmer). Script : un point non placé ne
+    coupe plus le tracé.
+  - Résultat : boucle **4,94 km** (−1,1 %), total **10,17 km** ; bornes 1,
+    2, 5, 6, 9 sur la bonne rue ; **3, 4, 7, 8 décalées** : entre la rue du
+    Départ (« vers Gaîté », borne 3) et le boulevard Raspail (borne 4) le
+    plan compte 1 km, le tracé 650 m → il manque ≈ 350 m, sans doute le
+    « crochet autour de la rue du Départ, près de la tour Montparnasse »
+    (zone signalée par l'utilisateur), non décrit dans les waypoints.
+  - `courses/paris14/parcours.gpx` et `apercu.html` (carte, points,
+    bornes, plan à côté). **En attente de validation de l'aperçu par
+    l'utilisateur** (et du plan officiel pour le crochet).

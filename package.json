@@ -12,7 +12,8 @@
     "new-course": "node scripts/new-course.ts",
     "deploy": "node scripts/deploy-course.ts",
     "import-gpx": "node scripts/import-gpx.ts",
-    "courses": "node scripts/courses.ts"
+    "courses": "node scripts/courses.ts",
+    "gpx-from-waypoints": "node scripts/gpx-from-waypoints.ts"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",

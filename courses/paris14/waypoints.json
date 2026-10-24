@@ -1,0 +1,127 @@
+{
+  "course": "10K du 14e",
+  "slug": "paris14",
+  "source": "Plan officiel 2027 (plan-officiel-2027.png), lu à la main. Tracé indicatif, à valider visuellement.",
+  "date": "2027-01-17",
+  "heureDepart": "09:30",
+  "distanceOfficielleKm": 10,
+  "nombreBoucles": 2,
+  "longueurBoucleKmAttendue": 5,
+  "sens": "Départ vers le sud-ouest par la rue des Plantes, puis sens horaire : sud, ouest, nord, est, retour par la rue Gassendi.",
+  "repereKm": "Les numéros 1 à 9 du plan sont des bornes kilométriques : 1 rue de l'Abbé-Carton, 2 rue Raymond-Losserand, 3 vers Gaîté, 4 boulevard Raspail, 5 rue des Plantes (2e boucle), 6 coin Abbé-Carton / Pauly, 7 vers rue Lebouis, 8 rue du Départ, 9 rue Émile-Richard / Gassendi.",
+  "boucle": [
+    {
+      "id": "depart",
+      "nom": "Départ — rue Gassendi, à la jonction avec la rue des Plantes",
+      "requete": "rue Gassendi & rue des Plantes, 75014 Paris",
+      "aConfirmer": true
+    },
+    {
+      "id": "p1",
+      "nom": "Rue des Plantes, extrémité sud",
+      "requete": "rue des Plantes & rue de l'Abbé Carton, 75014 Paris",
+      "aConfirmer": true
+    },
+    {
+      "id": "p2",
+      "nom": "Rue de l'Abbé-Carton vers l'ouest, jusqu'à la rue des Suisses",
+      "requete": "rue de l'Abbé Carton & rue des Suisses, 75014 Paris",
+      "correction": "OSM : la rue de l'Abbé-Carton ne croise pas la rue Pauly ; elle s'arrête rue des Suisses, que la rue Pauly croise 90 m plus loin (le « petit décroché »).",
+      "aConfirmer": true
+    },
+    {
+      "id": "p2b",
+      "nom": "Rue des Suisses, puis rue Pauly",
+      "requete": "rue des Suisses & rue Pauly, 75014 Paris",
+      "aConfirmer": true,
+      "correction": "Point ajouté d'après OSM (décroché par la rue des Suisses)."
+    },
+    {
+      "id": "p3",
+      "nom": "Rue Pauly vers le nord",
+      "requete": "rue Pauly & rue Raymond Losserand, 75014 Paris"
+    },
+    {
+      "id": "p4",
+      "nom": "Rue Raymond-Losserand vers le nord-est",
+      "requete": "rue Raymond Losserand & rue Lebouis, 75014 Paris",
+      "aConfirmer": true
+    },
+    {
+      "id": "p5",
+      "nom": "Rue Lebouis vers le nord",
+      "requete": "rue Lebouis & rue de l'Ouest, 75014 Paris"
+    },
+    {
+      "id": "p6",
+      "nom": "Rue de l'Ouest vers l'ouest",
+      "requete": "rue de l'Ouest & rue Texel, 75014 Paris"
+    },
+    {
+      "id": "p7",
+      "nom": "Rue du Texel vers le nord, jusqu'à la rue Vercingétorix",
+      "requete": "rue Texel & rue Vercingétorix, 75014 Paris",
+      "aConfirmer": true,
+      "correction": "OSM : la rue du Texel ne croise pas la rue du Commandant-Mouchotte ; elle finit rue Vercingétorix, à côté de la place de Catalogne où commence la rue du Commandant-Mouchotte."
+    },
+    {
+      "id": "p7b",
+      "nom": "Place de Catalogne, puis rue du Commandant-Mouchotte",
+      "requete": "rue du Commandant René Mouchotte & place de Catalogne, 75014 Paris",
+      "aConfirmer": true,
+      "correction": "Point ajouté d'après OSM (passage par la place de Catalogne)."
+    },
+    {
+      "id": "p8",
+      "nom": "Rue du Commandant-Mouchotte vers le nord-est",
+      "requete": "rue du Commandant René Mouchotte & avenue du Maine, 75014 Paris"
+    },
+    {
+      "id": "p9",
+      "nom": "Rue du Départ vers le nord",
+      "requete": "rue du Départ & boulevard Edgar Quinet, 75014 Paris"
+    },
+    {
+      "id": "p10",
+      "nom": "Boulevard Edgar-Quinet vers l'est",
+      "requete": "boulevard Edgar Quinet & boulevard Raspail, 75014 Paris"
+    },
+    {
+      "id": "p11",
+      "nom": "Rue Émile-Richard vers le sud (traverse le cimetière du Montparnasse)",
+      "requete": "rue Émile Richard & rue Froidevaux, 75014 Paris"
+    },
+    {
+      "id": "p12",
+      "nom": "Rue Gassendi vers le sud, retour au départ",
+      "requete": "rue Gassendi & rue des Plantes, 75014 Paris",
+      "aConfirmer": true
+    }
+  ],
+  "arrivee": {
+    "description": "Après la 2e boucle, au point de départ, bifurquer vers le sud-est puis remonter la rue Saillard jusqu'à l'arrivée.",
+    "points": [
+      {
+        "id": "a1",
+        "nom": "Bifurcation : bas de la rue Saillard (rue Mouton-Duvernet)",
+        "requete": "rue Saillard & rue Mouton Duvernet, 75014 Paris",
+        "aConfirmer": true,
+        "correction": "OSM : la rue Saillard va de la rue Mouton-Duvernet (sud) à la rue Charles-Divry (nord), à ≈ 150 m à l'est du départ."
+      },
+      {
+        "id": "arrivee",
+        "nom": "Arrivée — haut de la rue Saillard (rue Charles-Divry), point exact à confirmer",
+        "requete": "rue Saillard & rue Charles Divry, 75014 Paris",
+        "aConfirmer": true,
+        "correction": "Proposition : arrivée au bout nord de la rue Saillard (« remonter la rue Saillard »). Point exact à confirmer sur le plan ; forcer lat/lon au besoin."
+      }
+    ]
+  },
+  "zonesAVerifierSurLaCarte": [
+    "Le point exact du départ et l'enchaînement Gassendi / rue des Plantes.",
+    "Le petit décroché entre rue de l'Abbé-Carton et rue Raymond-Losserand (rue Pauly).",
+    "L'enchaînement Losserand → Lebouis → rue de l'Ouest → Texel → Mouchotte.",
+    "Le crochet autour de la rue du Départ, près de la tour Montparnasse.",
+    "La bretelle d'arrivée vers la rue Saillard."
+  ]
+}

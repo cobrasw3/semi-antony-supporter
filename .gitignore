@@ -34,3 +34,6 @@ track.imported.json
 # Captures d'écran partagées pour les retours (non versionnées : prénoms)
 docs/*.png
 docs/*.jpg
+
+# Caches des scripts de tracé (réseau OSM téléchargé)
+courses/*/.cache/

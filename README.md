@@ -121,7 +121,8 @@ Statut d'une course (`event.json` → `status`) :
 
 ## 🚨 Antony : remettre la version en production en 2 minutes
 
-Version de référence (envoyée à la mairie) : tag git **`antony-prod-avant-multi`**
+Version de référence (envoyée à la mairie) : tags git **`antony-prod-avant-multi`** et
+**`antony-prod-avant-paris14`** (même commit)
 (commit `e3209a0`), version Cloudflare **`ae3f3563-3d09-440f-8fae-3462527b93b9`**,
 servie sur https://semi-antony-supporter.semi-supporter.workers.dev.
 
@@ -135,7 +136,7 @@ En cas de problème sur la production d'Antony, au choix :
    ```
 3. **Reconstruire depuis le tag (~2 min)** :
    ```bash
-   git checkout antony-prod-avant-multi
+   git checkout antony-prod-avant-paris14   # = antony-prod-avant-multi
    npm ci && npm run build && npx wrangler deploy
    git checkout -   # revenir à la branche de travail
    ```
