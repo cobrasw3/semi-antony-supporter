@@ -3,7 +3,7 @@
 // (bruit GPS) : on met donc les distances officielles à l'échelle du tracé.
 
 import type { LatLng, Race } from "./event";
-import { pointAtDistance, routeLengthKm } from "./geo.ts";
+import { haversineDistanceKm, pointAtDistance, routeLengthKm } from "./geo.ts";
 
 export interface TrackMark extends LatLng {
   bearing: number;
@@ -19,7 +19,16 @@ export function kmMarks(track: LatLng[], race: Pick<Race, "loops" | "loopLengthK
     const labels = Array.from({ length: race.loops }, (_, i) => k + i * race.loopLengthKm).filter((km) => km < race.distanceKm);
     marks.push({ ...pointAtDistance(track, k * scale), label: labels.join(" · ") });
   }
-  return marks;
+  // Parcours entier qui repasse au même endroit (boucles différentes ou
+  // aller-retour) : une seule borne « km 7 · 14 · 21 » au lieu de bornes
+  // superposées.
+  const merged: TrackMark[] = [];
+  for (const m of marks) {
+    const near = merged.find((x) => haversineDistanceKm(x, m) < 0.06);
+    if (near) near.label = `${near.label} · ${m.label}`;
+    else merged.push({ ...m });
+  }
+  return merged;
 }
 
 /** Flèches de sens de course, régulièrement espacées (entre les bornes km). */

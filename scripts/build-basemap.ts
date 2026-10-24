@@ -1,6 +1,6 @@
 // Génère le fond de carte hébergé avec l'app (courses/<slug>/assets/carte/<zone>-<date>.pmtiles)
 // à partir de l'export quotidien Protomaps (données OpenStreetMap), puis
-// affiche les valeurs à reporter dans event.json (map.basemap / map.bounds).
+// met à jour event.json (map.basemap / map.bounds).
 //
 // Prérequis : l'outil `pmtiles` (https://github.com/protomaps/go-pmtiles/releases)
 // dans le PATH, ou son chemin dans la variable PMTILES.
@@ -13,7 +13,7 @@
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { slugFromArgs } from "./lib/course.ts";
+import { slugFromArgs, writeCourseEvent } from "./lib/course.ts";
 
 const SLUG = slugFromArgs(process.argv.slice(2).filter((a) => !a.includes(",")));
 const EVENT = `courses/${SLUG}/event.json`;
@@ -54,7 +54,15 @@ execFileSync(pmtiles, ["extract", `https://build.protomaps.com/${date}.pmtiles`,
 
 for (const f of readdirSync(DIR)) if (f.endsWith(".pmtiles") && f !== name) rmSync(`${DIR}/${f}`);
 
-// event.json garde sa mise en forme compacte : on affiche le bloc à recopier.
-console.log(`\nÀ reporter dans ${EVENT} (bloc "map") :`);
-console.log(`  "basemap": "/carte/${name}",`);
-console.log(`  "bounds": [[${bbox[1]}, ${bbox[0]}], [${bbox[3]}, ${bbox[2]}]],`);
+// Mise à jour de event.json (bloc "map"), mise en forme du projet conservée.
+event.map = {
+  ...event.map,
+  basemap: `/carte/${name}`,
+  bounds: [
+    [bbox[1], bbox[0]],
+    [bbox[3], bbox[2]],
+  ],
+  attribution: event.map?.attribution ?? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://protomaps.com">Protomaps</a>',
+};
+writeCourseEvent(SLUG, event);
+console.log(`${EVENT} mis à jour (map.basemap, map.bounds).`);

@@ -126,7 +126,14 @@ const round2 = (x: number) => Math.round(x * 100) / 100;
  * parcours. Ce sont les meilleurs spots pour les supporters. Les km sont
  * convertis en km officiels avec `scale`.
  */
-export function detectMultiplePassages(points: LatLng[], scale = 1, radiusM = 40, minGapKm = 1): SpotCandidate[] {
+export function detectMultiplePassages(
+  points: LatLng[],
+  scale = 1,
+  radiusM = 40,
+  minGapKm = 1,
+  maxCandidates = 6,
+  minSpacingKm = 0.8
+): SpotCandidate[] {
   const pts = resample(points, 20);
   // Paires proches et éloignées sur le parcours.
   const hits: Array<{ i: number; j: number }> = [];
@@ -164,7 +171,13 @@ export function detectMultiplePassages(points: LatLng[], scale = 1, radiusM = 40
       return { ...center, km, kind: "multiple" as const };
     })
     .filter((c) => c.km.length >= 2)
-    .sort((a, b) => b.km.length - a.km.length || a.km[0] - b.km[0]);
+    .sort((a, b) => b.km.length - a.km.length || a.km[0] - b.km[0])
+    // Sur des boucles identiques, TOUT le parcours repasse plusieurs fois :
+    // on ne garde que les meilleurs endroits, bien espacés.
+    .reduce<SpotCandidate[]>((kept, c) => {
+      if (kept.length < maxCandidates && kept.every((k) => haversineDistanceKm(k, c) >= minSpacingKm)) kept.push(c);
+      return kept;
+    }, []);
 }
 
 /**

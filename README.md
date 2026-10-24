@@ -79,6 +79,46 @@ Statut d'une course (`event.json` → `status`) :
 - `prototype` : non officielle, sans bandeau (Antony) ;
 - `official` : validée par l'organisateur (indexable).
 
+## Ajouter une course (≈ 30 min avec le GPX)
+
+1. **Créer le dossier** : `npm run new-course -- <slug> --nom "Semi de X" --court "Semi de X" --couleur "#2e6b3a" --organisateur "Club Y" --ville "X"`,
+   puis compléter `courses/<slug>/event.json` (date, heure, distance, boucles,
+   `aConfirmer` sur ce qui n'est pas sûr) et `SUIVI.md`.
+2. **Importer le tracé** : déposer le GPX dans `courses/<slug>/parcours.gpx`, puis
+   `npm run import-gpx -- <slug>` (tracé simplifié et recalé, dénivelé, spots
+   candidats nommés d'après la rue, tous « à confirmer »).
+3. **Choisir les spots** : dans `event.json`, garder 3 à 6 spots (les ★
+   « passages multiples » d'abord), les renommer, retirer `aConfirmer` de ceux
+   qui sont validés.
+4. **Calculer** : `node scripts/compute-walking-routes.ts <slug>`,
+   `node scripts/compute-walking-grid.ts <slug>`, `node scripts/build-basemap.ts <slug>`
+   (outil `pmtiles` : variable `PMTILES` ou dans le PATH),
+   `node scripts/generate-route-plan.ts <slug>`.
+5. **Vérifier et publier** : `npm run dev -- <slug>` (lien démo
+   `/?demo=1&now=<heure pendant la course>&name=Léa&pace=5:30`), puis
+   `npm run deploy -- <slug>` et `npm run courses` (tableau de bord, QR code).
+
+### Import GPX : ce que fait `npm run import-gpx -- <slug>`
+
+- Lit `courses/<slug>/parcours.gpx` (trkpt, sinon rtept), calcule la
+  distance (haversine) et le dénivelé positif (lissé : moyenne sur ± 50 m et
+  seuil de 2 m, pour ignorer le bruit GPS).
+- Simplifie le tracé (Douglas-Peucker, 5 m) et le recale sur la distance
+  officielle de la course ; l'écart est signalé au-delà de 2 %.
+- Boucles identiques (`loops` > 1) : le GPX peut ne contenir qu'une boucle ;
+  s'il contient tout le parcours, la course passe en `loops: 1` (tracé
+  entier).
+- **Passages multiples** : endroits à moins de 40 m l'un de l'autre mais
+  séparés de plus de 1 km sur le parcours — les meilleurs spots (6 au plus,
+  espacés de 800 m, le plus de passages d'abord, ★).
+- Candidats réguliers : départ, arrivée et un point environ tous les 2,5 km
+  (`--tous-les 3` pour changer), avec tous leurs passages.
+- Nom de rue par géocodage inverse **Nominatim** (OpenStreetMap, sans clé,
+  1 requête/s, User-Agent identifiant l'outil) ; `--sans-rues` pour garder
+  « Spot km 4,2 ».
+- Écrit les candidats avec `"aConfirmer": true` ; les spots déjà validés
+  sont conservés. `--course <id>` si l'événement a plusieurs courses.
+
 ## 🚨 Antony : remettre la version en production en 2 minutes
 
 Version de référence (envoyée à la mairie) : tag git **`antony-prod-avant-multi`**

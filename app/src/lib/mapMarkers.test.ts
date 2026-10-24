@@ -38,3 +38,13 @@ describe("groupOverlapping", () => {
     expect(groupOverlapping(pts, 10).map((g) => g.length)).toEqual([1, 1, 1, 1]);
   });
 });
+
+describe("kmMarks sur un parcours entier qui repasse au même endroit", () => {
+  it("fusionne les bornes superposées (aller-retour)", () => {
+    const out = Array.from({ length: 200 }, (_, i) => ({ lat: 48.8 + (0.0225 * i) / 199, lng: 2.3 })); // 2,5 km
+    const track = [...out, ...out.slice(0, -1).reverse()]; // 5 km
+    const marks = kmMarks(track, { loops: 1, loopLengthKm: 5, distanceKm: 5 });
+    // km 1 et km 4 au même endroit, km 2 et km 3 aussi.
+    expect(marks.map((m) => m.label)).toEqual(["1 · 4", "2 · 3"]);
+  });
+});

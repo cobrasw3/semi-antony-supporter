@@ -886,3 +886,17 @@ node scripts/import-track.ts fichier.gpx                   # importe un tracé
   (5 configs), 5 (tableau de bord, QR), 6 (vérifications), procédure de
   bascule d'Antony. Rien n'est poussé sur GitHub pour l'instant ; la
   production d'Antony n'a pas été touchée.
+- **Étape 3 terminée** : `npm run import-gpx -- <slug>` (`scripts/import-gpx.ts`)
+  écrit tracé simplifié, dénivelé, emprise, candidats `aConfirmer` (★
+  passages multiples, 6 max espacés de 800 m ; réguliers tous les 2,5 km avec
+  tous leurs passages, doublons < 300 m écartés), noms de rue Nominatim
+  (1 req/s). `formatEventJson` / `writeCourseEvent` (scripts/lib/course.ts) :
+  mise en forme compacte commune ; `build-basemap.ts` écrit désormais
+  `map.basemap` / `map.bounds` lui-même ; grille de marche à pas adaptatif
+  (≈ 70 points, 100 m pour Antony → inchangé). Bornes km superposées
+  fusionnées (« km 7 · 14 · 21 ») sur un tracé entier. Testé de bout en bout
+  sur une course temporaire construite à partir du tracé d'Antony (3
+  boucles bout à bout) : meilleur candidat trouvé = entrée du stade (km
+  0,1 · 7 · 14,1 · 21,1, 4 passages), écart de distance +0,4 %, carte et
+  écrans OK ; course supprimée ensuite. README : procédure « Ajouter une
+  course » en 5 étapes et doc de l'import.

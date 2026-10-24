@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cumulativeDistancesKm, routeLengthKm, type LatLng } from "./geo";
+import { cumulativeDistancesKm, haversineDistanceKm, routeLengthKm, type LatLng } from "./geo";
 import { detectMultiplePassages, elevationGainM, parseGpxPoints, regularCandidates, scaleToOfficial, simplify, type GpxPoint } from "./gpxImport";
 
 // Tracés synthétiques autour de Paris (≈ 111 m par 0,001° de latitude).
@@ -76,6 +76,17 @@ describe("detectMultiplePassages", () => {
     expect(best.km.length).toBeGreaterThanOrEqual(2);
     const half = cumulativeDistancesKm(loop).at(-1)!;
     expect(best.km.some((k) => Math.abs(k - half) < 0.1)).toBe(true);
+  });
+
+  it("boucles identiques : au plus 6 candidats, espacés d'au moins 800 m", () => {
+    const C = { lat: 48.809, lng: 2.33 };
+    const loop = [...line(A, B, 60), ...line(B, C, 60).slice(1), ...line(C, A, 60).slice(1)];
+    const track = [...loop, ...loop.slice(1), ...loop.slice(1)];
+    const c = detectMultiplePassages(track);
+    expect(c.length).toBeGreaterThan(0);
+    expect(c.length).toBeLessThanOrEqual(6);
+    for (let i = 0; i < c.length; i++) for (let j = i + 1; j < c.length; j++) expect(haversineDistanceKm(c[i], c[j])).toBeGreaterThanOrEqual(0.8);
+    expect(c[0].km.length).toBeGreaterThanOrEqual(3);
   });
 
   it("ligne simple : aucun passage multiple", () => {

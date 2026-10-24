@@ -1,5 +1,5 @@
 // Grille de distances À PIED entre des points du parcours espacés de
-// `STEP_KM` (100 m) : sert aux points libres touchés sur la carte, pour
+// 100 m (plus sur un long parcours) : sert aux points libres touchés sur la carte, pour
 // donner une distance par les rues (et pas à vol d'oiseau) entre n'importe
 // quels endroits du parcours. Calculée une fois ici, embarquée dans
 // courses/<slug>/event.json (races[].walkingGrid) : l'app reste hors-ligne.
@@ -15,7 +15,9 @@ import { courseDir, slugFromArgs } from "./lib/course.ts";
 import type { EventConfig } from "../app/src/lib/event.ts";
 import { pointAtDistance, routeLengthKm } from "../app/src/lib/geo.ts";
 
-const STEP_KM = 0.1;
+// 100 m sur une boucle courte ; au-delà, pas élargi pour rester vers 70 points
+// (≈ 5 000 distances, quelques dizaines de Ko dans event.json).
+const MAX_POINTS = 70;
 const BLOCK = 25; // origines par requête
 const SERVICE = "https://routing.openstreetmap.de/routed-foot/table/v1/driving";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -28,6 +30,7 @@ for (const race of config.races) {
   const track = race.track.map(([lat, lng]) => ({ lat, lng }));
   const loopKm = race.loops > 1 ? race.loopLengthKm : race.distanceKm;
   const trackKm = routeLengthKm(track);
+  const STEP_KM = Math.max(0.1, Math.ceil((loopKm / MAX_POINTS) * 10) / 10);
   const n = Math.floor(loopKm / STEP_KM + 1e-9);
   const points = Array.from({ length: n }, (_, i) => {
     const p = pointAtDistance(track, (i * STEP_KM * trackKm) / loopKm);

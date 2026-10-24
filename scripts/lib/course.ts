@@ -135,3 +135,40 @@ export function prepareCoursePublic(slug: string): string {
   writeFileSync(join(out, "robots.txt"), robotsTxt(ev));
   return out;
 }
+
+/**
+ * event.json mis en forme comme le reste du projet : indentation de 2, mais
+ * tracés, paires [lat, lng] et listes de km sur une ligne (diffs lisibles).
+ */
+export function formatEventJson(config: unknown): string {
+  const inline = new Map<string, string>();
+  const tokenize = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      // Tracé ou chemin : tableau de paires de nombres → une seule ligne.
+      if (value.length > 0 && value.every((p) => Array.isArray(p) && p.length === 2 && p.every((n) => typeof n === "number"))) {
+        const token = `__INLINE_${inline.size}__`;
+        inline.set(token, JSON.stringify(value));
+        return token;
+      }
+      return value.map(tokenize);
+    }
+    if (value && typeof value === "object") {
+      return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, k === "km" && Array.isArray(v) && v.every((n) => Array.isArray(n)) ? v.map((row) => {
+        const token = `__INLINE_${inline.size}__`;
+        inline.set(token, JSON.stringify(row));
+        return token;
+      }) : tokenize(v)]));
+    }
+    return value;
+  };
+  let json = JSON.stringify(tokenize(config), null, 2);
+  for (const [token, value] of inline) json = json.replace(`"${token}"`, value);
+  json = json.replace(/"km": \[\n((?:\s+-?[\d.]+,?\n)+)\s+\]/g, (_, body: string) => `"km": [${body.trim().split(/,?\s*\n\s*/).join(", ")}]`);
+  json = json.replace(/"bounds": \[\n\s+(\[[^\]]*\]),\n\s+(\[[^\]]*\])\n\s+\]/g, '"bounds": [$1, $2]');
+  return json + "\n";
+}
+
+/** Écrit courses/<slug>/event.json (mise en forme du projet). */
+export function writeCourseEvent(slug: string, config: unknown) {
+  writeFileSync(join(courseDir(slug), "event.json"), formatEventJson(config), "utf-8");
+}
